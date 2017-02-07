@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package com.sixt.service.test_service.api;
+
+option java_multiple_files = false;
+option java_package = "com.sixt.service.test_service.api";
+
+service TestService {
+    rpc GetRandomString(GetRandomStringQuery) returns (RandomStringResponse) {}
+    rpc SlowResponder(GetRandomStringQuery) returns (RandomStringResponse) {}
+    rpc SetHealthCheckStatus(SetHealthCheckStatusCommand) returns (SetHealthCheckStatusResponse) {}
+}
+
+message GetRandomStringQuery {
+    string input = 1;
+}
+
+message RandomStringResponse {
+    string random = 1;
+}
+
+message SetHealthCheckStatusCommand {
+    string status = 1;
+    string message = 2;
+}
+
+message SetHealthCheckStatusResponse {
+
+}

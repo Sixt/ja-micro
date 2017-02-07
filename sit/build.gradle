@@ -1,0 +1,191 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.bmuschko:gradle-docker-plugin:3.0.0'
+        classpath 'org.ajoberstar:grgit:1.7.0'
+    }
+    configurations.classpath {
+        resolutionStrategy {
+            cacheDynamicVersionsFor 0, 'seconds'
+        }
+    }
+}
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '1.2.3'  //build shadow jars
+}
+
+apply plugin: 'java'
+apply plugin: 'com.google.protobuf'
+apply plugin: 'com.bmuschko.docker-remote-api'     // create Dockerfile, build and push docker image
+
+group = 'com.sixt.service'
+
+repositories {
+    jcenter()
+    mavenCentral()
+    maven {
+        url 'https://dl.bintray.com/palantir/releases' // docker-compose-rule is published on bintray
+    }
+    mavenLocal()
+}
+
+docker {
+    // START fix for using docker-machine (vm) instead of local docker daemon (Mac)
+    if (System.env.DOCKER_HOST) {
+        url = "$System.env.DOCKER_HOST".replace("tcp", "https")
+        if (System.env.DOCKER_CERT_PATH) {
+            certPath = new File(System.env.DOCKER_CERT_PATH)
+        }
+    } else {
+        url = 'unix:///var/run/docker.sock'
+    }
+    // END fix for using docker-machine (vm)
+}
+
+def dockerRepo
+if (project.hasProperty('dockerUrl')) {
+    dockerRepo = dockerUrl + '/' + 'goorange'
+} else {
+    dockerRepo = 'goorange'
+}
+
+// Retrieve git hash for docker tag
+ext {
+    git = org.ajoberstar.grgit.Grgit.open(file('..'))
+    commitId = git.head().abbreviatedId
+}
+
+// ---------------------------------------------------------------------
+// --- Create the Dockerfile => "build/docker/Dockerfile"
+// ---------------------------------------------------------------------
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
+
+task createDockerfile(type: Dockerfile, dependsOn: shadowJar) {
+    description = 'Creates the Dockerfile => "build/docker/Dockerfile"'
+    destFile = project.file('build/docker/Dockerfile')
+    from 'anapsix/alpine-java'
+    volume '/tmp'
+    addFile 'test-service-' + version + '-all.jar', 'app.jar'
+    entryPoint 'java', '-server', '-Dfile.encoding=UTF8',
+            '-Djava.security.egd=file:/dev/./urandom',
+            '-XX:-OmitStackTraceInFastThrow', '-jar', '/app.jar'
+    // Use extra params to test local docker deployments
+    maintainer 'platform team'
+}
+
+task buildDockerImage(type: DockerBuildImage, dependsOn: createDockerfile) {
+    description = 'Builds docker image. ATTENTION: this task needs a running docker daemon!'
+    doFirst {
+        copy {
+            from shadowJar
+            into createDockerfile.destFile.parentFile
+        }
+    }
+    inputDir = createDockerfile.destFile.parentFile
+
+    tag = dockerRepo + '/' + project.group + '.' + project.name
+
+    finalizedBy 'tagDockerImage'
+}
+
+task tagDockerImage(type: DockerTagImage, dependsOn: 'buildDockerImage') {
+    description = 'Tags the previously built docker images as "version-commitId".'
+
+    targetImageId {
+        buildDockerImage.getImageId {}
+    }
+
+    repository = dockerRepo + '/' + project.group + '.' + project.name
+    force = true
+    tag = version + '-' + commitId
+
+    doLast() {
+        println "Successfully tagged image '$imageId' as '$tag'."
+    }
+}
+
+task cleanLocalDockerImages() {
+    mustRunAfter 'tagDockerImage'
+
+    doLast {
+        exec {
+            executable 'bash'
+            args 'docker_clean.sh', "com.sixt.service.${project.name}"
+        }
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += 'build/generated/source/proto/main/java'
+        }
+    }
+    serviceIntegrationTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDirs file('src/serviceTest/java')
+        }
+        resources.srcDir file('src/serviceTest/resources')
+    }
+}
+
+configurations {
+    serviceIntegrationTestCompile.extendsFrom testCompile
+    serviceIntegrationTestRuntime.extendsFrom testRuntime
+}
+
+dependencies {
+    // Dependency on root project
+    compile project(":")
+
+    serviceIntegrationTestCompile 'org.assertj:assertj-core:3.6.1'
+    // https://github.com/palantir/docker-compose-rule
+    serviceIntegrationTestCompile 'com.palantir.docker.compose:docker-compose-rule:0.24.0'
+}
+
+jar {
+    manifest {
+        attributes 'Service-Title': "${project.group}.${project.name}",
+                'Service-Version': version,
+                'Implementation-Title': "${project.group}.${project.name}",
+                'Main-Class': 'com.sixt.service.framework.JettyServiceBase'
+    }
+}
+
+shadowJar {
+    exclude 'META-INF/*', 'META-INF/cxf/*', 'META-INF/maven/**', 'META-INF/services/*'
+}
+
+shadowJar.dependsOn build
+
+task prepareServiceTestEnvironment {
+    doFirst {
+        copy {
+            from shadowJar
+            into createDockerfile.destFile.parentFile
+        }
+    }
+    dependsOn shadowJar, createDockerfile
+}
+
+task serviceIntegrationTest(type: Test, dependsOn: prepareServiceTestEnvironment) {
+    description "Run service integration tests."
+    group "verification"
+
+    testClassesDir = sourceSets.serviceIntegrationTest.output.classesDir
+    classpath = sourceSets.serviceIntegrationTest.runtimeClasspath
+
+    outputs.upToDateWhen { false }
+
+    testLogging.showStandardStreams = true
+    reports.junitXml.destination = file('build/test-results/serviceTest')
+
+    finalizedBy cleanLocalDockerImages
+}

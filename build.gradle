@@ -1,0 +1,186 @@
+buildscript {
+    dependencies {
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.0'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'idea'
+    id 'jacoco'
+    id 'net.researchgate.release' version '2.5.0'  // release your source code
+    id 'com.github.ben-manes.versions' version '0.13.0'
+    id 'com.bmuschko.nexus' version '2.3.1'
+}
+
+apply plugin: 'com.google.protobuf'
+apply plugin: 'project-report'
+
+group = 'com.sixt.service'
+
+repositories {
+    jcenter()
+    mavenCentral()
+    maven {
+        url 'https://dl.bintray.com/palantir/releases' // docker-compose-rule is published on bintray
+    }
+    mavenLocal()
+}
+
+extraArchive {
+    sources = false
+    tests = false
+    javadoc = false
+}
+
+jar {
+    manifest {
+        attributes 'Service-Title': 'com.sixt.service.java-service-framework',
+                'Service-Version': version,
+                'Service-Vendor': 'Sixt GmbH & Co. Autovermietung KG'
+    }
+}
+
+modifyPom {
+    project {
+        name 'com.sixt.service.framework'
+        description 'Java-micro microservice framework'
+        url 'https://github.com/Sixt/java-micro'
+        inceptionYear '2016'
+
+        scm {
+            url 'https://github.com/Sixt/java-micro'
+        }
+
+        developers {
+            developer {
+                name 'Brian Krahmer'
+                email 'brian.krahmer@sixt.com'
+            }
+        }
+    }
+}
+
+afterReleaseBuild.dependsOn uploadArchives
+
+ext.versions = [
+        'jetty'   : '9.3.14.v20161028',
+        'protobuf': '3.1.0',
+        'guice'   : '4.1.0',
+        'kafka'   : '0.10.1.0',
+        'guava'   : '20.0',
+        'logback' : '1.1.8',
+        'slf4j'   : '1.7.22'
+]
+
+dependencies { //achtung: order does matter!
+
+    //Commons utilities
+    compile 'org.apache.commons:commons-lang3:3.5'
+    compile 'commons-io:commons-io:2.5'
+    compile "com.google.guava:guava:$versions.guava"
+
+    //JSON
+    compile 'com.google.code.gson:gson:2.8.0'
+
+    //Guice dependency injection
+    compile "com.google.inject:guice:$versions.guice"
+    compile "com.google.inject.extensions:guice-servlet:$versions.guice"
+
+    // Kubernetes
+    compile 'io.fabric8:kubernetes-model:1.0.65'
+    compile 'io.fabric8:kubernetes-client:1.4.31'
+
+    //Protobuf
+    compile "com.google.protobuf:protobuf-java:$versions.protobuf"
+    compile 'com.googlecode.protobuf-java-format:protobuf-java-format:1.4'
+
+    //http client
+    compile 'com.fasterxml.jackson.core:jackson-core:2.8.5'
+    compile 'javax.servlet:javax.servlet-api:3.1.0'
+    compile 'javax.validation:validation-api:1.1.0.Final'
+
+    //metrics
+    compile 'io.dropwizard.metrics:metrics-core:3.1.2'
+
+    //Classpath scanner
+    compile 'io.github.lukehutch:fast-classpath-scanner:2.0.10'
+
+    //Jetty
+    compile "org.eclipse.jetty:jetty-client:$versions.jetty"
+    compile "org.eclipse.jetty:jetty-server:$versions.jetty"
+    compile "org.eclipse.jetty:jetty-servlet:$versions.jetty"
+    compile "org.eclipse.jetty:jetty-http:$versions.jetty"
+    compile "org.eclipse.jetty:jetty-util:$versions.jetty"
+    compile "org.eclipse.jetty:jetty-jmx:$versions.jetty"
+
+    //logging
+    compile "ch.qos.logback:logback-core:$versions.logback"
+    compile "ch.qos.logback:logback-classic:$versions.logback"
+    compile 'net.logstash.logback:logstash-logback-encoder:4.8'
+    compile "org.slf4j:slf4j-api:$versions.slf4j"
+
+    //read manifests
+    compile 'com.jcabi:jcabi-manifests:1.1'
+
+    //migrate database schemas
+    compile 'org.flywaydb:flyway-core:4.0.3'
+
+    //kafka
+    compile "org.apache.kafka:kafka-clients:$versions.kafka"
+
+    // service integration tests
+    compile 'com.squareup.wire:wire-schema:2.2.0'
+
+    // https://github.com/palantir/docker-compose-rule
+    compile 'com.palantir.docker.compose:docker-compose-rule:0.28.1'
+
+    //Testing
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:1.10.19'
+    testCompile 'org.assertj:assertj-core:3.6.1'
+    testCompile 'joda-time:joda-time:2.9.7'
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:$versions.protobuf"
+    }
+}
+
+idea {
+    module {
+        sourceDirs += file("$protobuf.generatedFilesBaseDir/main/java");
+        sourceDirs += file("$protobuf.generatedFilesBaseDir/test/java");
+    }
+}
+
+test {
+    useJUnit {
+        excludeCategories "com.sixt.service.framework.IntegrationTest"
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+    executionData = fileTree('build/jacoco').include('**/*.exec')
+}
+
+task integrationTest(type: Test) {
+    description "Run more heavyweight JUnit integration tests."
+    group "verification"
+    useJUnit {
+        includeCategories "com.sixt.service.framework.IntegrationTest"
+    }
+    shouldRunAfter test
+}
+
+check.dependsOn integrationTest
+
+compileJava {
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
+
+build.dependsOn dependencyUpdates

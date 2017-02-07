@@ -1,0 +1,25 @@
+version: "2"
+
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181"
+    hostname: zookeeper
+
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092"
+    environment:
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_CREATE_TOPICS: "events:1:1"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./scripts/start_kafka.sh:/tmp/start_kafka.sh
+    depends_on:
+      - zookeeper
+    entrypoint: /tmp/start_kafka.sh
+    hostname: kafka
+  

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package RpcEnvelope;
+option java_multiple_files = false;
+option java_package = "com.sixt.service.framework.protobuf";
+
+message Request {
+	string service_method = 1;
+	fixed64 sequence_number = 2;
+}
+
+message Response {
+	string service_method = 1;
+	fixed64 sequence_number = 2;
+	string error = 3;
+}

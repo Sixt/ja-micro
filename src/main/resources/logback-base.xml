@@ -1,0 +1,16 @@
+<appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+    <Target>System.out</Target>
+    <encoder class="com.sixt.service.framework.logging.SixtJsonEncoder">
+        <includeContext>false</includeContext>
+        <timeZone>UTC</timeZone>
+        <fieldNames>
+            <timestamp>time</timestamp>
+            <thread>thread-id</thread>
+            <levelValue>[ignore]</levelValue>
+            <version>[ignore]</version>
+            <logger>logger</logger>
+            <stackTrace>stacktrace</stackTrace>
+        </fieldNames>
+        <includeMdcKeyName>correlation-id</includeMdcKeyName>
+    </encoder>
+</appender>

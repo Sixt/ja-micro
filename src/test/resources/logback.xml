@@ -1,0 +1,19 @@
+<configuration>
+
+    <appender name="debug" class="ch.qos.logback.core.ConsoleAppender">
+        <Target>System.out</Target>
+        <encoder>
+            <pattern>%d [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Default for Sixt code is 'debug', can be overridden with env var SIXT_LOGGING -->
+    <logger name="com.sixt" level="${SIXT_LOGGING:-debug}" additivity="false">
+        <appender-ref ref="debug" />
+    </logger>
+
+    <root level="info">
+        <appender-ref ref="debug" />
+    </root>
+
+</configuration>

@@ -1,0 +1,3 @@
+include 'sit'
+project(':sit').name = 'test-service'
+rootProject.name='java-service-framework'

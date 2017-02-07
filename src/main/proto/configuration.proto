@@ -1,0 +1,58 @@
+// I had to add the configuration service definition here, otherwise it would
+// have introduced a circular dependency.
+
+syntax = "proto3";
+
+package com.sixt.service.configuration.api;
+
+option java_multiple_files = false;
+option java_package = "com.sixt.service.configuration.api";
+
+service Configuration {
+    rpc GetValues(Filter) returns (ValuesResponse) {}
+    rpc GetValue(FullPath) returns (ValuesResponse) {}
+    rpc UpsertValue(FullPath) returns (ValuesResponse) {}
+    rpc DeleteValue(FullPath) returns (ValuesResponse) {}
+    rpc ImportAll(Import) returns (ValuesResponse) {}
+}
+
+message Filter {
+    uint32 changeIndex = 1;
+    string service = 2;
+    string version = 3;
+    string instance = 4;
+}
+
+message VariantDetail {
+    string minVersion = 1;
+    string maxVersion = 2;
+    repeated string instances = 3;
+    string value = 4;
+    bool isEncrypted = 5;
+}
+
+message FullPath {
+    string service = 1;
+    string name = 2;
+    VariantDetail detail = 3;
+}
+
+message ImportItem {
+    string name = 1;
+    VariantDetail value = 2;
+}
+
+message Import {
+    repeated ImportItem values = 1;
+}
+
+message ValueResponse {
+    string name = 1;
+    string baseValue = 2;
+    repeated VariantDetail details = 3;
+}
+
+message ValuesResponse {
+    uint32 changeIndex = 1;
+    repeated ValueResponse values = 2;
+}

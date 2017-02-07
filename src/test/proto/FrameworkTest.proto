@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package FrameworkTest;
+option java_multiple_files = false;
+option java_package = "com.sixt.service.framework.protobuf";
+
+message Foobar {
+	repeated string blah = 1;
+}
+
+message SerializationSubMessage {
+    string id = 1;
+}
+
+message SerializationTest {
+    string id = 1;
+    string id2 = 2;
+    SerializationSubMessage sub_message = 3;
+    string id4 = 4;
+}
+
+enum Error {
+    NO_ERROR = 0;
+    INVALID_VEHICLE_ID = 1;
+}
+
+message MessageWithEnum {
+    Error error = 1;
+}
+

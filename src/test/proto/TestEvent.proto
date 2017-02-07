@@ -1,0 +1,20 @@
+syntax = "proto3";
+package schema;
+
+option java_multiple_files = false;
+option java_package = "com.sixt.service.framework.test";
+
+message Meta {
+    string name = 1;
+    string timestamp = 2;
+    string correlation_id = 3;
+    string grouping = 4;
+    string distribution_key = 5;
+}
+
+// Key: vehicle_id
+message OneTestEvent {
+  Meta meta = 1;
+
+  string vehicle_id = 10;
+}
