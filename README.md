@@ -110,7 +110,7 @@ The service information contains specially-formatted tags which contain informat
 about the format of the request and response messages for each endpoint, and other
 tags.
 
-## Go Micro Compatibility ##
+## [Go Micro](https://github.com/micro) Compatibility ##
 
 Java-micro is meant to keep compatibility so that service developers can easily choose
 between developing a service in Java or Go. Other languages can also be supported by
