@@ -2,12 +2,27 @@
 
 ## Introduction ##
 
-Java-micro is a framework that allows developers to easily develop microservices.
+Java-micro is a framework that allows developers to easily develop microservices in 
+Java. It was developed at Sixt, primarily over the course of 2016, during a push to 
+create a new platform. That platform was started with a goal of supporting two primary 
+languages, being Golang and Java. We use [Go Micro](https://github.com/micro) as our 
+framework for our Go services, so a primary concern for this framework is to be 
+compatible with Micro. They diverge a bit in capabilities and methodologies, but they 
+are indeed compatible. 
 The framework takes care of many of the concerns so that the developer can simply
 focus on the functionality of his services instead.
 
-Internal Sixt users: Detailed documentation can be
-[found on Confluence](https://confluence.sixt.com/display/GOOR/Java+Service+Architecture)
+## Coming Soon! ##
+
+Over the next weeks and months we will produce a series of screencasts to highlight 
+various aspects of the framework and how developers can use it to solve various 
+engineering problems in a modern microservices environment.
+
+##  Compatibility ##
+
+Java-micro is meant to keep compatibility so that service developers can easily choose
+between developing a service in Java or Go. Other languages can also be supported by
+using the Go Micro sidecar.
 
 ### Functional Areas ###
 
@@ -35,17 +50,16 @@ tasks as well. To start a service in a debugger, use the `JettyServiceBase` as a
 
 For any component in a service requiring configuration, it can simply get a `ServiceProperties`
 object injected into it, and request the configuration properties from it. Properties are
-located from three locations: command-line, environment variables, and configuration service.
+located from three locations: command-line, environment variables, and configuration plugin.
 They are applied in that order. The same property with a different value from a later source
-overwrites the earlier source. Right now, the Sixt configuration service provides long-polling
-so that each service can get real-time updates to changes of the configuration. The configuration 
-provider is pluggable so other configuration sources can be sourced as well.
-There are hooks to get real-time notifications of configuration changes.
+overwrites the earlier source. The configuration plugin provides the ability to do long-polling so 
+that each service can get real-time updates to changes of the configuration from arbitrary sources. 
+There are hooks for service components to get real-time notifications of configuration changes.
 
 ## Logging ##
 
 There is standardized logging in place. The log records are json objects, and `Marker`s can
-be used to dynamically create properties on those objects.
+be used to dynamically create properties on those objects. The log format can be completely customized.
 
 ## Metrics ##
 
@@ -110,24 +124,18 @@ The service information contains specially-formatted tags which contain informat
 about the format of the request and response messages for each endpoint, and other
 tags.
 
-## [Go Micro](https://github.com/micro) Compatibility ##
-
-Java-micro is meant to keep compatibility so that service developers can easily choose
-between developing a service in Java or Go. Other languages can also be supported by
-using the Go Micro sidecar.
-
 ## Dependency Injection ##
 
 Dependency injection is heavily used in java-micro. It is strictly supporting Guice.
 
 ## Service Integration Testing ##
 
-We heavily use automation at Sixt in our microservice projects. As part of the scrum
-definition of done, we have said that all stories should have quality assurance
-provided by automated service integration tests. What this means is that core infrastructure
-dependencies (for example, on one service, this is consul, postgres and kafka) and the
+We heavily use automation at Sixt in our microservice projects. To support this, the framework 
+gives the ability to developers to automate service integration tests. What this means is 
+that core infrastructure dependencies (for example, on one service, this is consul, 
+postgres, zookeeper and kafka) and the
 service itself are started as containers under docker-compose. Additionally, to
-eliminate the problem that would arise of starting containers for every Sixt service
+eliminate the problem that would arise of starting containers for every other service
 dependency (and their dependencies, etc.), there exists a class called `ServiceImpersonator`
 that can serve as a complete service mock, available in service registry and serving
 real rpc requests. However, the developer maps the requests and responses instead
@@ -138,8 +146,5 @@ of a real instance serving those requests.
 Contributions to the continued evolution of the framework are welcome. Please keep in 
 mind that the primary focus is to keep the framework minimal. Backwards-compatibility 
 and following semantic versioning is strictly required. For any major changes 
-that you would like to propose, please discuss the design with Brian before-hand to 
-avoid wasted efforts on incompatible changes.
-
-### Who do I talk to? ###
-Brian Krahmer / brian.krahmer@sixt.com
+that you would like to propose, please raise an issue and discuss the issue before 
+implementing to avoid wasted efforts on changes that would be rejected.
