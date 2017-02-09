@@ -13,8 +13,8 @@ We use [Go Micro](https://github.com/micro) as our framework for our Go services
 primary concern for this framework is to be compatible with Micro. They diverge a bit in 
 capabilities and methodologies, but they are indeed compatible. 
 
-The framework takes care of many of the concerns so that the developer can simply 
-focus on the functionality of his services instead.
+The framework takes care of many of the concerns so that developers can simply 
+focus on the functionality of their services instead.
 
 ## Features ##
 
