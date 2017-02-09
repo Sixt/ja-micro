@@ -14,7 +14,7 @@ primary concern for this framework is to be compatible with Micro. They diverge 
 capabilities and methodologies, but they are indeed compatible. 
 
 The framework takes care of many of the concerns so that the developer can simply 
-focus on the functionality of his services instead.
+focus on the functionality of their services instead.
 
 ## Features ##
 
