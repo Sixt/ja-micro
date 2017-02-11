@@ -1,10 +1,10 @@
-# Java-micro [![License](https://img.shields.io/:license-apache-blue.svg)](https://opensource.org/licenses/Apache-2.0) 
+# Ja-micro [![License](https://img.shields.io/:license-apache-blue.svg)](https://opensource.org/licenses/Apache-2.0) 
 
-Java-micro is a lightweight Java framework for building microservices.
+Ja-micro is a lightweight Java framework for building microservices.
 
 ## Introduction ##
 
-Java-micro is a framework that allows developers to easily develop microservices in 
+Ja-micro is a framework that allows developers to easily develop microservices in 
 Java. It was developed at Sixt, primarily over the course of 2016, during a push to 
 create a new platform. That platform was started with a goal of supporting two primary 
 languages, being Golang and Java. 
@@ -15,6 +15,8 @@ capabilities and methodologies, but they are indeed compatible.
 
 The framework takes care of many of the concerns so that developers can simply 
 focus on the functionality of their services instead.
+
+See the wiki to get started.
 
 ## Features ##
 
@@ -125,7 +127,7 @@ instances.
 
 ### Dependency Injection ###
 
-Dependency injection is heavily used in java-micro. It is strictly supporting Guice.
+Dependency injection is heavily used in Ja-micro. It is strictly supporting Guice.
 
 ### Service Integration Testing ###
 
@@ -142,7 +144,7 @@ of a real instance serving those requests.
 
 ##  Compatibility ##
 
-Java-micro is meant to keep compatibility so that service developers can easily choose
+Ja-micro is meant to keep compatibility so that service developers can easily choose
 between developing a service in Java or Go. Other languages can also be supported by
 using the Go Micro sidecar.
 
