@@ -189,3 +189,9 @@ task serviceIntegrationTest(type: Test, dependsOn: prepareServiceTestEnvironment
 
     finalizedBy cleanLocalDockerImages
 }
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:$versions.protobuf"
+    }
+}
