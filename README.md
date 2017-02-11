@@ -26,7 +26,7 @@ focus on the functionality of his services instead.
 * Client-side load-balancer
 * Simple interface for a service to support health checks.
 * Database migrations built-in.
-* Simplified event-handling using kafka.
+* Simplified event-handling using Kafka.
 * Pluggable service registry to register and discover service instances.
 * Compatible with Go Micro to allow choice of implementation language.
 * Guice dependency injection for ease of implementation and testing scenarios.
