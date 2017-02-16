@@ -8,9 +8,10 @@ plugins {
     id 'java'
     id 'idea'
     id 'jacoco'
+    id 'maven-publish'
     id 'net.researchgate.release' version '2.5.0'  // release your source code
     id 'com.github.ben-manes.versions' version '0.13.0'
-    id 'com.bmuschko.nexus' version '2.3.1'
+    id "com.jfrog.bintray" version "1.7.3"
 }
 
 apply plugin: 'com.google.protobuf'
@@ -27,12 +28,6 @@ repositories {
     mavenLocal()
 }
 
-extraArchive {
-    sources = false
-    tests = false
-    javadoc = false
-}
-
 jar {
     manifest {
         attributes 'Service-Title': 'com.sixt.service.java-service-framework',
@@ -41,27 +36,55 @@ jar {
     }
 }
 
-modifyPom {
-    project {
-        name 'com.sixt.service.framework'
-        description 'Java-micro microservice framework'
-        url 'https://github.com/Sixt/java-micro'
-        inceptionYear '2016'
-
-        scm {
-            url 'https://github.com/Sixt/java-micro'
+bintray {
+    user = System.getenv('bintray_user')
+    key = System.getenv('bintray_api_key')
+    publications = ['MyPublication']
+    pkg {
+        repo = 'maven'
+        name = project.name
+        userOrg = 'Sixt'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/Sixt/ja-micro.git'
+        version {
+            name = project.version
         }
+    }
+}
 
-        developers {
-            developer {
-                name 'Brian Krahmer'
-                email 'brian.krahmer@sixt.com'
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            groupId project.group
+            artifactId project.name
+            version project.version
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('url', 'https://github.com/Sixt/ja-micro')
+                root.children().last() + pomConfig
             }
         }
     }
 }
 
-afterReleaseBuild.dependsOn uploadArchives
+def pomConfig = {
+    licenses {
+        license {
+            name "The Apache Software License, Version 2.0"
+            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            distribution "repo"
+        }
+    }
+    developers {
+        developer {
+            name "Ja-micro developers"
+            email "java-micro@sixt.com"
+        }
+    }
+}
+
+afterReleaseBuild.dependsOn bintrayUpload
 
 ext.versions = [
         'jetty'   : '9.3.14.v20161028',
