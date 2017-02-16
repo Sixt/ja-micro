@@ -3,7 +3,6 @@ jdk:
   - oraclejdk8
 script: ./travis-build.sh
 install:
-  - cd $TRAVIS_REPO_SLUG
-  - git checkout master
+  - git clone --depth=50 --branch=master https://github.com/Sixt/ja-micro.git Sixt/ja-micro
 
 
