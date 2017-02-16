@@ -41,9 +41,9 @@ bintray {
     key = System.getenv('bintray_api_key')
     publications = ['MyPublication']
     pkg {
-        repo = 'maven'
+        repo = 'ja-micro'
         name = project.name
-        userOrg = 'Sixt'
+        userOrg = 'sixt'
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/Sixt/ja-micro.git'
         version {
