@@ -4,6 +4,7 @@ jdk:
 script: ./travis-build.sh
 install:
   - git clone --depth=50 --branch=master https://github.com/Sixt/ja-micro.git Sixt/ja-micro
+  - cd Sixt/ja-micro
   - git checkout master
 
 
