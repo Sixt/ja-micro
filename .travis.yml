@@ -1,5 +1,9 @@
 language: java
 jdk:
-- oraclejdk8
+  - oraclejdk8
 script: ./travis-build.sh
+install:
+  - cd $TRAVIS_REPO_SLUG
+  - git checkout master
+
 
