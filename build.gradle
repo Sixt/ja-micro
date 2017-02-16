@@ -40,6 +40,7 @@ bintray {
     user = System.getenv('bintray_user')
     key = System.getenv('bintray_api_key')
     publications = ['MyPublication']
+    publish = true
     pkg {
         repo = 'ja-micro'
         name = project.name
