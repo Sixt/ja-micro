@@ -85,6 +85,12 @@ publishing {
     }
 }
 
+release {
+    git {
+        requireBranch = null
+    }
+}
+
 afterReleaseBuild.dependsOn bintrayUpload
 
 ext.versions = [
