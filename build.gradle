@@ -52,22 +52,6 @@ bintray {
     }
 }
 
-publishing {
-    publications {
-        MyPublication(MavenPublication) {
-            from components.java
-            groupId project.group
-            artifactId project.name
-            version project.version
-            pom.withXml {
-                def root = asNode()
-                root.appendNode('url', 'https://github.com/Sixt/ja-micro')
-                root.children().last() + pomConfig
-            }
-        }
-    }
-}
-
 def pomConfig = {
     licenses {
         license {
@@ -80,6 +64,22 @@ def pomConfig = {
         developer {
             name "Ja-micro developers"
             email "java-micro@sixt.com"
+        }
+    }
+}
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            groupId project.group
+            artifactId project.name
+            version project.version
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('url', 'https://github.com/Sixt/ja-micro')
+                root.children().last() + pomConfig
+            }
         }
     }
 }
