@@ -1,0 +1,22 @@
+{
+  "package": {
+    "name": "ja-micro",
+    "repo": "ja-micro",
+    "website_url": "www.sixt.com",
+    "issue_tracker_url": "https://github.com/Sixt/ja-micro/issues",
+    "vcs_url": "https://github.com/Sixt/ja-micro.git",
+    "licenses": ["Apache-2.0"],
+    "public_download_numbers": true,
+    "public_stats": true
+  },
+
+  "version": {
+    "name": "${TRAVIS_TAG}"
+  },
+
+  "files":
+  [
+    {"includePattern": "build/libs/*\\.jar)"}
+  ],
+  "publish": true
+}

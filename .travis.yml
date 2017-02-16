@@ -1,4 +1,11 @@
 language: java
 jdk:
-  - oraclejdk8
+- oraclejdk8
+deploy:
+  provider: bintray
+  file: bintray.json
+  user: bkrahmer
+  key:
+    secure: X4doqM7mpsluWDjgbLoHIyDpdABT6I+gHJe4T2BT/0FFN33AvGv4AT6wPR33kfMN1wbsSowceRn7mTnQv9nOJrimTG6Tshs++883nOxjIhm5G8/iohZDEx7eElq0iFkum9YlskY1Sd27h4zem5yejaXqsFIyCLxCP3ILQSY1cH8fzEovHvdjBT/aoDWG+BZsbhePrYIkMSMCwl/qgM8lR8pXG9w05O2iNvthZb5BNADyttGYQvQndcmswps6yrCApMWUT8N8qGclLUm6EwrVAkNN2x3sVjB8QR5KhIC5s3IqAGzWjymRr/CalgrsHwIcxC+3ABXOq59DndYaS8lZTk+a1ESaQl6wmpj+8sVNv6Sobx/+Ka8xFYETM77m4KKzA6UHuKQbw7W+k32hqiYPWjsitUUeZJUHAAsd5mE4jA4hTwJuhZNH9LdzIaIcN6C0XHD7qS5lLVSG/TJpMj+iCzfD17OJz2qfw+9QHIkBrecmvBg6g1+I7uH2F2pXwpbDFEMGpNuH992DSADoDMoqJ5BNm6rjPDvpeGjvYJuy8ztatfXoV4jmEomIfdqWNzqcayMC1VQPHqsngt7OOs6x/twACLyuNrmLq4KvAN79lAu3ERwyDuKwUervaMzR7Ec9sP8A9UZ0JorgyYwji24Yf2lo1jgsa5M6yqwcAvIH0sU=
+  dry-run: true
 
