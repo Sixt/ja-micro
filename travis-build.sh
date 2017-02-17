@@ -7,11 +7,7 @@ TRAVIS_TAG=`git tag --contains`
 
 if ([ -n "${TRAVIS_TAG}" ]); then
   echo "Running release build"
-  ./gradlew release -Prelease.useAutomaticVersion=true -Prelease.releaseVersion="$TRAVIS_TAG" -x preTagCommit -x createReleaseTag -x checkCommitNeeded -x commitNewVersion
-  git remote set-url origin https://${GITHUB_API_KEY}:github.com/Sixt/ja-micro.git
-  git add gradle.properties
-  git commit -m "Automatic version bump after release"
-  git push origin
+  ./gradlew build bintrayUpload
 else
   echo "Running CI build"
   ./gradlew build
