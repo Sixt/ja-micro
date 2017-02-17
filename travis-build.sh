@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# Travis-CI builds
 TRAVIS_TAG=`git tag --contains`
 
 if ([ -n "${TRAVIS_TAG}" ]); then
