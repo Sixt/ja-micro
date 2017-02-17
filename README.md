@@ -16,7 +16,7 @@ capabilities and methodologies, but they are indeed compatible.
 The framework takes care of many of the concerns so that developers can simply 
 focus on the functionality of their services instead.
 
-See the wiki to get started.
+[See the wiki](https://github.com/Sixt/ja-micro/wiki) to get started.
 
 ## Features ##
 
