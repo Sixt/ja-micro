@@ -13,44 +13,75 @@
 package com.sixt.service.framework.json;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.sixt.service.framework.rpc.RpcCallException;
-import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletResponse;
+import java.time.Instant;
 
 public class JsonUtil {
 
-    public static JsonRpcResponse parseJsonRpcResponse(String rawResponse) {
-        JsonParser parser = new JsonParser();
-        JsonObject response = parser.parse(rawResponse).getAsJsonObject();
-        JsonElement id = response.get("id");
-        JsonElement errorElement = response.get("error");
-        int responseStatus = HttpServletResponse.SC_OK;
-        String error;
-        if (! (errorElement instanceof JsonNull)) {
-            if (errorElement instanceof JsonObject) {
-                error = errorElement.toString();
-                // try parsing it into RpcCallException to get the HttpStatus from there
-                RpcCallException rpcEx = RpcCallException.fromJson(error);
-                if (rpcEx != null) {
-                    responseStatus = rpcEx.getCategory().getHttpStatus();
-                    JsonElement resultElement = response.get("result");
-                    return new JsonRpcResponse(id, resultElement == null ? JsonNull.INSTANCE : resultElement,
-                            errorElement, responseStatus);
-                }
+    private static final Logger logger = LoggerFactory.getLogger(JsonUtil.class);
+
+    public int extractInteger(JsonObject json, String name, int defaultValue) {
+        if (json != null) {
+            int dotIndex = name.indexOf('.');
+            if (dotIndex > 0) {
+                String baseName = name.substring(0, dotIndex);
+                JsonElement childElement = json.get(baseName);
+                return extractInteger((JsonObject) childElement, name.substring(dotIndex + 1), defaultValue);
             }
-            error = errorElement.getAsString();
-            if (StringUtils.isNotBlank(error)) {
-                responseStatus = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+            JsonElement element = json.get(name);
+            if (element != null && ! element.isJsonNull()) {
+                return element.getAsInt();
             }
         }
+        return defaultValue;
+    }
 
-        JsonElement resultElement = response.get("result");
-        return new JsonRpcResponse(id, resultElement == null ? JsonNull.INSTANCE : resultElement,
-                errorElement, responseStatus);
+    public String extractString(JsonObject json, String name) {
+        if (json != null) {
+            int dotIndex = name.indexOf('.');
+            if (dotIndex > 0) {
+                String baseName = name.substring(0, dotIndex);
+                JsonElement childElement = json.get(baseName);
+                return extractString((JsonObject) childElement, name.substring(dotIndex + 1));
+            }
+            JsonElement element = json.get(name);
+            if (element != null && ! element.isJsonNull()) {
+                return element.getAsString();
+            }
+        }
+        return null;
+    }
+
+    public long extractTimestamp(JsonObject json, String name) {
+        String timestamp = extractString(json, name);
+        if (timestamp != null) {
+            try {
+                Instant instant = Instant.parse(timestamp);
+                return instant.toEpochMilli();
+            } catch (Exception ex) {
+                logger.info("Invalid timestamp: {}", timestamp);
+            }
+        }
+        return 0;
+    }
+
+    public double extractDouble(JsonObject json, String name, int defaultValue) {
+        if (json != null) {
+            int dotIndex = name.indexOf('.');
+            if (dotIndex > 0) {
+                String baseName = name.substring(0, dotIndex);
+                JsonElement childElement = json.get(baseName);
+                return extractDouble((JsonObject) childElement, name.substring(dotIndex + 1), defaultValue);
+            }
+            JsonElement element = json.get(name);
+            if (element != null && ! element.isJsonNull()) {
+                return element.getAsDouble();
+            }
+        }
+        return defaultValue;
     }
 
 }

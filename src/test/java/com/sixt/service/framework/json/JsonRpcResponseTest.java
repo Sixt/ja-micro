@@ -13,8 +13,12 @@
 package com.sixt.service.framework.json;
 
 import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import org.junit.Test;
+
+import javax.servlet.http.HttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,5 +31,48 @@ public class JsonRpcResponseTest {
         assertThat(response.getId()).isEqualTo(new JsonPrimitive(42));
         assertThat(response.toString()).contains("[id=42,result=null,error=\"none\"]");
     }
+
+    @Test
+    public void verifyParseResponse() {
+        String input = "{\"error\":\"errror\",\"result\":{\"foo\":\"bar\"}}";
+        JsonRpcResponse response = JsonRpcResponse.fromString(input);
+        assertThat(response.getError().getAsString()).isEqualTo("errror");
+        assertThat(response.getResult().toString()).isEqualTo("{\"foo\":\"bar\"}");
+        assertThat(response.getStatusCode()).isEqualTo(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+
+    @Test
+    public void testUtfEncoding() {
+        String input = "{\"name\":\"kr\\u00F6\\u00FC\\u00E4mer\"}";
+        JsonParser parser = new JsonParser();
+        JsonObject obj = (JsonObject) parser.parse(input);
+        assertThat(obj.get("name").getAsString()).isEqualTo("kröüämer");
+    }
+
+    @Test
+    public void testJsonResponseWithRpcException() {
+        String jsonRpcException = "{\"category\":400,\"message\":\"You fool!\"," +
+                "\"source\":\"com.sixt.service.foobar\",\"code\":\"SERVICE_PROTOBUF_ENUM\"," +
+                "\"data\":\"my data\",\"retriable\":true}";
+        String input = "{\"error\":" + jsonRpcException + ",\"result\":{\"foo\":\"bar\"}}";
+        JsonRpcResponse response = JsonRpcResponse.fromString(input);
+        assertThat(response.getError()).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpServletResponse.SC_BAD_REQUEST);
+    }
+
+    @Test
+    public void testJsonResponseWithSuccessCode() {
+        String input = "{\"error\":\"\",\"result\":{\"foo\":\"bar\"}}";
+        JsonRpcResponse response = JsonRpcResponse.fromString(input);
+        assertThat(response.getStatusCode()).isEqualTo(HttpServletResponse.SC_OK);
+    }
+
+    @Test
+    public void testJsonArrayError() {
+        String input = "{\"error\":\"[{},{}]\",\"result\":{\"foo\":\"bar\"}}";
+        JsonRpcResponse response = JsonRpcResponse.fromString(input);
+        assertThat(response.getStatusCode()).isEqualTo(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+
 
 }

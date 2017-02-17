@@ -19,11 +19,13 @@ public class KafkaTopicInfo {
     protected String topic;
     protected int partition;
     protected long offset;
+    protected String key;
 
-    public KafkaTopicInfo(String topic, int partition, long offset) {
+    public KafkaTopicInfo(String topic, int partition, long offset, String key) {
         this.topic = topic;
         this.partition = partition;
         this.offset = offset;
+        this.key = key;
     }
 
     public String getTopic() {
@@ -40,6 +42,10 @@ public class KafkaTopicInfo {
 
     public TopicPartition getTopicPartition() {
         return new TopicPartition(topic, partition);
+    }
+
+    public String getKey() {
+        return key;
     }
 
 }

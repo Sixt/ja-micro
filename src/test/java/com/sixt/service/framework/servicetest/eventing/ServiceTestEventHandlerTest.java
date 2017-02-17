@@ -86,7 +86,7 @@ public class ServiceTestEventHandlerTest {
     @Test
     public void getAllJsonEvents_EventsPresent() {
         eventHandler.kafkaSubscriber = mock(KafkaSubscriber.class);
-        eventHandler.eventReceived(getOneTestEventBody(), new KafkaTopicInfo("topic", 0, 0));
+        eventHandler.eventReceived(getOneTestEventBody(), new KafkaTopicInfo("topic", 0, 0, null));
 
         List<JsonObject> jsonEventMessages = eventHandler.getAllJsonEvents();
 
@@ -99,7 +99,7 @@ public class ServiceTestEventHandlerTest {
     @Test
     public void getEventsOfType_EventsPresent() {
         eventHandler.kafkaSubscriber = mock(KafkaSubscriber.class);
-        eventHandler.eventReceived(getOneTestEventBody(), new KafkaTopicInfo("topic", 0, 0));
+        eventHandler.eventReceived(getOneTestEventBody(), new KafkaTopicInfo("topic", 0, 0, null));
 
         List<TestEvent.OneTestEvent> foundEvents = eventHandler.getEventsOfType(ONE_TEST_EVENT_NAME, TestEvent.OneTestEvent.class);
         assertThat(foundEvents.size()).isEqualTo(1);
@@ -109,7 +109,7 @@ public class ServiceTestEventHandlerTest {
     @Test
     public void getEvent_EventsPresent() {
         eventHandler.kafkaSubscriber = mock(KafkaSubscriber.class);
-        eventHandler.eventReceived(getOneTestEventBody(), new KafkaTopicInfo("topic", 0, 0));
+        eventHandler.eventReceived(getOneTestEventBody(), new KafkaTopicInfo("topic", 0, 0, null));
 
         TestEvent.OneTestEvent foundEvent = eventHandler.getEvent(ONE_TEST_EVENT_NAME, TestEvent.OneTestEvent.class,
                 (TestEvent.OneTestEvent e) -> e.getVehicleId().equals(VEHICLE_ID), 500);
@@ -121,7 +121,7 @@ public class ServiceTestEventHandlerTest {
     @Test
     public void getExpectedEvents_EventsPresent() {
         eventHandler.kafkaSubscriber = mock(KafkaSubscriber.class);
-        eventHandler.eventReceived(getOneTestEventBody(), new KafkaTopicInfo("topic", 0, 0));
+        eventHandler.eventReceived(getOneTestEventBody(), new KafkaTopicInfo("topic", 0, 0, null));
 
         Map<String, Class> expectedEvents = new HashMap<>();
         expectedEvents.put(ONE_TEST_EVENT_NAME, TestEvent.OneTestEvent.class);

@@ -13,8 +13,14 @@
 package com.sixt.service.framework.json;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.sixt.service.framework.rpc.RpcCallException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import javax.servlet.http.HttpServletResponse;
 
 public class JsonRpcResponse {
 
@@ -52,6 +58,36 @@ public class JsonRpcResponse {
         return builder.toString();
     }
 
+    public static JsonRpcResponse fromString(String rawResponse) {
+        JsonParser parser = new JsonParser();
+        JsonObject response = parser.parse(rawResponse).getAsJsonObject();
+        JsonElement id = response.get("id");
+        JsonElement errorElement = response.get("error");
+        int responseStatus = HttpServletResponse.SC_OK;
+        String error;
+        if (! (errorElement instanceof JsonNull)) {
+            if (errorElement instanceof JsonObject) {
+                error = errorElement.toString();
+                // try parsing it into RpcCallException to get the HttpStatus from there
+                RpcCallException rpcEx = RpcCallException.fromJson(error);
+                if (rpcEx != null) {
+                    responseStatus = rpcEx.getCategory().getHttpStatus();
+                    JsonElement resultElement = response.get("result");
+                    return new JsonRpcResponse(id, resultElement == null ? JsonNull.INSTANCE : resultElement,
+                            errorElement, responseStatus);
+                }
+            }
+            error = errorElement.getAsString();
+            if (StringUtils.isNotBlank(error)) {
+                responseStatus = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+            }
+        }
+
+        JsonElement resultElement = response.get("result");
+        return new JsonRpcResponse(id, resultElement == null ? JsonNull.INSTANCE : resultElement,
+                errorElement, responseStatus);
+    }
+
     public JsonElement getId() {
         return id;
     }
@@ -79,4 +115,5 @@ public class JsonRpcResponse {
     public int getStatusCode() { return statusCode; }
 
     public void setStatusCode(int statusCode) { this.statusCode = statusCode; }
+
 }

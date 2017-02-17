@@ -14,53 +14,34 @@ package com.sixt.service.framework.json;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.assertj.core.data.Percentage;
 import org.junit.Test;
-
-import javax.servlet.http.HttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class JsonUtilTest {
 
-    @Test
-    public void verifyParseResponse() {
-        String input = "{\"error\":\"errror\",\"result\":{\"foo\":\"bar\"}}";
-        JsonRpcResponse response = JsonUtil.parseJsonRpcResponse(input);
-        assertThat(response.getError().getAsString()).isEqualTo("errror");
-        assertThat(response.getResult().toString()).isEqualTo("{\"foo\":\"bar\"}");
-        assertThat(response.getStatusCode()).isEqualTo(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    }
+    private JsonUtil jsonUtil = new JsonUtil();
 
     @Test
-    public void testUtfEncoding() {
-        String input = "{\"name\":\"kr\\u00F6\\u00FC\\u00E4mer\"}";
-        JsonParser parser = new JsonParser();
-        JsonObject obj = (JsonObject) parser.parse(input);
-        assertThat(obj.get("name").getAsString()).isEqualTo("kröüämer");
+    public void extractFieldsTest() {
+        String event = "{\"meta\":{\"name\":\"OneVehicleDynamicData\",\"timestamp\":" +
+                "\"2017-02-14T10:20:37.629Z\",\"grouping\":\"OneVehicleFinderData\"," +
+                "\"distribution_key\":\"665292e8-6a3b-4702-9666-b5624d6c8320\"},\"position\":{" +
+                "\"latitude\":48.042999267578125,\"longitude\":11.510173797607422,\"foo\":7}," +
+                "\"vehicle_id\":\"abcd\",\"fuel_level\":999," +
+                "\"charge_level\":50.0,\"odometer\":12345}";
+        JsonObject json = (JsonObject) new JsonParser().parse(event);
+        assertThat(jsonUtil.extractInteger(json, "odometer", -1)).isEqualTo(12345);
+        assertThat(jsonUtil.extractDouble(json, "charge_level", -1))
+                .isCloseTo(50, Percentage.withPercentage(1));
+        assertThat(jsonUtil.extractString(json, "vehicle_id")).isEqualTo("abcd");
+
+        //check dot-notation paths
+        assertThat(jsonUtil.extractInteger(json, "position.foo", -1)).isEqualTo(7);
+        assertThat(jsonUtil.extractDouble(json, "position.latitude", 0))
+                .isCloseTo(48.043, Percentage.withPercentage(1));
+        assertThat(jsonUtil.extractString(json, "meta.name")).isEqualTo("OneVehicleDynamicData");
     }
 
-    @Test
-    public void testJsonResponseWithRpcException() {
-        String jsonRpcException = "{\"category\":400,\"message\":\"You fool!\"," +
-                "\"source\":\"com.sixt.service.foobar\",\"code\":\"SERVICE_PROTOBUF_ENUM\"," +
-                "\"data\":\"my data\",\"retriable\":true}";
-        String input = "{\"error\":" + jsonRpcException + ",\"result\":{\"foo\":\"bar\"}}";
-        JsonRpcResponse response = JsonUtil.parseJsonRpcResponse(input);
-        assertThat(response.getError()).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(HttpServletResponse.SC_BAD_REQUEST);
-    }
-
-    @Test
-    public void testJsonResponseWithSuccessCode() {
-        String input = "{\"error\":\"\",\"result\":{\"foo\":\"bar\"}}";
-        JsonRpcResponse response = JsonUtil.parseJsonRpcResponse(input);
-        assertThat(response.getStatusCode()).isEqualTo(HttpServletResponse.SC_OK);
-    }
-
-    @Test
-    public void testJsonArrayError() {
-        String input = "{\"error\":\"[{},{}]\",\"result\":{\"foo\":\"bar\"}}";
-        JsonRpcResponse response = JsonUtil.parseJsonRpcResponse(input);
-        assertThat(response.getStatusCode()).isEqualTo(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    }
 }

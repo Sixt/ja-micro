@@ -14,7 +14,6 @@ package com.sixt.service.framework.protobuf;
 
 import com.google.common.primitives.Ints;
 import com.sixt.service.framework.json.JsonRpcResponse;
-import com.sixt.service.framework.json.JsonUtil;
 import com.sixt.service.framework.rpc.RpcCallException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +99,7 @@ public class ProtobufRpcResponse {
 
     private void readRpcError(String data) {
         try {
-            JsonRpcResponse json = JsonUtil.parseJsonRpcResponse(data);
+            JsonRpcResponse json = JsonRpcResponse.fromString(data);
             this.errorMessage = json.getError().toString();
         } catch (Exception ex) {
             logger.warn("Caught exception parsing response");

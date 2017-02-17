@@ -16,7 +16,7 @@ import com.google.gson.JsonArray;
 import com.google.inject.Inject;
 import com.google.protobuf.Message;
 import com.sixt.service.framework.json.JsonRpcRequest;
-import com.sixt.service.framework.json.JsonUtil;
+import com.sixt.service.framework.json.JsonRpcResponse;
 import com.sixt.service.framework.protobuf.ProtobufRpcRequest;
 import com.sixt.service.framework.protobuf.ProtobufRpcResponse;
 import com.sixt.service.framework.protobuf.ProtobufUtil;
@@ -89,7 +89,7 @@ public class RpcClient<RESPONSE extends Message> {
         String rawResponse = rpcResponse.getContentAsString();
         logger.debug("Json response from the service: {}", rawResponse);
 
-        return JsonUtil.parseJsonRpcResponse(rawResponse).getResult().getAsString();
+        return JsonRpcResponse.fromString(rawResponse).getResult().getAsString();
     }
 
     @SuppressWarnings("unchecked")
