@@ -32,6 +32,7 @@ import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings({"StatementWithEmptyBody", "unchecked"})
 public class ProtobufUtil {
 
     public static final int MAX_HEADER_CHUNK_SIZE = 1000;
@@ -56,6 +57,18 @@ public class ProtobufUtil {
     }
 
     public static <TYPE extends Message> TYPE jsonToProtobuf(String request, Class<TYPE> messageClass) {
+        if (request == null) {
+            return null;
+        } else if ("{}".equals(request)) {
+            try {
+                TYPE.Builder builder = getBuilder(messageClass);
+                return (TYPE) builder.getDefaultInstanceForType();
+            } catch (Exception e) {
+                logger.info("Error building protobuf object of type {} from json: {}",
+                        messageClass.getName(), request);
+            }
+        }
+
         try {
             TYPE.Builder builder = getBuilder(messageClass);
             JsonFormat formatter = new JsonFormat();
@@ -63,6 +76,8 @@ public class ProtobufUtil {
                 ByteArrayInputStream stream = new ByteArrayInputStream(request.getBytes());
                 formatter.merge(stream, builder);
             } catch (IOException e) {
+                logger.info("Error building protobuf object of type {} from json: {}",
+                        messageClass.getName(), request);
             }
             return (TYPE) builder.build();
         } catch (Exception e) {
