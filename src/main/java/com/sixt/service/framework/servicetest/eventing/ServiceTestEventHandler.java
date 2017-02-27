@@ -37,23 +37,25 @@ public class ServiceTestEventHandler implements EventReceivedCallback<String> {
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceTestEventHandler.class);
 
-    private static final String EVENTS = "events";
     private static final String GROUP_ID = "service-integration-test";
     private static final int TIMEOUT = 30;
-
-    @VisibleForTesting
-    protected KafkaSubscriber kafkaSubscriber;
-
-    private ConcurrentLinkedQueue<JsonObject> readEvents = new ConcurrentLinkedQueue<>();
-
     private final static int POLL_TIME = 200;
     private final static int CORE_POOL_SIZE = 1;
     private final static int MAX_POOL_SIZE = 1;
     private final static int KEEP_ALIVE_TIME = 15;
 
+    private final KafkaSubscriberFactory subscriberFactory;
+    @VisibleForTesting
+    protected KafkaSubscriber kafkaSubscriber;
+    private ConcurrentLinkedQueue<JsonObject> readEvents = new ConcurrentLinkedQueue<>();
+
     @Inject
     public ServiceTestEventHandler(KafkaSubscriberFactory kafkaFactory) {
-        this.kafkaSubscriber = kafkaFactory.newBuilder(EVENTS, this)
+        this.subscriberFactory = kafkaFactory;
+    }
+
+    public void initialize(String topic) {
+        this.kafkaSubscriber = subscriberFactory.newBuilder(topic, this)
                 .withPollTime(POLL_TIME)
                 .withGroupId(GROUP_ID)
                 .withThreadPool(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME)

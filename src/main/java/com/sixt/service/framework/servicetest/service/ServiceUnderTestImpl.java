@@ -44,8 +44,20 @@ public class ServiceUnderTestImpl implements ServiceUnderTest {
     private HttpCommandProxy httpCommandProxy;
     private LoadBalancer loadBalancer;
 
-    public ServiceUnderTestImpl(String serviceName, boolean useEventHandler) {
+    public ServiceUnderTestImpl(String serviceName) {
+        this(serviceName, false, null);
+    }
 
+    public ServiceUnderTestImpl(String serviceName, String kafkaTopic) {
+        this(serviceName, true, kafkaTopic);
+    }
+
+    @Deprecated //if you need eventing, please use the form that specifies the topic, else the 1-arg ctor
+    public ServiceUnderTestImpl(String serviceName, boolean useEventHandler) {
+        this(serviceName, useEventHandler, "events");
+    }
+
+    private ServiceUnderTestImpl(String serviceName, boolean useEventHandler, String kafkaTopic) {
         TestInjectionModule baseModule = new TestInjectionModule(serviceName);
         ServiceProperties serviceProperties = baseModule.getServiceProperties();
         Injector injector = Guice.createInjector(baseModule, new ServiceRegistryModule(serviceProperties));
@@ -66,6 +78,7 @@ public class ServiceUnderTestImpl implements ServiceUnderTest {
 
         if (useEventHandler) {
             eventHandler = injector.getInstance(ServiceTestEventHandler.class);
+            eventHandler.initialize(kafkaTopic);
         }
     }
 
