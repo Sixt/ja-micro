@@ -154,7 +154,7 @@ dependencies { //achtung: order does matter!
     compile 'com.jcabi:jcabi-manifests:1.1'
 
     //migrate database schemas
-    compile 'org.flywaydb:flyway-core:4.0.3'
+    compile 'org.flywaydb:flyway-core:4.1.2'
 
     //kafka
     compile "org.apache.kafka:kafka-clients:$versions.kafka"
