@@ -13,6 +13,7 @@
 package com.sixt.service.framework.rpc;
 
 import com.google.gson.*;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,12 +28,13 @@ public class RpcCallException extends Exception {
 
     private static final Logger logger = LoggerFactory.getLogger(RpcCallException.class);
 
-    public static final String CATEGORY = "category";
-    public static final String MESSAGE = "message";
-    public static final String SOURCE = "source";
-    public static final String CODE = "code";
-    public static final String DATA = "data";
-    public static final String RETRIABLE = "retriable";
+    private static final String CATEGORY = "category";
+    private static final String MESSAGE = "message";
+    private static final String SOURCE = "source";
+    private static final String CODE = "code";
+    private static final String DATA = "data";
+    private static final String RETRIABLE = "retriable";
+    private static final String DETAIL = "detail";
 
     private static Map<Integer, Category> cache = new HashMap<>();
 
@@ -152,8 +154,8 @@ public class RpcCallException extends Exception {
             JsonElement rawObject = parser.parse(json);
             if (rawObject instanceof JsonObject) {
                 JsonObject object = (JsonObject) rawObject;
-                Category category = Category.fromStatus(object.get(CATEGORY).getAsInt());
-                String message = object.get(MESSAGE).getAsString();
+                Category category = getCategory(object);
+                String message = getMessage(object);
                 RpcCallException retval = new RpcCallException(category, message);
                 JsonElement element = object.get(SOURCE);
                 if (element != null && !(element instanceof JsonNull)) {
@@ -179,6 +181,27 @@ public class RpcCallException extends Exception {
             logger.warn("Caught exception parsing RpcCallException: " + json, ex);
         }
         return null;
+    }
+
+    private static String getMessage(JsonObject object) {
+        String message = StringUtils.EMPTY;
+        if (object.has(MESSAGE)) {
+            message = object.get(MESSAGE).getAsString();
+        } else if (object.has(DETAIL)) {
+            message = object.get(DETAIL).getAsString();
+        }
+        return message;
+    }
+
+    private static Category getCategory(JsonObject object) {
+        // if no category can be found we use internal server error
+        Category category = Category.InternalServerError;
+        if (object.has(CATEGORY)) {
+            category = Category.fromStatus(object.get(CATEGORY).getAsInt());
+        } else if (object.has(CODE)) {
+            category = Category.fromStatus(object.get(CODE).getAsInt());
+        }
+        return category;
     }
 
 }
