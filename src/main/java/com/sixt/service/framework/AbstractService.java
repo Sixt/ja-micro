@@ -150,7 +150,6 @@ public abstract class AbstractService {
     }
 
     public void bootstrapComplete() throws InterruptedException {
-        initializeKafka();
         startupComplete.set(true);
         injector.getInstance(RpcServlet.class).serveRequests();
         jettyServer.join();
@@ -286,13 +285,6 @@ public abstract class AbstractService {
             LoadBalancerFactory lbFactory = localInjector.getInstance(LoadBalancerFactory.class);
             lbFactory.initialize(provider);
         }
-    }
-
-    public void initializeKafka() {
-        KafkaSubscriberFactory subscriberFactory = injector.getInstance(KafkaSubscriberFactory.class);
-        subscriberFactory.initialize();
-        KafkaPublisherFactory publisherFactory = injector.getInstance(KafkaPublisherFactory.class);
-        publisherFactory.initialize();
     }
 
     void setServiceRegistryPlugins(List<String> serviceRegistryPlugins) {
