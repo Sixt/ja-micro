@@ -72,7 +72,7 @@ public class JsonHandler extends RpcHandler {
             try {
                 rpcRequest = parseRpcRequest(postedContent);
             } catch (IllegalArgumentException iaex) {
-                logger.warn(iaex.getMessage());
+                logger.warn("Error parsing request: " + postedContent, iaex);
                 @SuppressWarnings("ThrowableNotThrown")
                 RpcCallException callException = new RpcCallException(RpcCallException.Category.BadRequest,
                         iaex.getMessage());
