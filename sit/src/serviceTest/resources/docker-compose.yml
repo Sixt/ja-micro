@@ -9,16 +9,18 @@ services:
       - "kafkaServer=kafka:9092"
       - "logLevel=DEBUG"
       - "registry=consul"
+      - "servicePort=42000"
     entrypoint: java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -server -Dfile.encoding=UTF8 -XX:-OmitStackTraceInFastThrow -Djava.security.egd=file:/dev/./urandom -jar /app.jar -registryServer consul:8500
     ports:
       - "5005"
+      - "42000"
     depends_on:
       - zookeeper
       - consul
       - kafka
 
   consul:
-    image: consul:0.7.1
+    image: consul:0.7.5
     command: "agent -server -bootstrap -data-dir=/tmp -client=0.0.0.0 -ui"
     ports:
       - "8500"

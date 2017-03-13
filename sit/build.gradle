@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.bmuschko:gradle-docker-plugin:3.0.0'
+        classpath 'com.bmuschko:gradle-docker-plugin:3.0.5'
         classpath 'org.ajoberstar:grgit:1.7.0'
     }
     configurations.classpath {
@@ -144,10 +144,12 @@ configurations {
 dependencies {
     // Dependency on root project
     compile project(":")
+    compile 'com.kohlschutter.junixsocket:junixsocket-common:2.0.4'
+    compile 'com.kohlschutter.junixsocket:junixsocket-native-common:2.0.4'
 
     serviceIntegrationTestCompile 'org.assertj:assertj-core:3.6.1'
     // https://github.com/palantir/docker-compose-rule
-    serviceIntegrationTestCompile 'com.palantir.docker.compose:docker-compose-rule:0.24.0'
+    serviceIntegrationTestCompile 'com.palantir.docker.compose:docker-compose-rule:0.31.1'
 }
 
 jar {
