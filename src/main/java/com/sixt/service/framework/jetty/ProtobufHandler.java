@@ -23,6 +23,9 @@ import com.sixt.service.framework.protobuf.ProtobufUtil;
 import com.sixt.service.framework.protobuf.RpcEnvelope;
 import com.sixt.service.framework.rpc.RpcCallException;
 import com.sixt.service.framework.util.ReflectionUtil;
+import io.opentracing.Span;
+import io.opentracing.Tracer;
+import io.opentracing.tag.Tags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -32,6 +35,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Map;
 
 @Singleton
 public class ProtobufHandler extends RpcHandler {
@@ -40,8 +44,8 @@ public class ProtobufHandler extends RpcHandler {
 
     @Inject
     public ProtobufHandler(MethodHandlerDictionary handlers, MetricRegistry registry,
-                           RpcHandlerMetrics handlerMetrics, ServiceProperties serviceProperties) {
-        super(handlers, registry, handlerMetrics, serviceProperties);
+                           RpcHandlerMetrics handlerMetrics, ServiceProperties serviceProperties, Tracer tracer) {
+        super(handlers, registry, handlerMetrics, serviceProperties, tracer);
     }
 
     @SuppressWarnings("unchecked")
@@ -50,7 +54,9 @@ public class ProtobufHandler extends RpcHandler {
 
         RpcEnvelope.Request rpcRequest = null;
         String methodName = null;
-        OrangeContext context = new OrangeContext(gatherHttpHeaders(req));
+        Span span = null;
+        Map<String, String> headers = gatherHttpHeaders(req);
+        OrangeContext context = new OrangeContext(headers);
         try {
             MDC.put(OrangeContext.CORRELATION_ID, context.getCorrelationId());
 
@@ -58,6 +64,9 @@ public class ProtobufHandler extends RpcHandler {
             rpcRequest = readRpcEnvelope(in);
 
             methodName = rpcRequest.getServiceMethod();
+
+            span = getSpan(methodName, headers, context);
+
             ServiceMethodHandler handler = handlers.getMethodHandler(methodName);
             if (handler == null) {
                 incrementFailureCounter(methodName, context.getRpcOriginService(),
@@ -86,14 +95,23 @@ public class ProtobufHandler extends RpcHandler {
                     context.getRpcOriginMethod());
         } catch (RpcCallException rpcEx) {
             sendErrorResponse(resp, rpcRequest, rpcEx.toString(), rpcEx.getCategory().getHttpStatus());
+            if (span != null) {
+                Tags.ERROR.set(span, true);
+            }
             incrementFailureCounter(methodName, context.getRpcOriginService(),
                     context.getRpcOriginMethod());
         } catch (Exception ex) {
             logger.warn("Uncaught exception", ex);
             sendErrorResponse(resp, rpcRequest, ex.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            if (span != null) {
+                Tags.ERROR.set(span, true);
+            }
             incrementFailureCounter(methodName, context.getRpcOriginService(),
                     context.getRpcOriginMethod());
         } finally {
+            if (span != null) {
+                span.finish();
+            }
             MDC.remove(OrangeContext.CORRELATION_ID);
         }
     }

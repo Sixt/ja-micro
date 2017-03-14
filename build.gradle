@@ -101,7 +101,8 @@ ext.versions = [
         'kafka'   : '0.10.1.0',
         'guava'   : '20.0',
         'logback' : '1.1.8',
-        'slf4j'   : '1.7.22'
+        'slf4j'   : '1.7.22',
+        'tracing' : '0.20.10'
 ]
 
 dependencies { //achtung: order does matter!
@@ -132,6 +133,10 @@ dependencies { //achtung: order does matter!
 
     //metrics
     compile 'io.dropwizard.metrics:metrics-core:3.1.2'
+
+    //tracing
+    compile "io.opentracing:opentracing-api:$versions.tracing"
+    compile "io.opentracing:opentracing-noop:$versions.tracing"
 
     //Classpath scanner
     compile 'io.github.lukehutch:fast-classpath-scanner:2.0.10'

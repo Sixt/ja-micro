@@ -17,6 +17,12 @@ import com.google.protobuf.Message;
 import com.sixt.service.framework.*;
 import com.sixt.service.framework.metrics.GoTimer;
 import com.sixt.service.framework.rpc.RpcCallException;
+import io.opentracing.Span;
+import io.opentracing.SpanContext;
+import io.opentracing.Tracer;
+import io.opentracing.propagation.Format;
+import io.opentracing.propagation.TextMapExtractAdapter;
+import io.opentracing.tag.Tags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,13 +42,16 @@ public abstract class RpcHandler {
     protected final MetricRegistry metricRegistry;
     protected final RpcHandlerMetrics handlerMetrics;
     protected final ServiceProperties serviceProps;
+    protected final Tracer tracer;
 
     public RpcHandler(MethodHandlerDictionary handlers, MetricRegistry registry,
-                      RpcHandlerMetrics handlerMetrics, ServiceProperties serviceProperties) {
+                      RpcHandlerMetrics handlerMetrics, ServiceProperties serviceProperties,
+                      Tracer tracer) {
         this.handlers = handlers;
         this.metricRegistry = registry;
         this.handlerMetrics = handlerMetrics;
         this.serviceProps = serviceProperties;
+        this.tracer = tracer;
     }
 
     protected void incrementFailureCounter(String methodName, String originService,
@@ -58,6 +67,22 @@ public abstract class RpcHandler {
     protected GoTimer getMethodTimer(String methodName, String originService,
                                      String originMethod) {
         return handlerMetrics.getMethodTimer(methodName, originService, originMethod);
+    }
+
+    protected Span getSpan(String methodName, Map<String, String> headers, OrangeContext context) {
+        Span span = null;
+        if (tracer != null) {
+            SpanContext spanContext = tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(headers));
+            if (spanContext != null) {
+                span = tracer.buildSpan(methodName).asChildOf(spanContext).start();
+            } else {
+                span = tracer.buildSpan(methodName).start();
+            }
+            span.setTag("X-Correlation-Id", context.getCorrelationId());
+            Tags.PEER_SERVICE.set(span, context.getRpcOriginService());
+            context.setTracingContext(span.context());
+        }
+        return span;
     }
 
     protected Map<String, String> gatherHttpHeaders(HttpServletRequest req) {

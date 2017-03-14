@@ -14,6 +14,7 @@ package com.sixt.service.framework.injection;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.jetty.HealthServlet;
 import com.sixt.service.framework.jetty.RpcServlet;
 import org.junit.Test;
@@ -25,7 +26,7 @@ public class OrangeServletModuleTest {
     @Test
     public void testConfigure() {
         OrangeServletModule module = new OrangeServletModule();
-        Injector injector = Guice.createInjector(module);
+        Injector injector = Guice.createInjector(module, new TracingModule(new ServiceProperties()));
         assertThat(injector.getInstance(HealthServlet.class)).isNotNull();
         assertThat(injector.getInstance(RpcServlet.class)).isNotNull();
     }

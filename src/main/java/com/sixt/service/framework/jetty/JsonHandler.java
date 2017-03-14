@@ -27,6 +27,12 @@ import com.sixt.service.framework.json.JsonRpcResponse;
 import com.sixt.service.framework.metrics.GoTimer;
 import com.sixt.service.framework.protobuf.ProtobufUtil;
 import com.sixt.service.framework.rpc.RpcCallException;
+import io.opentracing.Span;
+import io.opentracing.SpanContext;
+import io.opentracing.Tracer;
+import io.opentracing.propagation.Format;
+import io.opentracing.propagation.TextMapExtractAdapter;
+import io.opentracing.tag.Tags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -34,6 +40,7 @@ import org.slf4j.MDC;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Map;
 
 import static com.sixt.service.framework.OrangeContext.CORRELATION_ID;
 import static com.sixt.service.framework.jetty.RpcServlet.TYPE_JSON;
@@ -49,8 +56,8 @@ public class JsonHandler extends RpcHandler {
 
     @Inject
     public JsonHandler(MethodHandlerDictionary handlers, MetricRegistry registry,
-                       RpcHandlerMetrics handlerMetrics, ServiceProperties serviceProperties) {
-        super(handlers, registry, handlerMetrics, serviceProperties);
+                       RpcHandlerMetrics handlerMetrics, ServiceProperties serviceProperties, Tracer tracer) {
+        super(handlers, registry, handlerMetrics, serviceProperties, tracer);
     }
 
     public void doPost(HttpServletRequest req, HttpServletResponse resp) {
@@ -58,8 +65,10 @@ public class JsonHandler extends RpcHandler {
 
         GoTimer methodTimer = null;
         String methodName = null;
+        Span span = null;
         long startTime = System.nanoTime();
-        OrangeContext context = new OrangeContext(gatherHttpHeaders(req));
+        Map<String, String> headers = gatherHttpHeaders(req);
+        OrangeContext context = new OrangeContext(headers);
         try {
 
             MDC.put(CORRELATION_ID, context.getCorrelationId());
@@ -85,6 +94,9 @@ public class JsonHandler extends RpcHandler {
             }
 
             methodName = rpcRequest.getMethod();
+
+            span = getSpan(methodName, headers, context);
+
             methodTimer = getMethodTimer(methodName, context.getRpcOriginService(),
                     context.getRpcOriginMethod());
             startTime = methodTimer.start();
@@ -99,12 +111,18 @@ public class JsonHandler extends RpcHandler {
             incrementSuccessCounter(methodName, context.getRpcOriginService(),
                     context.getRpcOriginMethod());
         } catch (IOException e) {
+            if (span != null) {
+                Tags.ERROR.set(span, true);
+            }
             //TODO: this case doesn't return a response.  should it?
             methodTimer.recordFailure(startTime);
             logger.error("Error handling request", e);
             incrementFailureCounter(methodName, context.getRpcOriginService(),
                     context.getRpcOriginMethod());
         } finally {
+            if (span != null) {
+                span.finish();
+            }
             MDC.remove(CORRELATION_ID);
         }
     }

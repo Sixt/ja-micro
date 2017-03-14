@@ -15,6 +15,7 @@ package com.sixt.service.framework.rpc;
 import com.google.gson.JsonArray;
 import com.google.inject.Inject;
 import com.google.protobuf.Message;
+import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.json.JsonRpcRequest;
 import com.sixt.service.framework.json.JsonRpcResponse;
 import com.sixt.service.framework.protobuf.ProtobufRpcRequest;
@@ -64,16 +65,14 @@ public class RpcClient<RESPONSE extends Message> {
         return callSynchronous(params, null);
     }
 
-    public String callSynchronous(JsonArray params, Map<String, String> orangeContext)
+    public String callSynchronous(JsonArray params, OrangeContext orangeContext)
             throws RpcCallException {
         HttpClientWrapper clientWrapper = loadBalancer.getHttpClientWrapper();
         HttpRequestWrapper balancedPost = clientWrapper.createHttpPost(this);
 
         //set custom headers
         if (orangeContext != null) {
-            orangeContext.forEach((key, value)->{
-                balancedPost.setHeader(key, value);
-            });
+            orangeContext.getProperties().forEach(balancedPost::setHeader);
         }
 
         balancedPost.setHeader("Content-type", TYPE_JSON);
@@ -85,7 +84,7 @@ public class RpcClient<RESPONSE extends Message> {
 
         logger.debug("Sending request of size {}", json.length());
         ContentResponse rpcResponse = clientWrapper.execute(balancedPost,
-                new JsonRpcCallExceptionDecoder());
+                new JsonRpcCallExceptionDecoder(), orangeContext);
         String rawResponse = rpcResponse.getContentAsString();
         logger.debug("Json response from the service: {}", rawResponse);
 
@@ -98,13 +97,13 @@ public class RpcClient<RESPONSE extends Message> {
     }
 
     @SuppressWarnings("unchecked")
-    public RESPONSE callSynchronous(Message request, Map<String, String> orangeContext) throws RpcCallException {
+    public RESPONSE callSynchronous(Message request, OrangeContext orangeContext) throws RpcCallException {
         HttpClientWrapper clientWrapper = loadBalancer.getHttpClientWrapper();
         HttpRequestWrapper balancedPost = clientWrapper.createHttpPost(this);
 
         //set custom headers
         if (orangeContext != null) {
-            orangeContext.forEach(balancedPost::setHeader);
+            orangeContext.getProperties().forEach(balancedPost::setHeader);
         }
 
         balancedPost.setHeader("Content-type", TYPE_OCTET);
@@ -116,7 +115,7 @@ public class RpcClient<RESPONSE extends Message> {
 
         logger.debug("Sending request of size {}", protobufData.length);
         ContentResponse rpcResponse = clientWrapper.execute(balancedPost,
-                new ProtobufRpcCallExceptionDecoder());
+                new ProtobufRpcCallExceptionDecoder(), orangeContext);
         byte[] data = rpcResponse.getContent();
         logger.debug("Received a proto response of size: {}", data.length);
 

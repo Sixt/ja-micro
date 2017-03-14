@@ -65,7 +65,7 @@ public class JsonHandlerTest {
         handlerMetrics = mock(RpcHandlerMetrics.class);
         when(handlerMetrics.getMethodTimer(anyString(), anyString(), anyString())).thenReturn(mock(GoTimer.class));
 
-        servlet = new JsonHandler(handlerDictionary, metricRegistry, handlerMetrics, new ServiceProperties());
+        servlet = new JsonHandler(handlerDictionary, metricRegistry, handlerMetrics, new ServiceProperties(), null);
     }
 
     @Test
@@ -148,7 +148,7 @@ public class JsonHandlerTest {
 
         ServiceProperties props = new ServiceProperties();
         props.addProperty(FeatureFlags.FLAG_EXPOSE_ERRORS_HTTP, "true");
-        servlet = new JsonHandler(handlerDictionary, metricRegistry, handlerMetrics, props);
+        servlet = new JsonHandler(handlerDictionary, metricRegistry, handlerMetrics, props, null);
         servlet.doPost(request, response);
 
         String responseAsString = charArryWriter.toString();
@@ -200,7 +200,7 @@ public class JsonHandlerTest {
         // when
         ServiceProperties props = new ServiceProperties();
         props.addProperty(FeatureFlags.FLAG_EXPOSE_ERRORS_HTTP, "true");
-        servlet = new JsonHandler(handlerDictionary, metricRegistry, handlerMetrics, props);
+        servlet = new JsonHandler(handlerDictionary, metricRegistry, handlerMetrics, props, null);
         servlet.doPost(request, response);
 
         // then

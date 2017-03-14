@@ -12,6 +12,8 @@
 
 package com.sixt.service.framework;
 
+import io.opentracing.SpanContext;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -29,6 +31,7 @@ public class OrangeContext {
 
     private String correlationId;
     private Map<String, String> properties = new HashMap<>();
+    private SpanContext tracingContext;
 
     public OrangeContext() {
         this(null, null);
@@ -81,6 +84,14 @@ public class OrangeContext {
 
     public String getProperty(String key) {
         return properties.get(key.toLowerCase());
+    }
+
+    public SpanContext getTracingContext() {
+        return tracingContext;
+    }
+
+    public void setTracingContext(SpanContext tracingContext) {
+        this.tracingContext = tracingContext;
     }
 
     //TODO: getIntProperty, getLongProperty, etc.

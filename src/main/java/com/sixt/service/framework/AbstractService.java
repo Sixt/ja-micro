@@ -61,6 +61,7 @@ public abstract class AbstractService {
     private List<String> serviceRegistryPlugins;
     private List<String> configurationPlugins;
     private List<String> metricsReporterPlugins;
+    private List<String> tracingPlugins;
 
     public void registerMethodHandlers(List<String> rpcHandlers) {
 
@@ -112,6 +113,8 @@ public abstract class AbstractService {
             registryModule.setServiceRegistryPlugins(serviceRegistryPlugins);
             MetricsReporterModule metricsModule = new MetricsReporterModule();
             metricsModule.setPlugins(metricsReporterPlugins);
+            TracingModule tracingModule = new TracingModule(serviceProperties);
+            tracingModule.setPlugins(tracingPlugins);
 
             List<Module> modules = getGuiceModules();
             if (modules == null) {
@@ -123,6 +126,7 @@ public abstract class AbstractService {
             modules.add(0, new OrangeServletModule());
             modules.add(0, registryModule);
             modules.add(0, metricsModule);
+            modules.add(0, tracingModule);
             modules.add(0, mainModule);
             //^^^ the order of the modules is specifically controlled here
             injector = Guice.createInjector((Module[]) modules.toArray(new Module[0]));
@@ -304,5 +308,9 @@ public abstract class AbstractService {
         if (provider != null) {
             provider.initialize();
         }
+    }
+
+    public void setTracingPlugins(List<String> tracingPlugins) {
+        this.tracingPlugins = tracingPlugins;
     }
 }

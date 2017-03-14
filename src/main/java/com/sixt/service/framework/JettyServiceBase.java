@@ -39,6 +39,7 @@ public class JettyServiceBase {
             List<String> serviceRegistryPlugins = new ArrayList<>();
             List<String> configPlugins = new ArrayList<>();
             List<String> metricsReportingPlugins = new ArrayList<>();
+            List<String> tracingPlugins = new ArrayList<>();
 
             new FastClasspathScanner()
                     .matchClassesWithAnnotation(OrangeMicroservice.class, matchingClass ->
@@ -53,6 +54,8 @@ public class JettyServiceBase {
                             configPlugins.add(matchingClass.getCanonicalName()))
                     .matchClassesWithAnnotation(MetricsReporterPlugin.class, matchingClass ->
                             metricsReportingPlugins.add(matchingClass.getCanonicalName()))
+                    .matchClassesWithAnnotation(TracingPlugin.class, matchingClass ->
+                            tracingPlugins.add(matchingClass.getCanonicalName()))
                     .scan();
 
             if (serviceEntries.isEmpty()) {
@@ -75,6 +78,7 @@ public class JettyServiceBase {
             service.setConfigurationPlugins(configPlugins);
             service.setServiceRegistryPlugins(serviceRegistryPlugins);
             service.setMetricsReporterPlugins(metricsReportingPlugins);
+            service.setTracingPlugins(tracingPlugins);
 
             service.initializeConfigurationManager();
 

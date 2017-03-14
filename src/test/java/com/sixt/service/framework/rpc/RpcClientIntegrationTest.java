@@ -20,6 +20,7 @@ import com.google.inject.Provides;
 import com.sixt.service.framework.FeatureFlags;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.injection.ServiceRegistryModule;
+import com.sixt.service.framework.injection.TracingModule;
 import com.sixt.service.framework.protobuf.FrameworkTest;
 import com.sixt.service.framework.protobuf.RpcEnvelope;
 import org.eclipse.jetty.client.HttpClient;
@@ -71,7 +72,7 @@ public class RpcClientIntegrationTest {
         props.addProperty(ServiceProperties.REGISTRY_SERVER_KEY, "localhost:65432");
         props.addProperty("registry", "consul");
         module.setServiceProperties(props);
-        Injector injector = Guice.createInjector(module, new ServiceRegistryModule(props));
+        Injector injector = Guice.createInjector(module, new ServiceRegistryModule(props), new TracingModule(props));
         httpClient = (MockHttpClient)injector.getInstance(HttpClient.class);
         clientFactory = injector.getInstance(RpcClientFactory.class);
         loadBalancerFactory = injector.getInstance(LoadBalancerFactory.class);
