@@ -200,7 +200,8 @@ public class CircuitBreakerState {
                         logger.trace("Not changing {} to {}, is tripped", fromState, toState);
                     } else {
                         logger.warn("CircuitBreaker wasn't in state {}" +
-                                ", so not changing it to {}", fromState, toState);
+                                ", so not changing it to {}. Current state = {}",
+                                fromState, toState, getState());
                     }
                 }
             } catch (Exception ex) {

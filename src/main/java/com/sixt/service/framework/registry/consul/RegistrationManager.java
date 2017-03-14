@@ -146,12 +146,7 @@ public class RegistrationManager implements Runnable {
             logger.info("Registering shutdown hook for {}", serviceName);
             //low-level http to make fast as possible
             unregisterString = "GET /v1/agent/service/deregister/" + serviceId + " HTTP/1.0\r\n\r\n";
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-                    unregisterService();
-                }
-            });
+            Runtime.getRuntime().addShutdownHook(new Thread(this::unregisterService));
         }
         isShutdownHookRegistered.set(true);
     }

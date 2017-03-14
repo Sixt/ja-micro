@@ -13,6 +13,7 @@
 package com.sixt.service.framework.rpc;
 
 import com.google.inject.Inject;
+import com.sixt.service.framework.FeatureFlags;
 import com.sixt.service.framework.ServiceProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -154,13 +155,15 @@ public class LoadBalancer {
             Set<ServiceEndpoint> seenInstances = new HashSet<>();
             while (true) {
                 ServiceEndpoint retval = getHealthyInstance();
-                if (seenInstances.contains(retval)) {
-                    //we've made a complete loop
-                    return null;
-                }
-                if (set.contains(retval)) {
-                    seenInstances.add(retval);
-                    continue;
+                if (!FeatureFlags.shouldDisableRpcInstanceRetry(serviceProps)) {
+                    if (seenInstances.contains(retval)) {
+                        //we've made a complete loop
+                        return null;
+                    }
+                    if (set.contains(retval)) {
+                        seenInstances.add(retval);
+                        continue;
+                    }
                 }
                 return retval;
             }

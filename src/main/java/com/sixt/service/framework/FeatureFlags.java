@@ -32,5 +32,19 @@ public class FeatureFlags {
         }
     }
 
+    // If there is a failure making an RPC request, normally the request is retried
+    // against other instances if the retry count allow it (and the type of error allows
+    // for retries).  Set to "true" to ensure that the same request isn't resent to
+    // an instance multiple times.
+    // Be aware that this can cause RpcCallException: No available instance...
+    public final static String DISABLE_RPC_INSTANCE_RETRY = "disableRpcInstanceRetry";
+    public static boolean shouldDisableRpcInstanceRetry(ServiceProperties serviceProps) {
+        String value = serviceProps.getProperty(DISABLE_RPC_INSTANCE_RETRY);
+        if (StringUtils.isNotEmpty(value) && Boolean.valueOf(value)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
 }

@@ -144,12 +144,10 @@ configurations {
 dependencies {
     // Dependency on root project
     compile project(":")
-    compile 'com.kohlschutter.junixsocket:junixsocket-common:2.0.4'
-    compile 'com.kohlschutter.junixsocket:junixsocket-native-common:2.0.4'
 
     serviceIntegrationTestCompile 'org.assertj:assertj-core:3.6.1'
     // https://github.com/palantir/docker-compose-rule
-    serviceIntegrationTestCompile 'com.palantir.docker.compose:docker-compose-rule:0.31.1'
+    serviceIntegrationTestCompile 'com.palantir.docker.compose:docker-compose-rule:0.28.1'
 }
 
 jar {
