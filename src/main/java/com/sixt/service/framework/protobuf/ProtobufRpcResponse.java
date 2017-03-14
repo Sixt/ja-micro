@@ -84,7 +84,7 @@ public class ProtobufRpcResponse {
                 sb.append(", ");
             }
             byte b = data[i];
-            if (b > 32 && b <= 127) {
+            if (b > 32) {
                 sb.append((char) data[i]);
             } else {
                 sb.append("0x").append(Integer.toHexString(b & 0x000000ff));
@@ -104,14 +104,6 @@ public class ProtobufRpcResponse {
         } catch (Exception ex) {
             logger.warn("Caught exception parsing response");
         }
-    }
-
-    public String getServiceMethod() {
-        return serviceMethod;
-    }
-
-    public long getSequenceNumber() {
-        return sequenceNumber;
     }
 
     public String getErrorMessage() {

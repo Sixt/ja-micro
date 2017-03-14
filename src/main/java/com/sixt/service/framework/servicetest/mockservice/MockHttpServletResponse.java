@@ -98,11 +98,13 @@ public class MockHttpServletResponse implements HttpServletResponse {
 		throw new NotImplementedException("");
 	}
 
+    @Deprecated
 	@Override
 	public String encodeUrl(String url) {
 		throw new NotImplementedException("");
 	}
 
+    @Deprecated
 	@Override
 	public String encodeRedirectUrl(String url) {
 		throw new NotImplementedException("");
@@ -153,6 +155,7 @@ public class MockHttpServletResponse implements HttpServletResponse {
 		throw new NotImplementedException("");
 	}
 
+	@Deprecated
 	@Override
 	public void setStatus(int sc, String sm) {
 		throw new NotImplementedException("");

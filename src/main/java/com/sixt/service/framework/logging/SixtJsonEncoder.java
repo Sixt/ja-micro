@@ -20,6 +20,7 @@ import net.logstash.logback.encoder.LogstashEncoder;
 
 public class SixtJsonEncoder extends LogstashEncoder {
 
+    @SuppressWarnings("unchecked")
     public SixtJsonEncoder() {
         LoggingEventJsonProviders providers = getFormatter().getProviders();
 

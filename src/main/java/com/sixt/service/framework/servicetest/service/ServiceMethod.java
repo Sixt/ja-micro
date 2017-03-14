@@ -28,9 +28,9 @@ public class ServiceMethod<RESPONSE extends Message> {
     private static final Logger logger = LoggerFactory.getLogger(ServiceMethod.class);
 
     private final Class<RESPONSE> responseClass;
-    private final RpcClient client;
+    private final RpcClient<RESPONSE> client;
 
-    public ServiceMethod(RpcClient client, Class<RESPONSE> responseClass) {
+    public ServiceMethod(RpcClient<RESPONSE> client, Class<RESPONSE> responseClass) {
         this.responseClass = responseClass;
         this.client = client;
     }

@@ -179,6 +179,7 @@ public class DockerComposeHelper {
     }
 
     // Credits to: http://stackoverflow.com/questions/318239/how-do-i-set-environment-variables-from-java
+    @SuppressWarnings("unchecked")
     private static void setEnv(Map<String, String> newEnv) {
         try {
             Class<?> processEnvironmentClass = Class.forName("java.lang.ProcessEnvironment");

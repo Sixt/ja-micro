@@ -76,6 +76,7 @@ public class ConfigurationModule extends AbstractModule {
         boolean found = false;
         for (String plugin : configurationPlugins) {
             try {
+                @SuppressWarnings("unchecked")
                 Class<? extends ConfigurationPlugin> pluginClass =
                         (Class<? extends ConfigurationPlugin>) Class.forName(plugin);
                 ConfigurationPlugin anno = pluginClass.getAnnotation(ConfigurationPlugin.class);

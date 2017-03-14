@@ -49,6 +49,7 @@ public class RpcMethodScanner {
         this.rpcClientFactory = rpcClientFactory;
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, ServiceMethod<Message>> getMethodHandlers(String serviceName) {
         String serviceNameUnderscores = serviceName.replace("-", "_");
 

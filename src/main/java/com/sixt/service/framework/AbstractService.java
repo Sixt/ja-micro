@@ -28,8 +28,6 @@ import com.sixt.service.framework.health.HealthCheckManager;
 import com.sixt.service.framework.injection.*;
 import com.sixt.service.framework.jetty.JettyComposer;
 import com.sixt.service.framework.jetty.RpcServlet;
-import com.sixt.service.framework.kafka.KafkaPublisherFactory;
-import com.sixt.service.framework.kafka.KafkaSubscriberFactory;
 import com.sixt.service.framework.logging.SixtLogbackContext;
 import com.sixt.service.framework.metrics.MetricsReporterProvider;
 import com.sixt.service.framework.registry.ServiceDiscoveryProvider;
@@ -63,8 +61,8 @@ public abstract class AbstractService {
     private List<String> metricsReporterPlugins;
     private List<String> tracingPlugins;
 
+    @SuppressWarnings("unchecked")
     public void registerMethodHandlers(List<String> rpcHandlers) {
-
         for (String className : rpcHandlers) {
             try {
                 Class clazz = Class.forName(className);

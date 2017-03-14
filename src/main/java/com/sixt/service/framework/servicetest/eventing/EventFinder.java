@@ -36,6 +36,7 @@ public class EventFinder implements Callable<Map<String, Message>> {
         this.expectedEvents = expectedEvents;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Map<String, Message> call() throws Exception {
         Map<String, Message> foundEvents = Maps.newHashMap();

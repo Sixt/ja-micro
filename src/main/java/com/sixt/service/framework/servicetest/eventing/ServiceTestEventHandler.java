@@ -44,13 +44,13 @@ public class ServiceTestEventHandler implements EventReceivedCallback<String> {
     private final static int MAX_POOL_SIZE = 1;
     private final static int KEEP_ALIVE_TIME = 15;
 
-    private final KafkaSubscriberFactory subscriberFactory;
+    private final KafkaSubscriberFactory<String> subscriberFactory;
     @VisibleForTesting
     protected KafkaSubscriber kafkaSubscriber;
     private ConcurrentLinkedQueue<JsonObject> readEvents = new ConcurrentLinkedQueue<>();
 
     @Inject
-    public ServiceTestEventHandler(KafkaSubscriberFactory kafkaFactory) {
+    public ServiceTestEventHandler(KafkaSubscriberFactory<String> kafkaFactory) {
         this.subscriberFactory = kafkaFactory;
     }
 
@@ -110,12 +110,13 @@ public class ServiceTestEventHandler implements EventReceivedCallback<String> {
         return foundEvents;
     }
 
+    @SuppressWarnings("unchecked")
     public <T>T getEvent(String eventName, Class eventClass, Predicate<T> predicate, long timeout){
         long start = System.currentTimeMillis();
 
         while (System.currentTimeMillis() - start < timeout){
             //the reversing is for starting with the newest events
-            List<T> events = (List<T>) Lists.reverse(getEventsOfType(eventName, eventClass));
+            List<T> events = Lists.reverse(getEventsOfType(eventName, eventClass));
             for (T event: events) {
                 if(predicate.test(event)){
                     return event;

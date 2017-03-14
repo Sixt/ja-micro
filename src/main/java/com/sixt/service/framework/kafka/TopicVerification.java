@@ -33,6 +33,7 @@ public class TopicVerification {
         props.put("value.deserializer", StringDeserializer.class.getName());
         KafkaConsumer consumer = new KafkaConsumer(props);
         try {
+            @SuppressWarnings("unchecked")
             Map<String, List<PartitionInfo>> topics = consumer.listTopics();
 
             Set<Integer> partitionCount = new HashSet<>();

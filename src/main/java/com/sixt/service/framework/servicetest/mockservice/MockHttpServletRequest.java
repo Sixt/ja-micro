@@ -253,6 +253,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
 		throw new NotImplementedException("");
 	}
 
+	@Deprecated
 	@Override
 	public boolean isRequestedSessionIdFromUrl() {
 		throw new NotImplementedException("");
@@ -409,6 +410,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
 		throw new NotImplementedException("");
 	}
 
+	@Deprecated
 	@Override
 	public String getRealPath(String path) {
 		throw new NotImplementedException("");

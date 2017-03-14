@@ -142,7 +142,6 @@ public class ServiceImpersonator {
         if (publisher == null) {
             publisher = factory.newBuilder(topic).build();
             topicToPublisher.put(topic, publisher);
-            factory.initialize();
         }
 
         String jsonEvent = ProtobufUtil.protobufToJson(event).toString();

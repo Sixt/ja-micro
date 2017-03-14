@@ -68,6 +68,7 @@ public class RpcClientBuilder {
         return this;
     }
 
+    @SuppressWarnings("unchecked") //TODO: generic-ize this class
     public RpcClient build() {
         if (StringUtils.isBlank(serviceName)) {
             throw new IllegalStateException("RpcClientBuilder: Service name was not set");
@@ -77,7 +78,6 @@ public class RpcClientBuilder {
         }
         LoadBalancerFactory lbFactory = injector.getInstance(LoadBalancerFactory.class);
         LoadBalancer loadBalancer = lbFactory.getLoadBalancer(serviceName);
-        //noinspection unchecked
         return new RpcClient(loadBalancer, serviceName, methodName, retries, timeout, responseClass);
     }
 

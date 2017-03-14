@@ -91,6 +91,7 @@ public class ServiceRegistryModule extends AbstractModule {
         boolean found = false;
         for (String plugin : serviceRegistryPlugins) {
             try {
+                @SuppressWarnings("unchecked")
                 Class<? extends ServiceRegistryPlugin> pluginClass =
                         (Class<? extends ServiceRegistryPlugin>) Class.forName(plugin);
                 ServiceRegistryPlugin anno = pluginClass.getAnnotation(ServiceRegistryPlugin.class);
