@@ -22,7 +22,7 @@ public class ProtobufRpcCallExceptionDecoder implements RpcCallExceptionDecoder 
     private static final Logger logger = LoggerFactory.getLogger(ProtobufRpcCallExceptionDecoder.class);
 
     @Override
-    public RpcCallException decodeException(ContentResponse response) {
+    public RpcCallException decodeException(ContentResponse response) throws RpcCallException {
         try {
             if (response != null) {
                 byte[] data = response.getContent();
@@ -34,8 +34,12 @@ public class ProtobufRpcCallExceptionDecoder implements RpcCallExceptionDecoder 
             }
         } catch (Exception ex) {
             logger.warn("Caught exception decoding protobuf response exception", ex);
+            throw new RpcCallException(RpcCallException.Category.InternalServerError,
+                    RpcCallExceptionDecoder.exceptionToString(ex));
         }
         return null;
     }
+
+
 
 }

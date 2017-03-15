@@ -24,17 +24,19 @@ public class JsonRpcCallExceptionDecoder implements RpcCallExceptionDecoder {
     private static final Logger logger = LoggerFactory.getLogger(JsonRpcCallExceptionDecoder.class);
 
     @Override
-    public RpcCallException decodeException(ContentResponse response) {
-        if (response != null) {
-            try {
+    public RpcCallException decodeException(ContentResponse response) throws RpcCallException {
+        try {
+            if (response != null) {
                 JsonObject json = (JsonObject) new JsonParser().parse(response.getContentAsString());
                 JsonElement error = json.get("error");
                 if (error != null) {
                     return RpcCallException.fromJson(error.toString());
                 }
-            } catch (Exception ex) {
-                logger.warn("Caught exception decoding json response exception", ex);
             }
+        } catch (Exception ex) {
+            logger.warn("Caught exception decoding protobuf response exception", ex);
+            throw new RpcCallException(RpcCallException.Category.InternalServerError,
+                    RpcCallExceptionDecoder.exceptionToString(ex));
         }
         return null;
     }

@@ -164,7 +164,7 @@ public class HttpClientWrapper {
     }
 
     private boolean responseWasSuccessful(RpcCallExceptionDecoder decoder,
-                                          ContentResponse response, int lastStatusCode) {
+                                          ContentResponse response, int lastStatusCode) throws RpcCallException {
         if (shouldExposeErrorsToHttp(serviceProps)) {
             return lastStatusCode == 200 && response != null && response.getContent().length > 0;
         } else if (lastStatusCode != 0 && lastStatusCode != 200) {
