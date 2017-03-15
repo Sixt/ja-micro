@@ -28,7 +28,7 @@ public class LoadBalancerTest {
     public void setup() {
         ServiceProperties properties = new ServiceProperties();
         HttpClient httpClient = mock(HttpClient.class);
-        HttpClientWrapper wrapper = new HttpClientWrapper(properties, httpClient, null);
+        HttpClientWrapper wrapper = new HttpClientWrapper(properties, httpClient, null, null);
         lb = new LoadBalancer(properties, wrapper);
     }
 

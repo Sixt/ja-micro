@@ -14,6 +14,7 @@ package com.sixt.service.framework.servicetest.service;
 
 import com.google.gson.JsonObject;
 import com.google.protobuf.Message;
+import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.rpc.LoadBalancer;
 import com.sixt.service.framework.rpc.RpcCallException;
 
@@ -31,7 +32,7 @@ public interface ServiceUnderTest {
      */
     Message sendRequest(String serviceMethod, Message request) throws RpcCallException;
 
-    Message sendRequest(String serviceMethod, Message request, Map<String, String> orangeContext) throws RpcCallException;
+    Message sendRequest(String serviceMethod, Message request, OrangeContext orangeContext) throws RpcCallException;
 
     /**
      * Send an HTTP GET request to the service under test

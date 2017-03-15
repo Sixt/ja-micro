@@ -13,6 +13,7 @@
 package com.sixt.service.framework.servicetest.service;
 
 import com.google.protobuf.Message;
+import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.protobuf.ProtobufRpcRequest;
 import com.sixt.service.framework.protobuf.ProtobufUtil;
 import com.sixt.service.framework.rpc.RpcCallException;
@@ -38,7 +39,7 @@ public class ServiceMethod<RESPONSE extends Message> {
         return sendRequest(request, null);
     }
 
-    public RESPONSE sendRequest(Message request, Map<String, String> orangeContext) throws RpcCallException {
+    public RESPONSE sendRequest(Message request, OrangeContext orangeContext) throws RpcCallException {
 
         ProtobufRpcRequest pbRequest = new ProtobufRpcRequest(client.getMethodName(), request);
 

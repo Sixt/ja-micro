@@ -88,7 +88,7 @@ public class RpcHandlerTest {
         public RpcHandlerTest_RpcHandlerMock(MethodHandlerDictionary handlers,
                                              MetricRegistry registry,
                                              RpcHandlerMetrics handlerMetrics) {
-            super(handlers, registry, handlerMetrics, new ServiceProperties());
+            super(handlers, registry, handlerMetrics, new ServiceProperties(), null);
         }
 
         public Map<String, String> gatherHttpHeaders(HttpServletRequest request) {

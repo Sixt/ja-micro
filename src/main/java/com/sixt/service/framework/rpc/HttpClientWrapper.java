@@ -13,8 +13,13 @@
 package com.sixt.service.framework.rpc;
 
 import com.google.inject.Inject;
+import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.metrics.GoTimer;
+import io.opentracing.Span;
+import io.opentracing.SpanContext;
+import io.opentracing.Tracer;
+import io.opentracing.tag.Tags;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.slf4j.Logger;
@@ -38,13 +43,15 @@ public class HttpClientWrapper {
     protected HttpClient httpClient;
     protected RpcClientMetrics rpcClientMetrics;
     protected RpcClient client;
+    protected Tracer tracer;
 
     @Inject
     public HttpClientWrapper(ServiceProperties serviceProps, HttpClient httpClient,
-                             RpcClientMetrics rpcClientMetrics) {
+                             RpcClientMetrics rpcClientMetrics, Tracer tracer) {
         this.serviceProps = serviceProps;
         this.httpClient = httpClient;
         this.rpcClientMetrics = rpcClientMetrics;
+        this.tracer = tracer;
     }
 
     public HttpRequestWrapper createHttpPost(RpcClient client)
@@ -77,9 +84,11 @@ public class HttpClientWrapper {
         this.loadBalancer = loadBalancer;
     }
 
-    public ContentResponse execute(HttpRequestWrapper request, RpcCallExceptionDecoder decoder)
+    public ContentResponse execute(HttpRequestWrapper request, RpcCallExceptionDecoder decoder,
+                                   OrangeContext orangeContext)
             throws RpcCallException {
         ContentResponse retval = null;
+        Span span = null;
         List<ServiceEndpoint> triedEndpoints = new ArrayList<>();
         RpcCallException lastException;
         int lastStatusCode;
@@ -93,6 +102,18 @@ public class HttpClientWrapper {
                         .and(append("serviceEndpoint", request.getServiceEndpoint()));
                 logger.debug(logMarker,
                         "Sending http request to {}", request.getServiceEndpoint());
+                if (tracer != null) {
+                    SpanContext spanContext = null;
+                    if (orangeContext != null) {
+                        spanContext = orangeContext.getTracingContext();
+                    }
+                    if (spanContext != null) {
+                        span = tracer.buildSpan(request.getMethod()).asChildOf(spanContext).start();
+                    } else {
+                        span = tracer.buildSpan(request.getMethod()).start();
+                    }
+                    Tags.PEER_SERVICE.set(span, loadBalancer.getServiceName());
+                }
                 retval = request.newRequest(httpClient).timeout(client.getTimeout(),
                         TimeUnit.MILLISECONDS).send();
                 logger.debug(logMarker, "Http send completed");
@@ -108,10 +129,17 @@ public class HttpClientWrapper {
 
             //content.length must always be > 0, because we have an envelope
             if (responseWasSuccessful(decoder, retval, lastStatusCode)) {
+                if (span != null) {
+                    span.finish();
+                }
                 methodTimer.recordSuccess(startTime);
                 request.getServiceEndpoint().requestComplete(true);
                 return retval;
             } else {
+                if (span != null) {
+                    Tags.ERROR.set(span, true);
+                    span.finish();
+                }
                 methodTimer.recordFailure(startTime);
                 //4xx errors should not change circuit-breaker state
                 request.getServiceEndpoint().requestComplete(lastStatusCode < 500);

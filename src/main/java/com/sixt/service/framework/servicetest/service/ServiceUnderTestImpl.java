@@ -16,6 +16,7 @@ import com.google.gson.JsonObject;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.protobuf.Message;
+import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.injection.ServiceRegistryModule;
 import com.sixt.service.framework.registry.ServiceDiscoveryProvider;
@@ -88,7 +89,7 @@ public class ServiceUnderTestImpl implements ServiceUnderTest {
     }
 
     @Override
-    public Message sendRequest(String serviceMethod, Message request, Map<String, String> orangeContext) throws RpcCallException {
+    public Message sendRequest(String serviceMethod, Message request, OrangeContext orangeContext) throws RpcCallException {
         ServiceMethod<Message> method = serviceMethods.get(serviceMethod);
         return method.sendRequest(request, orangeContext);
     }
