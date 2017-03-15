@@ -265,7 +265,7 @@ public abstract class AbstractService {
 
         Injector configInjector = Guice.createInjector(configBaseModule,
                 serviceRegistryModule,
-                configurationModule);
+                configurationModule, new TracingModule(serviceProperties));
 
         ConfigurationProvider configProvider = configInjector.getInstance(ConfigurationProvider.class);
         if (configProvider == null) {
