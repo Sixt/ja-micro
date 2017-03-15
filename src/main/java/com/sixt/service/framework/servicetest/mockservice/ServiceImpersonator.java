@@ -19,6 +19,7 @@ import com.sixt.service.framework.MethodHandlerDictionary;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.health.HealthCheckManager;
 import com.sixt.service.framework.injection.ServiceRegistryModule;
+import com.sixt.service.framework.injection.TracingModule;
 import com.sixt.service.framework.kafka.KafkaPublisher;
 import com.sixt.service.framework.kafka.KafkaPublisherFactory;
 import com.sixt.service.framework.protobuf.ProtobufUtil;
@@ -65,7 +66,7 @@ public class ServiceImpersonator {
         serviceProperties.setServiceName(serviceName); //has to be before getting regMgr
         serviceProperties.setServiceInstanceId(UUID.randomUUID().toString());
         serviceProperties.addProperty("registry", "consul");
-        injector = Guice.createInjector(testInjectionModule, new ServiceRegistryModule(serviceProperties));
+        injector = Guice.createInjector(testInjectionModule, new ServiceRegistryModule(serviceProperties), new TracingModule(serviceProperties));
         ServiceDiscoveryProvider provider = injector.getInstance(ServiceDiscoveryProvider.class);
         LoadBalancerFactory lbFactory = injector.getInstance(LoadBalancerFactory.class);
         lbFactory.initialize(provider);
