@@ -19,6 +19,7 @@ import com.google.protobuf.Message;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.injection.ServiceRegistryModule;
+import com.sixt.service.framework.injection.TracingModule;
 import com.sixt.service.framework.registry.ServiceDiscoveryProvider;
 import com.sixt.service.framework.rpc.LoadBalancer;
 import com.sixt.service.framework.rpc.LoadBalancerFactory;
@@ -61,7 +62,8 @@ public class ServiceUnderTestImpl implements ServiceUnderTest {
     private ServiceUnderTestImpl(String serviceName, boolean useEventHandler, String kafkaTopic) {
         TestInjectionModule baseModule = new TestInjectionModule(serviceName);
         ServiceProperties serviceProperties = baseModule.getServiceProperties();
-        Injector injector = Guice.createInjector(baseModule, new ServiceRegistryModule(serviceProperties));
+        Injector injector = Guice.createInjector(baseModule, new ServiceRegistryModule(serviceProperties),
+                new TracingModule(serviceProperties));
 
         ServiceDiscoveryProvider provider = injector.getInstance(ServiceDiscoveryProvider.class);
         LoadBalancerFactory lbFactory = injector.getInstance(LoadBalancerFactory.class);
