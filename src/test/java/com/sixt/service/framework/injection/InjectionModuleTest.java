@@ -13,6 +13,7 @@
 package com.sixt.service.framework.injection;
 
 import com.sixt.service.framework.MethodHandlerDictionary;
+import com.sixt.service.framework.ServiceProperties;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,7 +22,7 @@ public class InjectionModuleTest {
 
     @Test
     public void testSetterAndGetter() {
-        InjectionModule module = new InjectionModule();
+        InjectionModule module = new InjectionModule(new ServiceProperties());
         MethodHandlerDictionary dict = new MethodHandlerDictionary();
         module.setMethodHandlerDictionary(dict);
         assertThat(module.getMethodHandlers()).isEqualTo(dict);

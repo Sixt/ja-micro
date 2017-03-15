@@ -103,9 +103,8 @@ public abstract class AbstractService {
 
     public void initializeGuice() throws Exception {
         if (injector == null) {
-            InjectionModule mainModule = new InjectionModule();
+            InjectionModule mainModule = new InjectionModule(serviceProperties);
             mainModule.setConfigurationManager(configurationManager);
-            mainModule.setServiceProperties(serviceProperties);
             mainModule.setMethodHandlerDictionary(methodHandlers);
             ServiceRegistryModule registryModule = new ServiceRegistryModule(serviceProperties);
             registryModule.setServiceRegistryPlugins(serviceRegistryPlugins);
@@ -255,8 +254,7 @@ public abstract class AbstractService {
             return;
         }
 
-        InjectionModule configBaseModule = new InjectionModule();
-        configBaseModule.setServiceProperties(serviceProperties);
+        InjectionModule configBaseModule = new InjectionModule(serviceProperties);
         configurationManager = new ConfigurationManager(serviceProperties);
         configBaseModule.setConfigurationManager(configurationManager);
 

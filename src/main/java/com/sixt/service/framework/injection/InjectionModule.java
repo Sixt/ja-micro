@@ -16,6 +16,7 @@ import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.sixt.service.framework.FeatureFlags;
 import com.sixt.service.framework.MethodHandlerDictionary;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.configuration.ConfigurationManager;
@@ -31,13 +32,14 @@ public class InjectionModule extends AbstractModule {
 
     private static final Logger logger = LoggerFactory.getLogger(InjectionModule.class);
 
-    private MetricRegistry metricRegistry;
+    private final MetricRegistry metricRegistry;
     private ServiceProperties serviceProperties;
+    private final HttpClient httpClient;
     private MethodHandlerDictionary methodHandlerDictionary;
-    private HttpClient httpClient;
     private ConfigurationManager configurationManager;
 
-    public InjectionModule() {
+    public InjectionModule(ServiceProperties serviceProperties) {
+        this.serviceProperties = serviceProperties;
         metricRegistry = new MetricRegistry();
         JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
         reporter.start();
@@ -70,10 +72,6 @@ public class InjectionModule extends AbstractModule {
         return configurationManager;
     }
 
-    public void setServiceProperties(ServiceProperties serviceProperties) {
-        this.serviceProperties = serviceProperties;
-    }
-
     public void setMethodHandlerDictionary(MethodHandlerDictionary methodHandlerDictionary) {
         this.methodHandlerDictionary = methodHandlerDictionary;
     }
@@ -100,8 +98,8 @@ public class InjectionModule extends AbstractModule {
         HttpClient client = new HttpClient(sslContextFactory);
         client.setFollowRedirects(false);
         client.setMaxConnectionsPerDestination(16);
-        client.setConnectTimeout(100);
-        client.setAddressResolutionTimeout(200);
+        client.setConnectTimeout(FeatureFlags.getHttpConnectTimeout(serviceProperties));
+        client.setAddressResolutionTimeout(FeatureFlags.getHttpAddressResolutionTimeout(serviceProperties));
         //You can set more restrictive timeouts per request, but not less, so
         //  we set the maximum timeout of 1 hour here.
         client.setIdleTimeout(60 * 60 * 1000);

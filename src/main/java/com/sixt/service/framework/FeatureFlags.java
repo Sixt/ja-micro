@@ -47,4 +47,18 @@ public class FeatureFlags {
         }
     }
 
+    public final static String HTTP_CONNECT_TIMEOUT = "httpConnectTimeout";
+    public final static int DEFAULT_HTTP_CONNECT_TIMEOUT = 100;
+    public static int getHttpConnectTimeout(ServiceProperties serviceProps) {
+        return serviceProps.getIntegerProperty(HTTP_CONNECT_TIMEOUT,
+                DEFAULT_HTTP_CONNECT_TIMEOUT);
+    }
+
+    public final static String HTTP_ADDRESS_RESOLUTION_TIMEOUT = "httpAddressResolutionTimeout";
+    public final static int DEFAULT_HTTP_ADDRESS_RESOLUTION_TIMEOUT = 200;
+    public static int getHttpAddressResolutionTimeout(ServiceProperties serviceProps) {
+        return serviceProps.getIntegerProperty(HTTP_ADDRESS_RESOLUTION_TIMEOUT,
+                DEFAULT_HTTP_ADDRESS_RESOLUTION_TIMEOUT);
+    }
+
 }

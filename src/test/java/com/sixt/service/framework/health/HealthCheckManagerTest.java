@@ -29,8 +29,7 @@ public class HealthCheckManagerTest {
 
     @Before
     public void setup() {
-        InjectionModule module = new InjectionModule();
-        module.setServiceProperties(new ServiceProperties());
+        InjectionModule module = new InjectionModule(new ServiceProperties());
         Injector injector = Guice.createInjector(module);
         manager = injector.getInstance(HealthCheckManager.class);
     }
