@@ -6,9 +6,12 @@ option java_multiple_files = false;
 option java_package = "com.sixt.service.test_service.api";
 
 service TestService {
-    rpc GetRandomString(GetRandomStringQuery) returns (RandomStringResponse) {}
-    rpc SlowResponder(GetRandomStringQuery) returns (RandomStringResponse) {}
-    rpc SetHealthCheckStatus(SetHealthCheckStatusCommand) returns (SetHealthCheckStatusResponse) {}
+    rpc GetRandomString (GetRandomStringQuery) returns (RandomStringResponse) {
+    }
+    rpc SlowResponder (GetRandomStringQuery) returns (RandomStringResponse) {
+    }
+    rpc SetHealthCheckStatus (SetHealthCheckStatusCommand) returns (SetHealthCheckStatusResponse) {
+    }
 }
 
 message GetRandomStringQuery {
@@ -26,4 +29,9 @@ message SetHealthCheckStatusCommand {
 
 message SetHealthCheckStatusResponse {
 
+}
+
+message RandomSampleEvent {
+    string id = 1;
+    string message = 2;
 }
