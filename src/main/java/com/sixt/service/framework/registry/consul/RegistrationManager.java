@@ -100,13 +100,15 @@ public class RegistrationManager implements Runnable {
 
     @Override
     public void run() {
+        long sleepDuration = 1000;
         while (! isRegistered.get()) {
             try {
                 attemptRegistration();
                 if (isRegistered.get()) {
                     break;
                 }
-                sleeper.sleepNoException(1000);
+                sleeper.sleepNoException(sleepDuration);
+                sleepDuration += (sleepDuration / 3);
             } catch (Exception ex) {
                 logger.warn("Caught exception attempting service registration", ex);
             }
