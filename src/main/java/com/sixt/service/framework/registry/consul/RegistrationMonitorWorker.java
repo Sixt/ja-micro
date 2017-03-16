@@ -123,15 +123,16 @@ public class RegistrationMonitorWorker implements Runnable {
                 "Calling Consul for health list of {}", serviceName);
 
         ContentResponse httpResponse = null;
-        long backoffTime = 1000;
+        double sleepDuration = (double)1000;
         while (httpResponse == null) {
             try {
                 httpResponse = httpClient.newRequest(requestUrl).send();
             } catch (Exception ex) {
                 logger.error(logMarker,
                         "Error calling Consul", ex);
-                backoffTime += backoffTime / 3;
-                sleeper.sleepNoException(backoffTime);
+
+                sleeper.sleepNoException((long)sleepDuration);
+                sleepDuration = sleepDuration * 1.5;
             }
         }
         List<ConsulHealthEntry> healths = new ArrayList<>();
