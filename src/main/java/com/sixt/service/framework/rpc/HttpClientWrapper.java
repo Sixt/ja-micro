@@ -66,7 +66,7 @@ public class HttpClientWrapper {
         return new HttpRequestWrapper("POST", instance);
     }
 
-    private HttpRequestWrapper createHttpPost(List<ServiceEndpoint> triedEndpoints)
+    private HttpRequestWrapper createHttpPost(HttpRequestWrapper previous, List<ServiceEndpoint> triedEndpoints)
             throws RpcCallException {
         ServiceEndpoint instance = loadBalancer.getHealthyInstanceExclude(triedEndpoints);
         if (instance == null) {
@@ -77,6 +77,7 @@ public class HttpClientWrapper {
         //TODO: There may still be a problem where retries are setting chunked encoding
         // or the content-length gets munged
         HttpRequestWrapper retval =  new HttpRequestWrapper("POST", instance);
+        retval.setHeaders(previous.getHeaders());
         return retval;
     }
 
@@ -149,7 +150,7 @@ public class HttpClientWrapper {
                     throw lastException;
                 }
                 if (tryCount < client.getRetries()) {
-                    request = createHttpPost(triedEndpoints);
+                    request = createHttpPost(request, triedEndpoints);
                 }
             }
             tryCount++;
