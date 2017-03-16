@@ -128,7 +128,7 @@ public class RegistrationMonitorWorker implements Runnable {
             try {
                 httpResponse = httpClient.newRequest(requestUrl).send();
             } catch (Exception ex) {
-                logger.error(logMarker,
+                logger.warn(logMarker,
                         "Error calling Consul", ex);
 
                 sleeper.sleepNoException((long)sleepDuration);
