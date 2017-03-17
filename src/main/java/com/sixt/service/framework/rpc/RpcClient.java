@@ -135,6 +135,10 @@ public class RpcClient<RESPONSE extends Message> {
         return methodName;
     }
 
+    public String getServiceMethodName() {
+        return serviceName + "." + methodName;
+    }
+
     public int getRetries() {
         return retries;
     }

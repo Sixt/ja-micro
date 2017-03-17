@@ -24,7 +24,6 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.slf4j.Marker;
 
 import java.util.ArrayList;
@@ -109,11 +108,10 @@ public class HttpClientWrapper {
                     if (orangeContext != null) {
                         spanContext = orangeContext.getTracingContext();
                     }
-                    String serviceMethod = String.format("%s.%s", client.getServiceName(), client.getMethodName());
                     if (spanContext != null) {
-                        span = tracer.buildSpan(serviceMethod).asChildOf(spanContext).start();
+                        span = tracer.buildSpan(client.getServiceMethodName()).asChildOf(spanContext).start();
                     } else {
-                        span = tracer.buildSpan(serviceMethod).start();
+                        span = tracer.buildSpan(client.getServiceMethodName()).start();
                     }
                     Tags.PEER_SERVICE.set(span, loadBalancer.getServiceName());
                     if (orangeContext != null) {
@@ -186,7 +184,7 @@ public class HttpClientWrapper {
     }
 
     private Marker getRemoteMethod() {
-        return append("method", client.getServiceName() + "." + client.getMethodName());
+        return append("method", client.getServiceMethodName());
     }
 
 }
