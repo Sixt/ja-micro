@@ -98,4 +98,6 @@ public interface ServiceUnderTest {
     void setDefaultRpcClientTimeout(int timeout);
 
     LoadBalancer getLoadBalancer();
+
+    void shutdown();
 }

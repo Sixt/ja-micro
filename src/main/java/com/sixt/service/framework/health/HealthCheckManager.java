@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.sixt.service.framework.FeatureFlags.DEFAULT_HEALTH_CHECK_POLL_INTERVAL;
 import static com.sixt.service.framework.FeatureFlags.HEALTH_CHECK_POLL_INTERVAL;
@@ -44,9 +45,12 @@ public class HealthCheckManager implements Runnable {
     private final String serviceId;
     private final ServiceProperties serviceProps;
     private final HttpClient httpClient;
+    private final AtomicBoolean isShutdown = new AtomicBoolean(false);
+    private ScheduledExecutorService executorService;
     protected Deque<HealthCheckContributor> pollingContributors = new ConcurrentLinkedDeque<>();
     protected Deque<HealthCheckContributor> oneShotContributors = new ConcurrentLinkedDeque<>();
     protected int failingChecksGauge;
+
 
     @Inject
     public HealthCheckManager(MetricBuilderFactory metricBuilderFactory,
@@ -77,8 +81,8 @@ public class HealthCheckManager implements Runnable {
     public void initialize() {
         GoGauge gauge = metricBuilderFactory.newMetric("health_checks").buildGauge();
         gauge.register("failing", () -> failingChecksGauge);
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        executor.scheduleAtFixedRate(this, 0, pollTime, TimeUnit.SECONDS);
+        executorService = Executors.newScheduledThreadPool(1);
+        executorService.scheduleAtFixedRate(this, 0, pollTime, TimeUnit.SECONDS);
     }
 
     @Override
@@ -97,7 +101,9 @@ public class HealthCheckManager implements Runnable {
                         , serviceProps.getServiceName());
             }
         } catch (Exception ex) {
-            logger.warn("Caught exception updating health status", ex);
+            if (!isShutdown.get()) {
+                logger.warn("Caught exception updating health status", ex);
+            }
         }
     }
 
@@ -161,4 +167,8 @@ public class HealthCheckManager implements Runnable {
         return retval;
     }
 
+    public void shutdown() {
+        isShutdown.set(true);
+        executorService.shutdown();
+    }
 }

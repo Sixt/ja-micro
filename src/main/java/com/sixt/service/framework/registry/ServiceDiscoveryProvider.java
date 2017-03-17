@@ -24,4 +24,9 @@ public interface ServiceDiscoveryProvider {
      */
     void monitorService(LoadBalancer lb);
 
+    /**
+     * Allow the registration monitor to shutdown cleanly
+     */
+    void shutdown();
+
 }

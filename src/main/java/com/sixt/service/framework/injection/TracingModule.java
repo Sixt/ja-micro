@@ -60,6 +60,7 @@ public class TracingModule extends AbstractModule {
         return plugin;
     }
 
+    @SuppressWarnings("unchecked")
     private Object findTracingPlugin(Injector injector) {
         Object retval = null;
         String pluginName = serviceProperties.getProperty("tracing");

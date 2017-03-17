@@ -44,6 +44,7 @@ public class ServiceUnderTestImpl implements ServiceUnderTest {
     private ServiceTestEventHandler eventHandler;
     private Map<String, ServiceMethod<Message>> serviceMethods;
     private HttpCommandProxy httpCommandProxy;
+    private LoadBalancerFactory loadBalancerFactory;
     private LoadBalancer loadBalancer;
 
     public ServiceUnderTestImpl(String serviceName) {
@@ -66,9 +67,9 @@ public class ServiceUnderTestImpl implements ServiceUnderTest {
                 new TracingModule(serviceProperties));
 
         ServiceDiscoveryProvider provider = injector.getInstance(ServiceDiscoveryProvider.class);
-        LoadBalancerFactory lbFactory = injector.getInstance(LoadBalancerFactory.class);
-        lbFactory.initialize(provider);
-        loadBalancer = lbFactory.getLoadBalancer(serviceName);
+        loadBalancerFactory = injector.getInstance(LoadBalancerFactory.class);
+        loadBalancerFactory.initialize(provider);
+        loadBalancer = loadBalancerFactory.getLoadBalancer(serviceName);
         loadBalancer.waitForServiceInstance();
 
         RpcClientFactory rpcClientFactory = injector.getInstance(RpcClientFactory.class);
@@ -186,6 +187,11 @@ public class ServiceUnderTestImpl implements ServiceUnderTest {
     @Override
     public LoadBalancer getLoadBalancer() {
         return loadBalancer;
+    }
+
+    @Override
+    public void shutdown() {
+        loadBalancerFactory.shutdown();
     }
 
 }

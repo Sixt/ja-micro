@@ -69,5 +69,10 @@ public class LoadBalancerFactory {
         return loadBalancers.keySet();
     }
 
+    public void shutdown() {
+        if (provider != null) {
+            provider.shutdown();
+        }
+    }
 }
 

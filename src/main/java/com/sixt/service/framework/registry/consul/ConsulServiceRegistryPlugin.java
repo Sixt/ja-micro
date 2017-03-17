@@ -51,4 +51,9 @@ public class ConsulServiceRegistryPlugin implements
         registrationManager.register();
     }
 
+    @Override
+    public void shutdown() {
+        registrationMonitor.shutdown();
+    }
+
 }

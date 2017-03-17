@@ -54,6 +54,7 @@ public class RegistrationMonitorWorker implements Runnable {
     protected LoadBalancer loadbalancer;
     protected ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(2);
     protected AtomicBoolean healthEndpointCalled = new AtomicBoolean(false);
+    protected AtomicBoolean isShutdown = new AtomicBoolean(false);
 
     @Inject
     public RegistrationMonitorWorker(HttpClient httpClient,
@@ -93,7 +94,6 @@ public class RegistrationMonitorWorker implements Runnable {
 
         //TODO: instances = sortByAvailabilityZone(instances);
 
-
         while (true) {
             watchForUpdates();
             if (shutdownSemaphore.tryAcquire()) {
@@ -123,16 +123,17 @@ public class RegistrationMonitorWorker implements Runnable {
                 "Calling Consul for health list of {}", serviceName);
 
         ContentResponse httpResponse = null;
-        double sleepDuration = (double)1000;
+        long sleepDuration = 1000;
         while (httpResponse == null) {
             try {
                 httpResponse = httpClient.newRequest(requestUrl).send();
             } catch (Exception ex) {
-                logger.warn(logMarker,
-                        "Error calling Consul", ex);
-
-                sleeper.sleepNoException((long)sleepDuration);
-                sleepDuration = sleepDuration * 1.5;
+                if (isShutdown.get()) {
+                    return null;
+                }
+                logger.warn(logMarker, "Error calling Consul", ex);
+                sleeper.sleepNoException(sleepDuration);
+                sleepDuration = (long) (sleepDuration * 1.5);
             }
         }
         List<ConsulHealthEntry> healths = new ArrayList<>();
@@ -247,4 +248,8 @@ public class RegistrationMonitorWorker implements Runnable {
         this.loadbalancer = loadbalancer;
     }
 
+    public void shutdown() {
+        shutdownSemaphore.release();
+        isShutdown.set(true);
+    }
 }

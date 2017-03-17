@@ -30,14 +30,10 @@ import com.sixt.service.test_service.api.TestServiceOuterClass.RandomStringRespo
 import com.sixt.service.test_service.api.TestServiceOuterClass.SetHealthCheckStatusCommand;
 import org.eclipse.jetty.client.HttpClient;
 import org.joda.time.Duration;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.Timeout;
 
 import java.util.List;
-import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -69,6 +65,12 @@ public class RandomServiceIntegrationTest {
         serviceImpersonator = new ServiceImpersonator("com.sixt.service.another-service");
 
         testService = new ServiceUnderTestImpl("com.sixt.service.test-service", "events");
+    }
+
+    @AfterClass
+    public static void shutdown() {
+        testService.shutdown();
+        serviceImpersonator.shutdown();
     }
 
     @Test

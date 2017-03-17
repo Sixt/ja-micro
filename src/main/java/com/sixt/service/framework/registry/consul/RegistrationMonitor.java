@@ -59,6 +59,11 @@ public class RegistrationMonitor {
         workers.put(worker, future);
     }
 
+    public void shutdown() {
+        for (RegistrationMonitorWorker worker : workers.keySet()) {
+            worker.shutdown();
+        }
+    }
 }
 
 

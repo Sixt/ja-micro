@@ -54,6 +54,7 @@ public class ServiceImpersonator {
     protected Injector injector;
     protected RpcMethodScanner rpcMethodScanner;
     protected KafkaPublisherFactory factory;
+    protected LoadBalancerFactory loadBalancerFactory;
     private Map<String, KafkaPublisher> topicToPublisher = new HashMap<>();
     private int sleepAfterPublish = SLEEP_AFTER_PUBLISH;
 
@@ -96,11 +97,13 @@ public class ServiceImpersonator {
         }
         healthCheckManager.initialize();
 
-        LoadBalancerFactory lbFactory = injector.getInstance(LoadBalancerFactory.class);
-        lbFactory.getLoadBalancer(serviceName).waitForServiceInstance();
+        loadBalancerFactory = injector.getInstance(LoadBalancerFactory.class);
+        loadBalancerFactory.getLoadBalancer(serviceName).waitForServiceInstance();
     }
 
     public void shutdown() {
+        healthCheckManager.shutdown();
+        loadBalancerFactory.shutdown();
         registrationManager.shutdown();
         messageHandler.shutdown();
     }
