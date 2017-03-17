@@ -24,6 +24,7 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.slf4j.Marker;
 
 import java.util.ArrayList;
@@ -108,12 +109,16 @@ public class HttpClientWrapper {
                     if (orangeContext != null) {
                         spanContext = orangeContext.getTracingContext();
                     }
+                    String serviceMethod = String.format("%s.%s", client.getServiceName(), client.getMethodName());
                     if (spanContext != null) {
-                        span = tracer.buildSpan(request.getMethod()).asChildOf(spanContext).start();
+                        span = tracer.buildSpan(serviceMethod).asChildOf(spanContext).start();
                     } else {
-                        span = tracer.buildSpan(request.getMethod()).start();
+                        span = tracer.buildSpan(serviceMethod).start();
                     }
                     Tags.PEER_SERVICE.set(span, loadBalancer.getServiceName());
+                    if (orangeContext != null) {
+                        span.setTag("X-Correlation-Id", orangeContext.getCorrelationId());
+                    }
                 }
                 retval = request.newRequest(httpClient).timeout(client.getTimeout(),
                         TimeUnit.MILLISECONDS).send();
