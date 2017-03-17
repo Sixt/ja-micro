@@ -117,7 +117,7 @@ public class HttpClientWrapper {
                     }
                     Tags.PEER_SERVICE.set(span, loadBalancer.getServiceName());
                     if (orangeContext != null) {
-                        span.setTag("X-Correlation-Id", orangeContext.getCorrelationId());
+                        span.setTag("correlation_id", orangeContext.getCorrelationId());
                     }
                 }
                 retval = request.newRequest(httpClient).timeout(client.getTimeout(),
