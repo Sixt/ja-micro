@@ -73,6 +73,7 @@ public class TracingModule extends AbstractModule {
         boolean found = false;
         for (String plugin : plugins) {
             try {
+                @SuppressWarnings("unchecked")
                 Class<? extends TracingPlugin> pluginClass = (Class<? extends TracingPlugin>) Class.forName(plugin);
                 TracingPlugin anno = pluginClass.getAnnotation(TracingPlugin.class);
                 if (anno != null && pluginName.equals(anno.name())) {

@@ -78,7 +78,7 @@ public abstract class RpcHandler {
             } else {
                 span = tracer.buildSpan(methodName).start();
             }
-            span.setTag("X-Correlation-Id", context.getCorrelationId());
+            span.setTag("correlation_id", context.getCorrelationId());
             Tags.PEER_SERVICE.set(span, context.getRpcOriginService());
             context.setTracingContext(span.context());
         }

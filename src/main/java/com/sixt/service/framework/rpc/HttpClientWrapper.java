@@ -109,11 +109,14 @@ public class HttpClientWrapper {
                         spanContext = orangeContext.getTracingContext();
                     }
                     if (spanContext != null) {
-                        span = tracer.buildSpan(request.getMethod()).asChildOf(spanContext).start();
+                        span = tracer.buildSpan(client.getServiceMethodName()).asChildOf(spanContext).start();
                     } else {
-                        span = tracer.buildSpan(request.getMethod()).start();
+                        span = tracer.buildSpan(client.getServiceMethodName()).start();
                     }
                     Tags.PEER_SERVICE.set(span, loadBalancer.getServiceName());
+                    if (orangeContext != null) {
+                        span.setTag("correlation_id", orangeContext.getCorrelationId());
+                    }
                 }
                 retval = request.newRequest(httpClient).timeout(client.getTimeout(),
                         TimeUnit.MILLISECONDS).send();
@@ -181,7 +184,7 @@ public class HttpClientWrapper {
     }
 
     private Marker getRemoteMethod() {
-        return append("method", client.getServiceName() + "." + client.getMethodName());
+        return append("method", client.getServiceMethodName());
     }
 
 }
