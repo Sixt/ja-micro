@@ -137,6 +137,8 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
                 readMessages();
                 consumeMessages();
                 offsetCommitter.recommitOffsets();
+            } catch (CommitFailedException ex) {
+                logger.warn("Caught CommitFailedException in message loop", ex);
             } catch (Exception ex) {
                 logger.error("Caught exception in message loop", ex);
             }
