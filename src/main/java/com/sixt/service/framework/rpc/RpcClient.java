@@ -60,6 +60,10 @@ public class RpcClient<RESPONSE extends Message> {
         this.responseClass = responseClass;
     }
 
+    /**
+     * @deprecated use {@link #callSynchronous(JsonArray, OrangeContext)} instead and make sure to always pass the {@link OrangeContext}
+     */
+    @Deprecated
     public String callSynchronous(JsonArray params)
             throws RpcCallException {
         return callSynchronous(params, null);
@@ -91,7 +95,11 @@ public class RpcClient<RESPONSE extends Message> {
         return JsonRpcResponse.fromString(rawResponse).getResult().getAsString();
     }
 
+    /**
+     * @deprecated use {@link #callSynchronous(Message, OrangeContext)} instead and make sure to always pass the {@link OrangeContext}
+     */
     @SuppressWarnings("unchecked")
+    @Deprecated
     public RESPONSE callSynchronous(Message request) throws RpcCallException {
         return callSynchronous(request, null);
     }
