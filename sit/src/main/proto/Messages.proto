@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package com.sixt.service.test_service.api;
+
+option java_multiple_files = false;
+option java_package = "com.sixt.service.test_service.api";
+
+
+// Asynchronous messaging
+
+message Greeting {
+    string greeting = 1;
+}
+
+
+message Echo {
+    string echo = 1;
+}
