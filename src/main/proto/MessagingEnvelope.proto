@@ -5,19 +5,22 @@ option java_multiple_files = true;
 option java_package = "com.sixt.service.framework.protobuf";
 
 message MessagingEnvelope {
+	// Header fields:
 
-	// Header fields
-	string service_method = 1;
-	fixed64 sequence_number = 2;
+	// - Tracing/Correlation
+	string correlation_id = 10;  // OPTIONAL. A correlation id to correlate multiple messages, rpc request/responses, etc. belonging to a trace/flow/user request/etc..
+	string trace_id = 11;        // OPTIONAL. Another correlation id for tracing.
 
 
-	// The inner message: type and raw bytes
-	//
-	// An alternative would be to use ANY (that packs a typeURL with the embedded message), but I'm not sure how well it is
-	// supported (the protobuf documentation says: "Currently the runtime libraries for working with Any types are under development.")
-	//
-	string message_type = 100;
-	bytes innerMessage = 101;
+	// - Message exchange patterns
+	// -- Request/Reply
+	string request_correlation_id = 20; // OPTIONAL. This response correlates to the request with the given id
+	string reply_to = 21; // OPTIONAL. Send responses for this request to the given address. See class Topic for syntax.
 
+
+	// Payload:
+	// inner message type and serialized bytes
+	string message_type = 100; // REQUIRED. See class MessageType for syntax.
+	bytes innerMessage = 101;  // REQUIRED. byte[] for the serialized inner protobuf message
 }
 

@@ -4,27 +4,18 @@ import com.sixt.service.framework.protobuf.MessagingEnvelope;
 
 
 public class Message<T extends com.google.protobuf.Message> {
+    private final T payload;
+    private final Metadata metadata;
 
-    public T getMessage() {
+    public Message(T payload, Metadata metadata) {
+        this.payload = payload;
+        this.metadata = metadata;
+    }
+
+    public T getPayload() {
         return null;
     }
-
-    public MessageMetadata getMetadata() {
+    public Metadata getMetadata() {
         return null;
     }
-
-    // TODO proper builder methods
-    public Message with(com.google.protobuf.Message payload) {
-        return this;
-    }
-
-    public static Message replyTo(Message request) {
-        return null;
-    }
-
-    static Message fromKafka(com.google.protobuf.Message payload, MessagingEnvelope envelope) {
-        // FIXME
-        return new Message();
-    }
-
 }

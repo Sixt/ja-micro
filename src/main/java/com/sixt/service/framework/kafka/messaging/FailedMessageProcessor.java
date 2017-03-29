@@ -1,10 +1,8 @@
 package com.sixt.service.framework.kafka.messaging;
 
 
-public class FailedMessageProcessor {
+public interface FailedMessageProcessor {
 
-    public void onFailedMessage(Message failed, Throwable failureCause) {
-
-    }
+    void onFailedMessage(Message failed, Throwable failureCause);
 
 }
