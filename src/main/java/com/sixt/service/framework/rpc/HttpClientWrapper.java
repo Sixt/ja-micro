@@ -109,9 +109,9 @@ public class HttpClientWrapper {
                         spanContext = orangeContext.getTracingContext();
                     }
                     if (spanContext != null) {
-                        span = tracer.buildSpan(client.getServiceMethodName()).asChildOf(spanContext).start();
+                        span = tracer.buildSpan(client.getMethodName()).asChildOf(spanContext).start();
                     } else {
-                        span = tracer.buildSpan(client.getServiceMethodName()).start();
+                        span = tracer.buildSpan(client.getMethodName()).start();
                     }
                     Tags.PEER_SERVICE.set(span, loadBalancer.getServiceName());
                     if (orangeContext != null) {
