@@ -1,7 +1,10 @@
-package com.sixt.service.framework.kafka;
+package com.sixt.service.framework.kafka.messaging;
 
 import com.google.common.collect.Lists;
 import com.sixt.service.framework.OrangeContext;
+import com.sixt.service.framework.kafka.KafkaSubscriber;
+import com.sixt.service.framework.kafka.KafkaTopicInfo;
+import com.sixt.service.framework.kafka.OffsetCommitter;
 import com.sixt.service.framework.protobuf.ProtobufUtil;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
@@ -76,7 +79,8 @@ public class KafkaMessagingConsumer<TYPE> implements Runnable, ConsumerRebalance
         Threading model:
         1. Each consumer runs a single-threaded poll-Loop, serving potentially multiple partitions
         If we need higher concurrency, we assign additional consumers (up to the number of partitions) by either spinning
-        additonal service instances or having multiple consumsers in one instance.
+        additonal service instances or having multiple consumsers in one instance. Note that partion assginment may change
+        over time.
 
         2. Message processing is delegated to separate worker threads.
         For now, we go single-threaded here.
@@ -112,7 +116,7 @@ public class KafkaMessagingConsumer<TYPE> implements Runnable, ConsumerRebalance
             realConsumer.subscribe(Lists.newArrayList(topic), this);
 
             // FIXME
-            offsetCommitter = new OffsetCommitter(realConsumer, Clock.systemUTC());
+         //   offsetCommitter = new OffsetCommitter(realConsumer, Clock.systemUTC());
 
             pollLoopExecutor.submit(this);
             isInitialized.set(true);
@@ -153,16 +157,17 @@ public class KafkaMessagingConsumer<TYPE> implements Runnable, ConsumerRebalance
 
         checkForMessageThrottling();
 
-        ConsumerRecords<String, String> records = realConsumer.poll(pollTime);
+        ConsumerRecords<String, byte[]> records = realConsumer.poll(pollTime);
         if (records != null) {
-            for (ConsumerRecord<String, String> record : records) {
-                String rawMessage = record.value();
+            for (ConsumerRecord<String, byte[]> record : records) {
+                byte[] rawMessage = record.value();
 
                 logger.debug(append("rawMessage", rawMessage), "Read Kafka message ({})", record.offset());
                 KafkaTopicInfo topicInfo = new KafkaTopicInfo(topic, record.partition(),
                         record.offset(), record.key());
 
                 MessageDeliveryWorker worker = null;
+        /*
                 if (useProtobuf) {
                     com.google.protobuf.Message proto = ProtobufUtil.jsonToProtobuf(rawMessage,
                             (Class<? extends com.google.protobuf.Message>) messageType);
@@ -170,6 +175,7 @@ public class KafkaMessagingConsumer<TYPE> implements Runnable, ConsumerRebalance
                 } else {
                     worker = new MessageDeliveryWorker((TYPE) rawMessage, topicInfo);
                 }
+                */
                 messageHandlerExecutor.submit(worker);
                 messageBacklog.incrementAndGet();
             }

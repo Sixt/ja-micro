@@ -1,6 +1,8 @@
-package com.sixt.service.framework.kafka;
+package com.sixt.service.framework.kafka.messaging;
 
 import com.sixt.service.framework.OrangeContext;
+import com.sixt.service.framework.kafka.SixtPartitioner;
+import com.sixt.service.framework.protobuf.MessagingEnvelope;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -13,15 +15,13 @@ import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Created by abjb on 3/23/17.
- */
 public class KafkaMessagingProducer {
     private static final Logger logger = LoggerFactory.getLogger(KafkaMessagingProducer.class);
 
     protected org.apache.kafka.clients.producer.KafkaProducer<String, byte[]> realProducer;
     protected AtomicBoolean isInitialized = new AtomicBoolean(false);
 
+    // TODO move to ctor?
     public void initialize(String servers) {
         if (isInitialized.get()) {
             logger.warn("Already initialized");
@@ -44,15 +44,22 @@ public class KafkaMessagingProducer {
 
 
     public void send(Message response, OrangeContext context) {
-        if (! isInitialized.get()) {
+        if (!isInitialized.get()) {
             throw new IllegalStateException("KafkaProducer is not initialized.");
         }
 
+        MessagingEnvelope.Builder envelopeBuilder = MessagingEnvelope.newBuilder();
+
+        // Set headers
         String destinationTopic = response.getMetadata().getTopic();
         String partitioningKey = response.getMetadata().getPartitioningKey();
-        byte[] messageBytes = response.getMessage().toByteArray();
+        // FIXME additional headers such as message type!
 
-        ProducerRecord<String, byte[]> record = new ProducerRecord<>(destinationTopic, partitioningKey, messageBytes);
+        // the inner message (payload) as byte array
+        envelopeBuilder.setInnerMessage(response.getMessage().toByteString());
+
+
+        ProducerRecord<String, byte[]> record = new ProducerRecord<>(destinationTopic, partitioningKey, envelopeBuilder.build().toByteArray());
 
         try {
             Future future = realProducer.send(record);
