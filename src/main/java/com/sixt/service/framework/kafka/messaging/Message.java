@@ -1,8 +1,8 @@
-package com.sixt.service.framework.kafka;
+package com.sixt.service.framework.kafka.messaging;
 
-/**
- * Created by abjb on 3/23/17.
- */
+import com.sixt.service.framework.protobuf.MessagingEnvelope;
+
+
 public class Message<T extends com.google.protobuf.Message> {
 
     public T getMessage() {
@@ -20,6 +20,11 @@ public class Message<T extends com.google.protobuf.Message> {
 
     public static Message replyTo(Message request) {
         return null;
+    }
+
+    static Message fromKafka(com.google.protobuf.Message payload, MessagingEnvelope envelope) {
+        // FIXME
+        return new Message();
     }
 
 }

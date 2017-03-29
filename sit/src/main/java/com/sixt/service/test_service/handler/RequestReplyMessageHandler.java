@@ -3,9 +3,9 @@ package com.sixt.service.test_service.handler;
 
 import com.google.inject.Inject;
 import com.sixt.service.framework.OrangeContext;
-import com.sixt.service.framework.kafka.KafkaMessagingProducer;
-import com.sixt.service.framework.kafka.Message;
-import com.sixt.service.framework.kafka.MessageHandler;
+import com.sixt.service.framework.kafka.messaging.KafkaMessagingProducer;
+import com.sixt.service.framework.kafka.messaging.Message;
+import com.sixt.service.framework.kafka.messaging.MessageHandler;
 import com.sixt.service.test_service.api.Messages;
 
 public class RequestReplyMessageHandler implements MessageHandler<Messages.Greeting> {

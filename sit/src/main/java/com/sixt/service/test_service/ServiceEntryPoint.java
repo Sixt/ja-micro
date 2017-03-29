@@ -14,7 +14,6 @@ package com.sixt.service.test_service;
 
 import com.sixt.service.framework.AbstractService;
 import com.sixt.service.framework.annotation.OrangeMicroservice;
-import com.sixt.service.framework.kafka.KafkaMessagingConsumer;
 import com.sixt.service.test_service.handler.*;
 
 import java.io.PrintStream;
