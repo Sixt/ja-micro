@@ -19,6 +19,8 @@ import com.sixt.service.framework.metrics.GoTimer;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
+import io.opentracing.propagation.Format;
+import io.opentracing.propagation.TextMapInjectAdapter;
 import io.opentracing.tag.Tags;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -117,6 +119,7 @@ public class HttpClientWrapper {
                     if (orangeContext != null) {
                         span.setTag("correlation_id", orangeContext.getCorrelationId());
                     }
+                    tracer.inject(span.context(), Format.Builtin.HTTP_HEADERS, new TextMapInjectAdapter(request.getHeaders()));
                 }
                 retval = request.newRequest(httpClient).timeout(client.getTimeout(),
                         TimeUnit.MILLISECONDS).send();
