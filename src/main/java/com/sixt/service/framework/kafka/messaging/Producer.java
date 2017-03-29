@@ -15,8 +15,8 @@ import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class KafkaMessagingProducer {
-    private static final Logger logger = LoggerFactory.getLogger(KafkaMessagingProducer.class);
+public class Producer {
+    private static final Logger logger = LoggerFactory.getLogger(Producer.class);
 
     protected org.apache.kafka.clients.producer.KafkaProducer<String, byte[]> realProducer;
     protected AtomicBoolean isInitialized = new AtomicBoolean(false);
@@ -48,15 +48,16 @@ public class KafkaMessagingProducer {
             throw new IllegalStateException("KafkaProducer is not initialized.");
         }
 
-        MessagingEnvelope.Builder envelopeBuilder = MessagingEnvelope.newBuilder();
 
         // Set headers
-        String destinationTopic = response.getMetadata().getTopic();
+        String destinationTopic = response.getMetadata().getTopic().toString();
         String partitioningKey = response.getMetadata().getPartitioningKey();
         // FIXME additional headers such as message type!
 
+        MessagingEnvelope.Builder envelopeBuilder = MessagingEnvelope.newBuilder();
+
         // the inner message (payload) as byte array
-        envelopeBuilder.setInnerMessage(response.getMessage().toByteString());
+        envelopeBuilder.setInnerMessage(response.getPayload().toByteString());
 
 
         ProducerRecord<String, byte[]> record = new ProducerRecord<>(destinationTopic, partitioningKey, envelopeBuilder.build().toByteArray());

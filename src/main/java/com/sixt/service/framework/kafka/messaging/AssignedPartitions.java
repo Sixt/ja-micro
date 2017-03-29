@@ -1,6 +1,5 @@
 package com.sixt.service.framework.kafka.messaging;
 
-import com.sixt.service.framework.kafka.KafkaSubscriber;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -9,24 +8,45 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-
-public class AssignedPartitions {
+/**
+ * AssignedPartitions represents the set of PartitionProcessors for the partitions assigned to a certain consumer.
+ *
+ * Read records are dispatched to the right processor. It aggregates over the individual processors to get the set of
+ * committed offset, paused or resumed partitions.
+ *
+ * Additionally it manages creation, termination and removal of PartitionProcessors as partitions are distributed across
+ * consumers.
+ *
+ * Thread safety policy: single-thread use by MessagingConsumer
+ */
+final class AssignedPartitions {
     private static final Logger logger = LoggerFactory.getLogger(AssignedPartitions.class);
 
-    
+    private final PartitionProcessorFactory processorFactory;
     private final Map<TopicPartition, PartitionProcessor> processors = new HashMap<>();
 
-    public void assignNewPartitions(Collection<TopicPartition> assignedPartitions) {
+    AssignedPartitions(PartitionProcessorFactory processorFactory) {
+        this.processorFactory = processorFactory;
+    }
+
+    Set<TopicPartition> allPartitions() {
+        Set<TopicPartition> assignedPartitions = new HashSet<>();
+        processors.forEach((key, partition) -> assignedPartitions.add(key));
+        return assignedPartitions;
+    }
+
+    void assignNewPartitions(Collection<TopicPartition> assignedPartitions) {
         assignedPartitions.forEach((key) -> assignNewPartition(key));
     }
 
-    public PartitionProcessor assignNewPartition(TopicPartition partitionKey) {
-        // FIXME
+    PartitionProcessor assignNewPartition(TopicPartition partitionKey) {
+        PartitionProcessor proccessor = processorFactory.newProcessorFor(partitionKey);
+        processors.put(partitionKey, proccessor);
 
-        return null;
+        return proccessor;
     }
 
-    public void enqueue(ConsumerRecords<String, byte[]> records) {
+    void enqueue(ConsumerRecords<String, byte[]> records) {
         records.forEach((record) -> {
             TopicPartition partitionKey = new TopicPartition(record.topic(), record.partition());
 
@@ -39,31 +59,7 @@ public class AssignedPartitions {
         });
     }
 
-    public Collection<TopicPartition> partitionsToBePaused() {
-        List<TopicPartition> pausedPartitions = new ArrayList<>();
-
-        processors.forEach((key, processor) -> {
-          if(processor.isPaused()) {
-              pausedPartitions.add(key);
-          }
-        });
-
-        return pausedPartitions;
-    }
-
-    public Collection<TopicPartition> partitionsToBeResumed() {
-        List<TopicPartition> resumeablePartitions = new ArrayList<>();
-
-        processors.forEach((key, processor) -> {
-            if(processor.shouldResume()) {
-                resumeablePartitions.add(key);
-            }
-        });
-
-        return resumeablePartitions;
-    }
-
-    public Map<TopicPartition, OffsetAndMetadata> offsetsToBeCommitted() {
+    Map<TopicPartition, OffsetAndMetadata> offsetsToBeCommitted() {
         Map<TopicPartition, OffsetAndMetadata> commitOffsets = new HashMap<>();
 
         processors.forEach((key, processor) -> {
@@ -75,7 +71,31 @@ public class AssignedPartitions {
         return commitOffsets;
     }
 
-    public void stopProcessing(Collection<TopicPartition> partitions) {
+    Collection<TopicPartition> partitionsToBePaused() {
+        List<TopicPartition> pausedPartitions = new ArrayList<>();
+
+        processors.forEach((key, processor) -> {
+            if (processor.isPaused()) {
+                pausedPartitions.add(key);
+            }
+        });
+
+        return pausedPartitions;
+    }
+
+    Collection<TopicPartition> partitionsToBeResumed() {
+        List<TopicPartition> resumeablePartitions = new ArrayList<>();
+
+        processors.forEach((key, processor) -> {
+            if (processor.shouldResume()) {
+                resumeablePartitions.add(key);
+            }
+        });
+
+        return resumeablePartitions;
+    }
+
+    void stopProcessing(Collection<TopicPartition> partitions) {
         partitions.forEach((key) -> {
             PartitionProcessor processor = processors.get(key);
 
@@ -84,25 +104,24 @@ public class AssignedPartitions {
                 return;
             }
 
-            processor.stop();
+            processor.stopProcessing();
         });
     }
 
-    public void waitForHandlersToComplete(Collection<TopicPartition> partitions, long timeoutMillis) {
+    void waitForHandlersToComplete(Collection<TopicPartition> partitions, long timeoutMillis) {
         partitions.forEach((key) -> {
             PartitionProcessor processor = processors.get(key);
 
             if (processor == null) {
-                logger.warn("Ignored operation: trying to waitForHandlerToComplete on a non-existing processor for partition {}", key);
+                logger.warn("Ignored operation: trying to waitForHandlersToTerminate on a non-existing processor for partition {}", key);
                 return;
             }
 
-            processor.waitForHandlerToComplete(timeoutMillis);
+            processor.waitForHandlersToTerminate(timeoutMillis);
         });
     }
 
-    public void removePartitions(Collection<TopicPartition> revokedPartitions) {
-        // Must have stopped the partition processing before
+    void removePartitions(Collection<TopicPartition> revokedPartitions) {
         revokedPartitions.forEach((key) -> {
             PartitionProcessor processor = processors.get(key);
 
