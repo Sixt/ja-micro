@@ -76,8 +76,10 @@ public class RpcServlet extends HttpServlet {
             logger.debug("Request content-type: {}", contentType);
             if (isProtobuf(contentType)) {
                 protobufHandler.doPost(req, resp);
-            } else {
+            } else if (isJson(contentType)) {
                 jsonRpcHandler.doPost(req, resp);
+            } else {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }
         } catch (Exception ex) {
             logger.error("Uncaught exception handling POST", ex);
@@ -89,6 +91,13 @@ public class RpcServlet extends HttpServlet {
             return false;
         }
         return ctype.startsWith(TYPE_PROTO) || ctype.startsWith(TYPE_OCTET);
+    }
+
+    private boolean isJson(String ctype) {
+        if (ctype == null) {
+            return false;
+        }
+        return ctype.startsWith(TYPE_JSON);
     }
 
 }

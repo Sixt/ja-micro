@@ -43,7 +43,9 @@ public class HttpRequestWrapper {
         request.content(contentProvider).method(method);
 
         for (String key : headers.keySet()) {
-            request.header(key, headers.get(key));
+            if (! "User-Agent".equals(key)) {
+                request.header(key, headers.get(key));
+            }
         }
 
         return request;
