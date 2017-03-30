@@ -37,17 +37,17 @@ class PartitionProcessor {
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
 
     // Offset/commit handling
-    private AtomicLong lastConsumedOffset = new AtomicLong(-1); // i.e. unknown
+    private AtomicLong lastConsumedOffset = new AtomicLong(-2); // i.e. unknown
     private AtomicLong lastComittedOffset = new AtomicLong(-1); // i.e. unknown
 
 
     // Lifecycle --------------------------------------------------
 
-    PartitionProcessor() {
-        // FIXME
-        this.partitionKey = null;
-        this.typeDictionary = null;
-        this.failedMessageProcessor = null;
+    // TODO injection
+    PartitionProcessor(TopicPartition partitionKey, TypeDictionary typeDictionary, FailedMessageProcessor failedMessageProcessor) {
+        this.partitionKey = partitionKey;
+        this.typeDictionary = typeDictionary;
+        this.failedMessageProcessor = failedMessageProcessor;
 
         undeliveredMessages = new LinkedBlockingQueue<>();
 
@@ -61,6 +61,7 @@ class PartitionProcessor {
     public void stopProcessing() {
         // We mark this dispatcher as stopped, so no new tasks will execute.
         isStopped.set(true);
+        executor.shutdown();
     }
 
     public boolean isTerminated() {
@@ -68,9 +69,10 @@ class PartitionProcessor {
     }
 
     public void waitForHandlersToTerminate(long timeoutMillis) {
-        stopProcessing(); // ensure that we're stopping
+        stopProcessing(); // ensure that we're shutting down
 
         try {
+
             boolean terminatedSuccessfully = executor.awaitTermination(timeoutMillis, TimeUnit.MILLISECONDS);
 
             if (!terminatedSuccessfully) {
@@ -88,18 +90,12 @@ class PartitionProcessor {
     // Message dispatch --------------------------------------------------
 
     public void enqueue(ConsumerRecord<String, byte[]> record) {
-        try {
-            if (isStopped.get()) {
-                logger.info("Ignored records to be enqueued after PartitionProcessor {} was stopped.", partitionKey);
-                return;
-            }
-
-            undeliveredMessages.put(new MessageDeliveryTask(record)); // queue is thread safe
-
-        } catch (InterruptedException e) {
-            // Should not happen, since we don't block in put - the queue is unbounded.
-            logger.warn("Interrupted when trying to put a record to the message queue.");
+        if (isStopped.get()) {
+            logger.info("Ignored records to be enqueued after PartitionProcessor {} was stopped.", partitionKey);
+            return;
         }
+
+        executor.submit(new MessageDeliveryTask(record));
     }
 
 
@@ -130,19 +126,15 @@ class PartitionProcessor {
                 Parser<com.google.protobuf.Message> parser = typeDictionary.parserFor(type);
 
                 com.google.protobuf.Message innerMessage = parser.parseFrom(envelope.getInnerMessage());
-
-                // FIXME fill them
-                message = Messages.fromKafka(innerMessage, envelope);
+                message = Messages.fromKafka(innerMessage, envelope, record);
 
             } catch (InvalidProtocolBufferException e) {
                 // Cannot even unmarshal the envelope
                 // FIXME!!
+            } catch (Throwable t) {
+                logger.error("WHAAAT?", t);
             }
         }
-
-
-
-
 
 
         private void executeHander() {
@@ -163,7 +155,7 @@ class PartitionProcessor {
             } finally {
                 // All messages including the failed ones processed by a handler are marked as consumed and committed to Kafka.
                 // TODO have some way for the handler to do a early commit
-                markAsConsumed(message.getMetadata().getTopicInfo().getOffset());
+                markAsConsumed(message.getMetadata().getOffset());
             }
         }
     }

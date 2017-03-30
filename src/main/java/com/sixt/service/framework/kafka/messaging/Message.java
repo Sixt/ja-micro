@@ -1,8 +1,5 @@
 package com.sixt.service.framework.kafka.messaging;
 
-import com.sixt.service.framework.protobuf.MessagingEnvelope;
-
-
 public class Message<T extends com.google.protobuf.Message> {
     private final T payload;
     private final Metadata metadata;
@@ -13,9 +10,10 @@ public class Message<T extends com.google.protobuf.Message> {
     }
 
     public T getPayload() {
-        return null;
+        return payload;
     }
+
     public Metadata getMetadata() {
-        return null;
+        return metadata;
     }
 }

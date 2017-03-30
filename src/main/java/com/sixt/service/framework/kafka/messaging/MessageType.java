@@ -5,10 +5,20 @@ package com.sixt.service.framework.kafka.messaging;
  */
 public class MessageType {
 
-    public MessageType(String typeName) {
+    private final String type;
 
+    MessageType(String typeName) {
+        type = typeName;
     }
 
+    static MessageType of(com.google.protobuf.Message protoMessage) {
+        // FIXME define type name!
+        return new MessageType(protoMessage.getClass().getCanonicalName());
+    }
 
+    @Override
+    public String toString() {
+        return type;
+    }
 
 }

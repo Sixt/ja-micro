@@ -6,6 +6,7 @@ option java_package = "com.sixt.service.framework.protobuf";
 
 message MessagingEnvelope {
 	// Header fields:
+	string message_id = 1; // REQUIRED. A unique identfier for this message.
 
 	// - Tracing/Correlation
 	string correlation_id = 10;  // OPTIONAL. A correlation id to correlate multiple messages, rpc request/responses, etc. belonging to a trace/flow/user request/etc..
