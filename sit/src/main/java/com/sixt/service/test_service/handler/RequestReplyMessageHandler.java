@@ -19,20 +19,21 @@ public class RequestReplyMessageHandler implements MessageHandler<Greeting> {
     @Override
     public void onMessage(Message<Greeting> command, OrangeContext context) {
         Greeting greeting = command.getPayload();
-
         Echo echo = Echo.newBuilder().setEcho(greeting.getGreeting()).build();
 
-        Message response = Messages.replyTo(command).with(echo);
 
-        producer.send(response, context);
+        Topic target = Topic.defaultServiceInbox("com.sixt.service.cruftlord");
+        Topic trash = Topic.serviceInbox("com.sixt.service.cruftlord", "trash");
+
+        Message response = Messages.replyTo(command, echo, context);
+
+        Message sayHello = Messages.requestFor(target, "a crufty key", echo, context);
+        Message sayHelloAgain = Messages.requestFor(target, trash, "a crufty key", echo, context);
+
+        Message fireAndForget = Messages.oneWayMessage(target, "another key", echo, context);
 
 
-        // A new request
-        Greeting hello = Greeting.newBuilder().setGreeting("Hello").build();
-
-        Topic target = new Topic("test");
-        Message sayHello = Messages.requestFor(target).with(hello);
-
+        producer.send(response);
     }
 
 }

@@ -13,4 +13,8 @@ public class Topic {
         return new Topic("inbox-" + serviceName);
     }
 
+    public static Topic serviceInbox(String serviceName, String inboxName) {
+        // TODO fancy naming scheme
+        return new Topic("inbox-" + serviceName + "-" + inboxName);
+    }
 }

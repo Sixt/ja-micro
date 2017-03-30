@@ -43,24 +43,16 @@ public class Producer {
     }
 
 
-    public void send(Message response, OrangeContext context) {
+    public void send(Message message) {
         if (!isInitialized.get()) {
             throw new IllegalStateException("KafkaProducer is not initialized.");
         }
 
+        String destinationTopic = message.getMetadata().getTopic().toString();
+        String partitioningKey = message.getMetadata().getPartitioningKey();
+        MessagingEnvelope envelope = Messages.toKafka(message);
 
-        // Set headers
-        String destinationTopic = response.getMetadata().getTopic().toString();
-        String partitioningKey = response.getMetadata().getPartitioningKey();
-        // FIXME additional headers such as message type!
-
-        MessagingEnvelope.Builder envelopeBuilder = MessagingEnvelope.newBuilder();
-
-        // the inner message (payload) as byte array
-        envelopeBuilder.setInnerMessage(response.getPayload().toByteString());
-
-
-        ProducerRecord<String, byte[]> record = new ProducerRecord<>(destinationTopic, partitioningKey, envelopeBuilder.build().toByteArray());
+        ProducerRecord<String, byte[]> record = new ProducerRecord<>(destinationTopic, partitioningKey, envelope.toByteArray());
 
         try {
             Future future = realProducer.send(record);

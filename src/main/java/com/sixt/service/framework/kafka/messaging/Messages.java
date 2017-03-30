@@ -1,6 +1,11 @@
 package com.sixt.service.framework.kafka.messaging;
 
+import com.google.common.base.Strings;
+import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.protobuf.MessagingEnvelope;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+
+import java.util.UUID;
 
 public class Messages {
 
@@ -8,36 +13,119 @@ public class Messages {
         // Prevent instantiation.
     }
 
-    public static Builder replyTo(Message request) {
-        return new Builder(request);
+    // Copy-paste is by intention here.
+
+    public static Message oneWayMessage(Topic target, String partitionKey, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
+        boolean wasReceived = false;
+
+        String messageId = UUID.randomUUID().toString();
+        String correlationId = context.getCorrelationId();
+        String traceId = ""; // TODO
+
+        Topic replyTo = null; // not required
+        String requestCorrelationId = ""; // not required
+
+        MessageType type = MessageType.of(protoPayloadMessage);
+
+        Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
+        return new Message(protoPayloadMessage, meta);
     }
 
-    public static Builder requestFor(Topic target) {
-        return new Builder(target);
+
+    public static Message requestFor(Topic target, String partitionKey, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
+        Topic defaultReplyTo = Topic.defaultServiceInbox("FIXME"); // FIXME where to get the service name from? context?
+        return requestFor(target, defaultReplyTo, partitionKey,protoPayloadMessage,context);
     }
 
-    static Message fromKafka(com.google.protobuf.Message payload, MessagingEnvelope envelope) {
-        // FIXME
-        return null;
+    public static Message requestFor(Topic target, Topic replyTo, String partitionKey, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
+        boolean wasReceived = false;
+
+        String messageId = UUID.randomUUID().toString();
+        String correlationId = context.getCorrelationId();
+        String traceId = ""; // TODO
+
+        // Use default inbox for service.
+        if(replyTo == null) {
+            throw new IllegalArgumentException("replyTo required");
+        }
+        String requestCorrelationId = ""; // not required
+
+        MessageType type = MessageType.of(protoPayloadMessage);
+
+        Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
+        return new Message(protoPayloadMessage, meta);
     }
 
-    public static class Builder {
-        private Message referencedMessage;
-        private Topic target;
 
-        Builder(Topic target) {
-            this.target = target;
+    public static Message replyTo(Message originalRequest, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
+        boolean wasReceived = false;
+
+        // By default, return to sender topic using same partitioning scheme.
+        Topic target = originalRequest.getMetadata().getTopic();
+        String partitionKey = originalRequest.getMetadata().getPartitioningKey();
+
+        String messageId = UUID.randomUUID().toString();
+        String correlationId = context.getCorrelationId();
+        String traceId = ""; // TODO
+
+        String requestCorrelationId = originalRequest.getMetadata().getMessageId();
+        Topic replyTo = null; // not required
+
+        MessageType type = MessageType.of(protoPayloadMessage);
+
+        Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
+        return new Message(protoPayloadMessage, meta);
+    }
+
+
+    static Message fromKafka(com.google.protobuf.Message protoMessage, MessagingEnvelope envelope, ConsumerRecord<String, byte[]> record) {
+        boolean wasReceived = true;
+
+        Topic topic = new Topic(record.topic());
+        String partitioningKey = record.key();
+        int partitionId = record.partition();
+        long offset = record.offset();
+
+        String messageId = envelope.getMessageId();
+        String correlationId = envelope.getCorrelationId();
+        String traceId = envelope.getTraceId();
+
+        String requestCorrelationId = envelope.getRequestCorrelationId();
+        Topic replyTo = new Topic(envelope.getReplyTo());
+
+        MessageType type = MessageType.of(protoMessage);
+
+        Metadata meta = new Metadata(wasReceived, topic, partitioningKey, partitionId, offset, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
+        return new Message(protoMessage, meta);
+    }
+
+
+    static MessagingEnvelope toKafka(Message message) {
+        MessagingEnvelope.Builder envelope = MessagingEnvelope.newBuilder();
+        Metadata meta = message.getMetadata();
+
+        envelope.setMessageId(meta.getMessageId());
+
+        // Correlation ids are set when building the message
+        if (!Strings.isNullOrEmpty(meta.getCorrelationId())) {
+            envelope.setCorrelationId(meta.getCorrelationId());
+        }
+        if (!Strings.isNullOrEmpty(meta.getTraceId())) {
+            envelope.setCorrelationId(meta.getTraceId());
         }
 
-        Builder(Message referencedMessage) {
-            this.referencedMessage = referencedMessage;
+        // Message exchange pattern headers
+        if (meta.getReplyTo() != null) {
+            envelope.setReplyTo(meta.getReplyTo().toString());
+        }
+        if (!Strings.isNullOrEmpty(meta.getRequestCorrelationId())) {
+            envelope.setRequestCorrelationId(meta.getRequestCorrelationId());
         }
 
-        public Message with(com.google.protobuf.Message payload) {
-          Metadata metadata = new Metadata();
-         return new Message(payload, metadata);
-        }
+        // Payload (mandatory fields!)
+        envelope.setMessageType(meta.getType().toString());
+        envelope.setInnerMessage(message.getPayload().toByteString()); // Serialize the proto payload to bytes
+
+        return envelope.build();
     }
-
-
 }
