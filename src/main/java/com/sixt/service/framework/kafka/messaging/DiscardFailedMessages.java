@@ -13,8 +13,10 @@ public class DiscardFailedMessages implements FailedMessageProcessor {
     private static final Logger logger = LoggerFactory.getLogger(DiscardFailedMessages.class);
 
     @Override
-    public void onFailedMessage(Message failed, Throwable failureCause) {
+    public boolean onFailedMessage(Message failed, Throwable failureCause) {
         // TODO structured logging
-        logger.warn("Discarding message",failureCause);
+        logger.warn("Discarding message, failureCause:",failureCause);
+
+        return false;
     }
 }

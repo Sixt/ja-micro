@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 class PartitionProcessor {
     private static final Logger logger = LoggerFactory.getLogger(PartitionProcessor.class);
 
-    private static final int MAX_MESSAGES_IN_FLIGHT = 100;
+    public static final int MAX_MESSAGES_IN_FLIGHT = 100;
 
     // The partition processor is a queue plus a worker thread.
     private final BlockingQueue<Runnable> undeliveredMessages;
@@ -131,8 +131,10 @@ class PartitionProcessor {
             } catch (InvalidProtocolBufferException e) {
                 // Cannot even unmarshal the envelope
                 // FIXME!!
+                logger.error("FIXME", e);
             } catch (Throwable t) {
-                logger.error("WHAAAT?", t);
+                // FIXME!!
+                logger.error("FIXME", t);
             }
         }
 
@@ -150,11 +152,21 @@ class PartitionProcessor {
 
                 // Handlers are responsible to handle expected exceptions (such as domain logic failures) and re-try temporary failures.
                 // If we get an exception here it's either a unrecoverable condition (e.g. database not available) or a lazy developer.
-                failedMessageProcessor.onFailedMessage(message, error);
+
+                // TODO wrap failedMessageProcessor in try/catch. never trust external code.
+                boolean shouldRetry = failedMessageProcessor.onFailedMessage(message, error);
+                if(shouldRetry) {
+                    // recursive call is executed before finally, when unwinding the call stack we call all pending finally blocks
+                    // TODO is recursion a good idea here or do we nuke the stack?
+                    executeHander();
+                }
+
 
             } finally {
                 // All messages including the failed ones processed by a handler are marked as consumed and committed to Kafka.
                 // TODO have some way for the handler to do a early commit
+                System.out.println("finally");
+
                 markAsConsumed(message.getMetadata().getOffset());
             }
         }
@@ -198,5 +210,10 @@ class PartitionProcessor {
     public boolean shouldResume() {
         // simple logic for now
         return !isPaused();
+    }
+
+    // Test access
+    TypeDictionary getTypeDictionary() {
+        return typeDictionary;
     }
 }

@@ -61,7 +61,7 @@ public class Messages {
         boolean wasReceived = false;
 
         // By default, return to sender topic using same partitioning scheme.
-        Topic target = originalRequest.getMetadata().getTopic();
+        Topic target = originalRequest.getMetadata().getReplyTo();
         String partitionKey = originalRequest.getMetadata().getPartitioningKey();
 
         String messageId = UUID.randomUUID().toString();
