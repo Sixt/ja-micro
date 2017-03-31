@@ -115,6 +115,7 @@ public class HttpClientWrapper {
                     } else {
                         span = tracer.buildSpan(client.getMethodName()).start();
                     }
+                    Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
                     Tags.PEER_SERVICE.set(span, loadBalancer.getServiceName());
                     if (orangeContext != null) {
                         span.setTag("correlation_id", orangeContext.getCorrelationId());
@@ -137,6 +138,7 @@ public class HttpClientWrapper {
             //content.length must always be > 0, because we have an envelope
             if (responseWasSuccessful(decoder, retval, lastStatusCode)) {
                 if (span != null) {
+                    Tags.HTTP_STATUS.set(span, lastStatusCode);
                     span.finish();
                 }
                 methodTimer.recordSuccess(startTime);
@@ -144,6 +146,7 @@ public class HttpClientWrapper {
                 return retval;
             } else {
                 if (span != null) {
+                    Tags.HTTP_STATUS.set(span, lastStatusCode);
                     Tags.ERROR.set(span, true);
                     span.finish();
                 }
