@@ -5,6 +5,7 @@ import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
@@ -36,11 +37,11 @@ public class Consumer {
         props.put("bootstrap.servers", servers);
         props.put("group.id", groupId);
         props.put("key.deserializer", StringDeserializer.class.getName());
-        props.put("value.deserializer", ByteArraySerializer.class.getName());
+        props.put("value.deserializer", ByteArrayDeserializer.class.getName());
         props.put("heartbeat.interval.ms", "10000");
         props.put("session.timeout.ms", "20000");
         props.put("enable.auto.commit", "false");
-        props.put("auto.offset.reset", "latest");
+        props.put("auto.offset.reset", "earliest");
         kafka = new KafkaConsumer<>(props);
 
         partitions = new AssignedPartitions(processorFactory);

@@ -1,10 +1,15 @@
 package com.sixt.service.framework.kafka.messaging;
 
+import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.validation.constraints.NotNull;
+
 public class Topic {
 
     private final String topic;
 
-    public Topic(String topicName) {
+    public Topic(@NotNull String topicName) {
         this.topic = topicName;
     }
 
@@ -16,6 +21,10 @@ public class Topic {
     public static Topic serviceInbox(String serviceName, String inboxName) {
         // TODO fancy naming scheme
         return new Topic("inbox-" + serviceName + "-" + inboxName);
+    }
+
+    public boolean isEmpty() {
+        return Strings.isNullOrEmpty(topic);
     }
 
     @Override

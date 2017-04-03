@@ -7,7 +7,15 @@ import org.apache.kafka.common.TopicPartition;
  */
 public class PartitionProcessorFactory {
 
+    private TypeDictionary typeDictionary;
+    private FailedMessageProcessor failedMessageProcessor;
+
+    public PartitionProcessorFactory(TypeDictionary typeDictionary, FailedMessageProcessor failedMessageProcessor) {
+        this.typeDictionary = typeDictionary;
+        this.failedMessageProcessor = failedMessageProcessor;
+    }
+
     public PartitionProcessor newProcessorFor(TopicPartition partitionKey) {
-        return null;
+        return new PartitionProcessor(partitionKey, typeDictionary, failedMessageProcessor);
     }
 }

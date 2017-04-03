@@ -93,7 +93,7 @@ public class KafkaPublisher {
 
     protected boolean publishEvents(boolean sync, String key, String[] events) {
         if (realProducer == null) {
-            throw new IllegalStateException("realProducer was null. was the factory initialized?");
+            throw new IllegalStateException("kafka was null. was the factory initialized?");
         }
         for (String event : events) {
             ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, event);
