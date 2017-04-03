@@ -35,15 +35,15 @@ public class DelayAndRetryOnRecoverableErrors implements FailedMessageProcessor 
             return fallbackStrategy.onFailedMessage(failed, failureCause);
         }
 
-        return true;
+        return shouldRetry;
     }
 
     private boolean isRecoverable(Throwable failureCause) {
 
-        // make interchangeable strategy
+        // TODO make interchangeable strategy
 
         // FIXME
-        return true;
+        return false;
     }
 
 }

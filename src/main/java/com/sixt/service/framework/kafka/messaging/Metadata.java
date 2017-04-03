@@ -91,13 +91,31 @@ public class Metadata {
         return new OrangeContext(correlationId);
     }
 
-// Object instantiation is done via factory
+    @Override
+    public String toString() {
+        return "Metadata{" +
+                "wasReceived=" + wasReceived +
+                ", topic=" + topic +
+                ", partitioningKey='" + partitioningKey + '\'' +
+                ", partitionId=" + partitionId +
+                ", offset=" + offset +
+                ", messageId='" + messageId + '\'' +
+                ", correlationId='" + correlationId + '\'' +
+                ", traceId='" + traceId + '\'' +
+                ", requestCorrelationId='" + requestCorrelationId + '\'' +
+                ", replyTo=" + replyTo +
+                ", type=" + type +
+                '}';
+    }
+
+
+    // Object instantiation is done via factory
 
 
     Metadata(boolean wasReceived, Topic topic, String partitioningKey, int partitionId, long offset, String messageId, String correlationId, String traceId, String requestCorrelationId, Topic replyTo, MessageType type) {
         this.wasReceived = wasReceived;
 
-        if (topic == null) {
+        if (topic == null || topic.isEmpty()) {
             throw new IllegalArgumentException("topic is required");
         }
         this.topic = topic;

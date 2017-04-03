@@ -1,6 +1,5 @@
 package com.sixt.service.framework.kafka.messaging;
 
-import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.kafka.SixtPartitioner;
 import com.sixt.service.framework.protobuf.MessagingEnvelope;
 import org.apache.kafka.clients.CommonClientConfigs;
@@ -18,36 +17,25 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Producer {
     private static final Logger logger = LoggerFactory.getLogger(Producer.class);
 
-    protected org.apache.kafka.clients.producer.KafkaProducer<String, byte[]> realProducer;
-    protected AtomicBoolean isInitialized = new AtomicBoolean(false);
+    protected org.apache.kafka.clients.producer.KafkaProducer<String, byte[]> kafka;
 
-    // TODO move to ctor?
-    public void initialize(String servers) {
-        if (isInitialized.get()) {
-            logger.warn("Already initialized");
-            return;
-        }
-
+    public Producer(String servers) {
         Properties props = new Properties();
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, servers);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
         props.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, SixtPartitioner.class.getName());
-        realProducer = new org.apache.kafka.clients.producer.KafkaProducer<>(props);
-        isInitialized.set(true);
+
+        kafka = new org.apache.kafka.clients.producer.KafkaProducer<>(props);
     }
 
     public void shutdown() {
-        realProducer.close();
-        realProducer = null;
+        kafka.close();
+        kafka = null;
     }
 
 
     public void send(Message message) {
-        if (!isInitialized.get()) {
-            throw new IllegalStateException("KafkaProducer is not initialized.");
-        }
-
         String destinationTopic = message.getMetadata().getTopic().toString();
         String partitioningKey = message.getMetadata().getPartitioningKey();
         MessagingEnvelope envelope = Messages.toKafka(message);
@@ -55,10 +43,10 @@ public class Producer {
         ProducerRecord<String, byte[]> record = new ProducerRecord<>(destinationTopic, partitioningKey, envelope.toByteArray());
 
         try {
-            Future future = realProducer.send(record);
+            Future future = kafka.send(record);
             future.get();
         } catch (Exception ex) {
-            // TODO proper exception
+            // TODO proper error handling
             throw new RuntimeException(ex);
         }
     }

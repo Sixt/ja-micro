@@ -140,35 +140,24 @@ class PartitionProcessor {
 
 
         private void executeHander() {
-            try {
-                MessageHandler handler = typeDictionary.messageHandlerFor(message.getMetadata().getType());
+            boolean deliverMessage = true;
 
-                // Leave the framework here: hand over execution to service-specific handler.
-                handler.onMessage(message, message.getMetadata().newContextFromMetadata());
+            while(deliverMessage) {
+                try {
+                    MessageHandler handler = typeDictionary.messageHandlerFor(message.getMetadata().getType());
 
-            } catch (Throwable error) {
-                // TODO distinguish between no handler and any other problem
-                // TODO we need something like a circuit breaker that pauses message delivery if we have high failure rate
+                    // Leave the framework here: hand over execution to service-specific handler.
+                    handler.onMessage(message, message.getMetadata().newContextFromMetadata());
+                    break;
 
-                // Handlers are responsible to handle expected exceptions (such as domain logic failures) and re-try temporary failures.
-                // If we get an exception here it's either a unrecoverable condition (e.g. database not available) or a lazy developer.
-
-                // TODO wrap failedMessageProcessor in try/catch. never trust external code.
-                boolean shouldRetry = failedMessageProcessor.onFailedMessage(message, error);
-                if(shouldRetry) {
-                    // recursive call is executed before finally, when unwinding the call stack we call all pending finally blocks
-                    // TODO is recursion a good idea here or do we nuke the stack?
-                    executeHander();
+                } catch (Throwable error) {
+                    // Should we retry to deliver the failed message?
+                    deliverMessage = failedMessageProcessor.onFailedMessage(message, error);
                 }
-
-
-            } finally {
-                // All messages including the failed ones processed by a handler are marked as consumed and committed to Kafka.
-                // TODO have some way for the handler to do a early commit
-                System.out.println("finally");
-
-                markAsConsumed(message.getMetadata().getOffset());
             }
+
+            // finally, consume the message - even if delivery failed
+            markAsConsumed(message.getMetadata().getOffset());
         }
     }
 
