@@ -102,7 +102,6 @@ class PartitionProcessor {
     class MessageDeliveryTask implements Runnable {
 
         private final ConsumerRecord<String, byte[]> record;
-        private Message message;
 
         public MessageDeliveryTask(ConsumerRecord<String, byte[]> record) {
             this.record = record;
@@ -111,40 +110,53 @@ class PartitionProcessor {
         @Override
         public void run() {
             if (isStopped.get()) {
-                return;
+                return; // empty the queue if the processor was stopped.
             }
 
-            parseMessage();
-            executeHander();
+            Message<? extends com.google.protobuf.Message> message = parseMessage();
+            if (message == null) {
+                return; // Could not even parse the message, so we give up.
+            }
+
+            deliverToMessageHandler(message);
         }
 
-        private void parseMessage() {
+        private Message<? extends com.google.protobuf.Message> parseMessage() {
             try {
                 MessagingEnvelope envelope = MessagingEnvelope.parseFrom(record.value());
 
                 MessageType type = new MessageType(envelope.getMessageType());
                 Parser<com.google.protobuf.Message> parser = typeDictionary.parserFor(type);
 
-                com.google.protobuf.Message innerMessage = parser.parseFrom(envelope.getInnerMessage());
-                message = Messages.fromKafka(innerMessage, envelope, record);
+                if (parser == null) {
+                    throw new UnknownMessageTypeException(type);
+                }
 
-            } catch (InvalidProtocolBufferException e) {
-                // Cannot even unmarshal the envelope
-                // FIXME!!
-                logger.error("FIXME", e);
-            } catch (Throwable t) {
-                // FIXME!!
-                logger.error("FIXME", t);
+                com.google.protobuf.Message innerMessage = parser.parseFrom(envelope.getInnerMessage());
+                return Messages.fromKafka(innerMessage, envelope, record);
+
+            } catch (InvalidProtocolBufferException | UnknownMessageTypeException unrecoverableParsingError) {
+                // FIXME structured logging
+                logger.warn("Cannot parse message", unrecoverableParsingError);
+
+            } catch (Throwable unexpectedError) {
+                // FIXME structured logging
+                logger.error("FIXME", unexpectedError);
             }
+
+            return null;
         }
 
 
-        private void executeHander() {
+        private void deliverToMessageHandler(Message<? extends com.google.protobuf.Message> message) {
             boolean deliverMessage = true;
 
-            while(deliverMessage) {
+            while (deliverMessage) {
                 try {
                     MessageHandler handler = typeDictionary.messageHandlerFor(message.getMetadata().getType());
+                    if (handler == null) {
+                        throw new UnknownMessageHandlerException(message.getMetadata().getType());
+                    }
 
                     // Leave the framework here: hand over execution to service-specific handler.
                     handler.onMessage(message, message.getMetadata().newContextFromMetadata());

@@ -1,5 +1,7 @@
 package com.sixt.service.framework.kafka.messaging;
 
+import java.lang.reflect.Type;
+
 /**
  * Created by abjb on 3/28/17.
  */
@@ -34,5 +36,10 @@ public class MessageType {
     @Override
     public int hashCode() {
         return type != null ? type.hashCode() : 0;
+    }
+
+    public static MessageType of(Type t) {
+        // FIXME!!
+        return new MessageType(t.getTypeName());
     }
 }

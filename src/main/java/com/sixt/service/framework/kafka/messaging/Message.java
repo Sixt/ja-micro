@@ -16,4 +16,12 @@ public class Message<T extends com.google.protobuf.Message> {
     public Metadata getMetadata() {
         return metadata;
     }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "payload=" + payload +
+                ", metadata=" + metadata +
+                '}';
+    }
 }

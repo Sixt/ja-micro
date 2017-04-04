@@ -72,22 +72,7 @@ public class AssignedPartitionsTest {
     }
 
     private PartitionProcessorFactory processorFactory() {
-        TypeDictionary typeDictionary = new TypeDictionary() {
-            @Override
-            public MessageHandler messageHandlerFor(MessageType type) {
-                return new MessageHandler() {
-                    @Override
-                    public void onMessage(Message msg, OrangeContext context) {
-                        System.out.println(msg.getMetadata().toString());
-                    }
-                };
-            }
-
-            @Override
-            public Parser parserFor(MessageType type) {
-                return MessagingEnvelope.parser();
-            }
-        };
+        TypeDictionary typeDictionary = new TypeDictionary(new HashMap<>(), new HashMap<>());
         FailedMessageProcessor failedMessageProcessor = new DiscardFailedMessages();
         return new PartitionProcessorFactory(typeDictionary, failedMessageProcessor);
     }

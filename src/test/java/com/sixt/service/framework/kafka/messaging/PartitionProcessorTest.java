@@ -7,9 +7,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -52,9 +50,13 @@ public class PartitionProcessorTest {
     }
 
 
-    static class TestTypeDictionary implements TypeDictionary {
+    static class TestTypeDictionary extends TypeDictionary {
 
         TestHandler handler = new TestHandler();
+
+        public TestTypeDictionary() {
+            super(new HashMap<>(), new HashMap<>());
+        }
 
         @Override
         public MessageHandler messageHandlerFor(MessageType type) {

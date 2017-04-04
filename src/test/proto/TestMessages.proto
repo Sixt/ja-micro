@@ -1,0 +1,22 @@
+syntax = "proto3";
+package schema;
+
+option java_multiple_files = true;
+option java_package = "com.sixt.service.framework.test.api";
+
+
+message SayHelloToCmd {
+    string name = 1;
+}
+
+message SayHelloToReply {
+    string greeting = 1;
+}
+
+message TypeDictionaryTest{
+    int32 cruftlevel = 1;
+}
+
+message TestMessageWithNoHandler {
+    string a_meaningless_field = 1;
+}
