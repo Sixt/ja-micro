@@ -6,6 +6,6 @@ import com.sixt.service.framework.kafka.messaging.Message;
 
 public interface MessageHandler<T extends com.google.protobuf.Message> {
 
-    void onMessage(Message<T> msg, OrangeContext context);
+    void onMessage(Message<T> message, OrangeContext context);
 
 }
