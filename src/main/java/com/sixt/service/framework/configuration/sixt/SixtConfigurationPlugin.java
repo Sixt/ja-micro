@@ -15,6 +15,7 @@ package com.sixt.service.framework.configuration.sixt;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.sixt.service.configuration.api.ConfigurationOuterClass;
+import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.annotation.ConfigurationPlugin;
 import com.sixt.service.framework.configuration.ConfigurationManager;
@@ -90,7 +91,7 @@ public class SixtConfigurationPlugin implements ConfigurationProvider, Runnable 
                                 "Configuration.GetValues", ConfigurationOuterClass.ValuesResponse.class).
                                 withRetries(0).withTimeout(LONG_POLL_TIMEOUT).build();
                 logger.debug("Calling configuration service, lastChangeIndex = {}", lastChangeIndex.get());
-                response = client.callSynchronous(configRequest);
+                response = client.callSynchronous(configRequest, new OrangeContext());
                 logger.debug("Got configuration service response");
                 break;
             } catch (RpcCallException ex) {

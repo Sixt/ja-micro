@@ -28,10 +28,7 @@ import com.sixt.service.framework.metrics.GoTimer;
 import com.sixt.service.framework.protobuf.ProtobufUtil;
 import com.sixt.service.framework.rpc.RpcCallException;
 import io.opentracing.Span;
-import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMapExtractAdapter;
 import io.opentracing.tag.Tags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -163,7 +160,7 @@ public class JsonHandler extends RpcHandler {
             Message innerResponse = invokeHandlerChain(rpcRequest.getMethod(), handler, innerRequest, cxt);
             jsonResponse.setResult(ProtobufUtil.protobufToJson(innerResponse));
         } catch (RpcCallException rpcEx) {
-            logger.warn("Error processing request", rpcEx);
+            logger.debug("Error processing request", rpcEx);
             jsonResponse.setError(rpcEx.toJson());
             jsonResponse.setStatusCode(rpcEx.getCategory().getHttpStatus());
         } catch (Exception ex) {

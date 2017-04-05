@@ -1,7 +1,7 @@
 buildscript {
     dependencies {
-        classpath 'org.apache.ant:ant:1.9.7'
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.0'
+        classpath 'org.apache.ant:ant:1.10.1'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.1'
     }
 }
 
@@ -12,7 +12,7 @@ plugins {
     id 'maven-publish'
     id 'project-report'
 
-    id 'net.researchgate.release' version '2.5.0'
+    id 'net.researchgate.release' version '2.6.0'
     id 'com.github.ben-manes.versions' version '0.14.0'
     id 'com.jfrog.bintray' version '1.7.3'
     id 'com.google.protobuf' version '0.8.1'
@@ -95,14 +95,15 @@ release {
 afterReleaseBuild.dependsOn bintrayUpload
 
 ext.versions = [
-        'jetty'   : '9.3.14.v20161028',
-        'protobuf': '3.1.0',
-        'guice'   : '4.1.0',
-        'kafka'   : '0.10.1.0',
-        'guava'   : '20.0',
-        'logback' : '1.1.8',
-        'slf4j'   : '1.7.22',
-        'tracing' : '0.20.10'
+        'jetty'    : '9.4.3.v20170317',
+        'protobuf' : '3.2.0',
+        'guice'    : '4.1.0',
+        'kafka'    : '0.10.2.0',
+        'guava'    : '21.0',
+        'logback'  : '1.2.3',
+        'slf4j'    : '1.7.25',
+        'tracing'  : '0.20.10',
+        'powermock': '1.6.6'
 ]
 
 dependencies { //achtung: order does matter!
@@ -132,14 +133,14 @@ dependencies { //achtung: order does matter!
     compile 'javax.validation:validation-api:1.1.0.Final'
 
     //metrics
-    compile 'io.dropwizard.metrics:metrics-core:3.1.2'
+    compile 'io.dropwizard.metrics:metrics-core:3.2.2'
 
     //tracing
     compile "io.opentracing:opentracing-api:$versions.tracing"
     compile "io.opentracing:opentracing-noop:$versions.tracing"
 
     //Classpath scanner
-    compile 'io.github.lukehutch:fast-classpath-scanner:2.0.10'
+    compile 'io.github.lukehutch:fast-classpath-scanner:2.0.18'
 
     //Jetty
     compile "org.eclipse.jetty:jetty-client:$versions.jetty"
@@ -152,7 +153,7 @@ dependencies { //achtung: order does matter!
     //logging
     compile "ch.qos.logback:logback-core:$versions.logback"
     compile "ch.qos.logback:logback-classic:$versions.logback"
-    compile 'net.logstash.logback:logstash-logback-encoder:4.8'
+    compile 'net.logstash.logback:logstash-logback-encoder:4.9'
     compile "org.slf4j:slf4j-api:$versions.slf4j"
 
     //read manifests
@@ -169,16 +170,16 @@ dependencies { //achtung: order does matter!
     compile 'com.squareup.wire:wire-schema:2.2.0'
 
     // https://github.com/palantir/docker-compose-rule
-    compile 'com.palantir.docker.compose:docker-compose-rule:0.28.1'
+    compile 'com.palantir.docker.compose:docker-compose-rule-junit4:0.31.1'
 
     //Testing
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:1.10.19'
-    testCompile 'org.powermock:powermock-module-junit4:1.6.6'
-    testCompile 'org.powermock:powermock-api-mockito:1.6.6'
-    testCompile 'org.powermock:powermock-core:1.6.6'
-    testCompile 'org.assertj:assertj-core:3.6.1'
-    testCompile 'joda-time:joda-time:2.9.7'
+    testCompile "org.powermock:powermock-module-junit4:$versions.powermock"
+    testCompile "org.powermock:powermock-api-mockito:$versions.powermock"
+    testCompile "org.powermock:powermock-core:$versions.powermock"
+    testCompile 'org.assertj:assertj-core:3.6.2'
+    testCompile 'joda-time:joda-time:2.9.9'
 }
 
 protobuf {
