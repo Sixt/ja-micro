@@ -3,8 +3,6 @@ package com.sixt.service.framework.kafka.messaging;
 
 import com.google.protobuf.Parser;
 import com.sixt.service.framework.OrangeContext;
-import com.sixt.service.framework.test.api.TestMessageWithNoHandler;
-import com.sixt.service.framework.test.api.TypeDictionaryTest;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;

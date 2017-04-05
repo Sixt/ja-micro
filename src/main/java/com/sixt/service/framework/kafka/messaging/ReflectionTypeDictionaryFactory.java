@@ -1,7 +1,6 @@
 package com.sixt.service.framework.kafka.messaging;
 
 import com.google.protobuf.Parser;
-import com.sixt.service.framework.test.api.SayHelloToCmd;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

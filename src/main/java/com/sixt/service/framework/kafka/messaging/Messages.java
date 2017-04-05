@@ -2,7 +2,7 @@ package com.sixt.service.framework.kafka.messaging;
 
 import com.google.common.base.Strings;
 import com.sixt.service.framework.OrangeContext;
-import com.sixt.service.framework.protobuf.MessagingEnvelope;
+
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.util.UUID;
@@ -32,10 +32,12 @@ public class Messages {
     }
 
 
+    /*
     public static Message requestFor(Topic target, String partitionKey, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
         Topic defaultReplyTo = Topic.defaultServiceInbox("FIXME"); // FIXME where to get the service name from? context?
         return requestFor(target, defaultReplyTo, partitionKey,protoPayloadMessage,context);
     }
+    */
 
     public static Message requestFor(Topic target, Topic replyTo, String partitionKey, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
         boolean wasReceived = false;
@@ -78,7 +80,7 @@ public class Messages {
     }
 
 
-    static Message fromKafka(com.google.protobuf.Message protoMessage, MessagingEnvelope envelope, ConsumerRecord<String, byte[]> record) {
+    static Message fromKafka(com.google.protobuf.Message protoMessage, Envelope envelope, ConsumerRecord<String, byte[]> record) {
         boolean wasReceived = true;
 
         Topic topic = new Topic(record.topic());
@@ -100,8 +102,8 @@ public class Messages {
     }
 
 
-    static MessagingEnvelope toKafka(Message message) {
-        MessagingEnvelope.Builder envelope = MessagingEnvelope.newBuilder();
+    static Envelope toKafka(Message message) {
+        Envelope.Builder envelope = Envelope.newBuilder();
         Metadata meta = message.getMetadata();
 
         envelope.setMessageId(meta.getMessageId());

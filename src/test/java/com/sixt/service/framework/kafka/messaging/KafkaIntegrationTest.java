@@ -17,8 +17,6 @@ import com.palantir.docker.compose.configuration.ProjectName;
 import com.sixt.service.framework.IntegrationTest;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.servicetest.helper.DockerComposeHelper;
-import com.sixt.service.framework.test.api.SayHelloToCmd;
-import com.sixt.service.framework.test.api.SayHelloToReply;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.joda.time.Duration;
 import org.junit.ClassRule;
@@ -95,10 +93,14 @@ public class KafkaIntegrationTest {
 
 class SayHelloToCmdHandler implements MessageHandler<SayHelloToCmd> {
 
-    final Producer producer = new Producer(KafkaIntegrationTest.servers);
+    Producer producer;
 
     @Override
     public void onMessage(Message<SayHelloToCmd> message, OrangeContext context) {
+        if (producer == null) {
+            producer = new Producer(KafkaIntegrationTest.servers);
+        }
+
         System.err.println(message);
 
         SayHelloToReply greeting = SayHelloToReply.newBuilder().setGreeting("Hello to " + message.getPayload().getName()).build();

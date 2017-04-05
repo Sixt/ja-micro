@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package MessagingEnvelope;
-option java_multiple_files = true;
-option java_package = "com.sixt.service.framework.protobuf";
+package com.sixt.service.framework.kafka.messaging;
 
-message MessagingEnvelope {
+option java_multiple_files = true;
+
+message Envelope {
 	// Header fields:
 	string message_id = 1; // REQUIRED. A unique identfier for this message.
 

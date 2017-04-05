@@ -1,9 +1,12 @@
 syntax = "proto3";
-package schema;
+
+package com.sixt.service.framework.kafka.messaging;
 
 option java_multiple_files = true;
-option java_package = "com.sixt.service.framework.test.api";
 
+message EmptyMessage {
+
+}
 
 message SayHelloToCmd {
     string name = 1;
