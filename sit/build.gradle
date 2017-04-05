@@ -3,8 +3,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.bmuschko:gradle-docker-plugin:3.0.5'
-        classpath 'org.ajoberstar:grgit:1.7.0'
+        classpath 'com.bmuschko:gradle-docker-plugin:3.0.6'
+        classpath 'org.ajoberstar:grgit:1.9.0'
     }
     configurations.classpath {
         resolutionStrategy {
@@ -145,9 +145,10 @@ dependencies {
     // Dependency on root project
     compile project(":")
 
-    serviceIntegrationTestCompile 'org.assertj:assertj-core:3.6.1'
     // https://github.com/palantir/docker-compose-rule
-    serviceIntegrationTestCompile 'com.palantir.docker.compose:docker-compose-rule:0.28.1'
+    compile 'com.palantir.docker.compose:docker-compose-rule-junit4:0.31.1'
+
+    serviceIntegrationTestCompile 'org.assertj:assertj-core:3.6.2'
 }
 
 jar {

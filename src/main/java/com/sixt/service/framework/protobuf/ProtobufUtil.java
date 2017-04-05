@@ -64,7 +64,7 @@ public class ProtobufUtil {
                 TYPE.Builder builder = getBuilder(messageClass);
                 return (TYPE) builder.getDefaultInstanceForType();
             } catch (Exception e) {
-                logger.info("Error building protobuf object of type {} from json: {}",
+                logger.warn("Error building protobuf object of type {} from json: {}",
                         messageClass.getName(), request);
             }
         }
@@ -76,7 +76,7 @@ public class ProtobufUtil {
                 ByteArrayInputStream stream = new ByteArrayInputStream(request.getBytes());
                 formatter.merge(stream, builder);
             } catch (IOException e) {
-                logger.info("Error building protobuf object of type {} from json: {}",
+                logger.warn("Error building protobuf object of type {} from json: {}",
                         messageClass.getName(), request);
             }
             return (TYPE) builder.build();
