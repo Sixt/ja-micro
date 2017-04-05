@@ -2,7 +2,6 @@ package com.sixt.service.framework.kafka.messaging;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Parser;
-import com.sixt.service.framework.protobuf.MessagingEnvelope;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
@@ -123,7 +122,7 @@ class PartitionProcessor {
 
         private Message<? extends com.google.protobuf.Message> parseMessage() {
             try {
-                MessagingEnvelope envelope = MessagingEnvelope.parseFrom(record.value());
+                Envelope envelope = Envelope.parseFrom(record.value());
 
                 MessageType type = new MessageType(envelope.getMessageType());
                 Parser<com.google.protobuf.Message> parser = typeDictionary.parserFor(type);

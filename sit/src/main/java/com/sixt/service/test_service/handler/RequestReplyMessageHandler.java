@@ -27,7 +27,7 @@ public class RequestReplyMessageHandler implements MessageHandler<Greeting> {
 
         Message response = Messages.replyTo(command, echo, context);
 
-        Message sayHello = Messages.requestFor(target, "a crufty key", echo, context);
+        //Message sayHello = Messages.requestFor(target, "a crufty key", echo, context);
         Message sayHelloAgain = Messages.requestFor(target, trash, "a crufty key", echo, context);
 
         Message fireAndForget = Messages.oneWayMessage(target, "another key", echo, context);

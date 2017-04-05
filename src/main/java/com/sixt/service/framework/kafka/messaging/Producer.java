@@ -1,7 +1,6 @@
 package com.sixt.service.framework.kafka.messaging;
 
 import com.sixt.service.framework.kafka.SixtPartitioner;
-import com.sixt.service.framework.protobuf.MessagingEnvelope;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -38,7 +37,7 @@ public class Producer {
     public void send(Message message) {
         String destinationTopic = message.getMetadata().getTopic().toString();
         String partitioningKey = message.getMetadata().getPartitioningKey();
-        MessagingEnvelope envelope = Messages.toKafka(message);
+        Envelope envelope = Messages.toKafka(message);
 
         ProducerRecord<String, byte[]> record = new ProducerRecord<>(destinationTopic, partitioningKey, envelope.toByteArray());
 

@@ -3,7 +3,16 @@ package com.sixt.service.framework.kafka.messaging;
 import java.lang.reflect.Type;
 
 /**
- * Created by abjb on 3/28/17.
+ * Value object to represent the type of a (protobuf) message.
+ * Used to specify the type of the inner message in the messaging envelope.
+ *
+ * Conventions:
+ * - The type name is the Java Type.getTypeName() of the generated protobuf message.
+ *
+ * - In the defining proto file
+ * -- specify option java_multiple_files = true; to avoid the OuterClass that nests the message types.
+ * -- use package com.sixt.service.{SERVICENAME}.api; as default namespace/package for the asynchronous messaging contract
+ * -- there is no need for the option java_package directive
  */
 public class MessageType {
 
@@ -14,8 +23,7 @@ public class MessageType {
     }
 
     static MessageType of(com.google.protobuf.Message protoMessage) {
-        // FIXME define type name!
-        return new MessageType(protoMessage.getClass().getCanonicalName());
+        return new MessageType(protoMessage.getClass().getTypeName());
     }
 
     @Override
@@ -39,7 +47,6 @@ public class MessageType {
     }
 
     public static MessageType of(Type t) {
-        // FIXME!!
         return new MessageType(t.getTypeName());
     }
 }

@@ -1,8 +1,5 @@
 package com.sixt.service.framework.kafka.messaging;
 
-import com.google.protobuf.Parser;
-import com.sixt.service.framework.OrangeContext;
-import com.sixt.service.framework.protobuf.MessagingEnvelope;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
@@ -16,7 +13,7 @@ public class AssignedPartitionsTest {
 
     public static final String TOPIC = "aTopic";
     public static final String KEY = "aKey";
-    public static final MessagingEnvelope EMPTY_MESSAGE = MessagingEnvelope.getDefaultInstance();
+    public static final EmptyMessage EMPTY_MESSAGE = EmptyMessage.getDefaultInstance();
 
     @Test
     public void enqueuingARecordForANewPartitionShouldCreateAProcessor() {

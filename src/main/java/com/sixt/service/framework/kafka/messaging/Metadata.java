@@ -16,8 +16,8 @@ public class Metadata {
     private final int partitionId; // The id of the topic partition - only for INBOUND.
     private final long offset; // The offset of the message - only for INBOUND
 
-    // Message headers - see also MessagingEnvelope.proto
-    private final String messageId; // FIXME
+    // Message headers - see also Messaging.proto
+    private final String messageId;
 
 
     // Tracing/correlation ids

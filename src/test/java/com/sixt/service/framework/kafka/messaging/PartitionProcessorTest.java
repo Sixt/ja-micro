@@ -2,12 +2,14 @@ package com.sixt.service.framework.kafka.messaging;
 
 import com.google.protobuf.Parser;
 import com.sixt.service.framework.OrangeContext;
-import com.sixt.service.framework.protobuf.MessagingEnvelope;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -65,7 +67,7 @@ public class PartitionProcessorTest {
 
         @Override
         public Parser parserFor(MessageType type) {
-            return MessagingEnvelope.parser();
+            return EmptyMessage.parser();
         }
     }
 
@@ -80,16 +82,15 @@ public class PartitionProcessorTest {
     }
 
     private ConsumerRecord<String, byte[]> testRecordWithOffset(long offset) {
-
-        MessagingEnvelope.Builder envelope = MessagingEnvelope.newBuilder();
-        envelope.setMessageId("anId");
+        Envelope.Builder envelope = Envelope.newBuilder();
+        envelope.setMessageId("cruft");
 
         return new ConsumerRecord<String, byte[]>(TOPIC, PARTITION, offset, KEY, envelope.build().toByteArray());
     }
 
 
     private ConsumerRecord<String, byte[]> simulateKafkaInTheLoop(Message message, long offset) {
-        MessagingEnvelope envelope = Messages.toKafka(message);
+        Envelope envelope = Messages.toKafka(message);
         return new ConsumerRecord<String, byte[]>(message.getMetadata().getTopic().toString(), PARTITION, offset, message.getMetadata().getPartitioningKey(), envelope.toByteArray());
     }
 
@@ -226,8 +227,7 @@ public class PartitionProcessorTest {
     public void requestResponseCylce() throws InterruptedException {
         PartitionProcessor processor = givenAPartionProcessor();
 
-        // We don't have a message type to just MessagingEnvelope as inner message.
-        MessagingEnvelope payload = MessagingEnvelope.getDefaultInstance();
+        EmptyMessage payload = EmptyMessage.getDefaultInstance();
         OrangeContext context = new OrangeContext();
 
 
