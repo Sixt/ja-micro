@@ -1,7 +1,12 @@
 package com.sixt.service.framework.kafka.messaging;
 
+import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Parser;
+import com.sixt.service.framework.OrangeContext;
+import io.opentracing.Span;
+import io.opentracing.Tracer;
+import io.opentracing.tag.Tags;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
@@ -39,10 +44,12 @@ class PartitionProcessor {
     private AtomicLong lastConsumedOffset = new AtomicLong(-2); // i.e. unknown
     private AtomicLong lastComittedOffset = new AtomicLong(-1); // i.e. unknown
 
+    // Metrics and tracing
+    private Tracer tracer; // FIXME inject me
+
 
     // Lifecycle --------------------------------------------------
 
-    // TODO injection
     PartitionProcessor(TopicPartition partitionKey, TypeDictionary typeDictionary, FailedMessageProcessor failedMessageProcessor) {
         this.partitionKey = partitionKey;
         this.typeDictionary = typeDictionary;
@@ -150,6 +157,15 @@ class PartitionProcessor {
         private void deliverToMessageHandler(Message<? extends com.google.protobuf.Message> message) {
             boolean deliverMessage = true;
 
+            OrangeContext context = message.getMetadata().newContextFromMetadata();
+
+            /*
+            Span span = tracer.buildSpan(message.getMetadata().getType().toString()).start();
+            Tags.SPAN_KIND.set(span, "consumer");
+            span.setTag("correlation_id", context.getCorrelationId());
+            context.setTracingContext(span.context());
+*/
+
             while (deliverMessage) {
                 try {
                     MessageHandler handler = typeDictionary.messageHandlerFor(message.getMetadata().getType());
@@ -158,17 +174,23 @@ class PartitionProcessor {
                     }
 
                     // Leave the framework here: hand over execution to service-specific handler.
-                    handler.onMessage(message, message.getMetadata().newContextFromMetadata());
-                    break;
+                    handler.onMessage(message, context);
+                    break; // tricky: break here and deliverMessage stays true, this way we can distinguish between failure and success below.
 
                 } catch (Throwable error) {
                     // Should we retry to deliver the failed message?
                     deliverMessage = failedMessageProcessor.onFailedMessage(message, error);
                 }
             }
-
             // finally, consume the message - even if delivery failed
             markAsConsumed(message.getMetadata().getOffset());
+
+            /*
+            if (!deliverMessage) {
+                Tags.ERROR.set(span, true);
+            }
+            span.finish();
+            */
         }
     }
 
@@ -203,7 +225,6 @@ class PartitionProcessor {
     // Flow control --------------------------------------------------
 
     public boolean isPaused() {
-        // TODO some fancy error rate / circuit breaker stuff
         return numberOfUnprocessedMessages() > MAX_MESSAGES_IN_FLIGHT;
     }
 

@@ -1,5 +1,6 @@
 package com.sixt.service.framework.kafka.messaging;
 
+import com.google.inject.Inject;
 import org.apache.kafka.common.TopicPartition;
 
 /**
@@ -10,6 +11,8 @@ public class PartitionProcessorFactory {
     private TypeDictionary typeDictionary;
     private FailedMessageProcessor failedMessageProcessor;
 
+
+    @Inject
     public PartitionProcessorFactory(TypeDictionary typeDictionary, FailedMessageProcessor failedMessageProcessor) {
         this.typeDictionary = typeDictionary;
         this.failedMessageProcessor = failedMessageProcessor;

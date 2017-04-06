@@ -13,7 +13,9 @@
 package com.sixt.service.test_service;
 
 import com.sixt.service.framework.AbstractService;
+import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.annotation.OrangeMicroservice;
+import com.sixt.service.framework.kafka.messaging.*;
 import com.sixt.service.test_service.handler.*;
 
 import java.io.PrintStream;
@@ -37,18 +39,9 @@ public class ServiceEntryPoint extends AbstractService {
     @Override
     public void bootstrapComplete() throws InterruptedException {
 
-        // what do we want?
-
-        // consumer1 reads from topic 1
-        // consumer2 reads from topic 2
-
-        // handlers a,b,c go to consumer1
-        // handlers x,y,z go to consumer2
-        // handler c also goes to consumer2
-
-        // or wire everything to default??
-        //KafkaMessagingConsumer consumer = new KafkaMessagingConsumer("inbox-com.sixt.service.test_service");
-
+        // Start a messaging consumer for the default inbox.
+        ConsumerFactory consumerFactory = injector.getInstance(ConsumerFactory.class);
+        consumerFactory.defaultInboxConsumer(new DiscardFailedMessages());
 
         injector.getInstance(RandomEventHandler.class);
         super.bootstrapComplete();

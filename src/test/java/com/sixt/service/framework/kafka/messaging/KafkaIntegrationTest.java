@@ -16,9 +16,11 @@ import com.palantir.docker.compose.DockerComposeRule;
 import com.palantir.docker.compose.configuration.ProjectName;
 import com.sixt.service.framework.IntegrationTest;
 import com.sixt.service.framework.OrangeContext;
+import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.servicetest.helper.DockerComposeHelper;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.joda.time.Duration;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,12 +36,6 @@ import static org.junit.Assert.assertTrue;
 public class KafkaIntegrationTest {
 
 
-    // FIXME
-    public final static int N = 10;
-    public static CountDownLatch requestLatch = new CountDownLatch(N);
-    public static CountDownLatch responseLatch = new CountDownLatch(N);
-    public static String servers;
-
     @Rule
     public Timeout globalTimeout = Timeout.seconds(300);
 
@@ -53,73 +49,75 @@ public class KafkaIntegrationTest {
                     "build/dockerCompose/logs/kafka.log"), Duration.standardMinutes(1))
             .build();
 
+
+    @BeforeClass
+    public static void setupClass() throws Exception {
+        DockerComposeHelper.setKafkaEnvironment(docker);
+    }
+
+
     @Test
     public void simpleProducerConsumer() throws InterruptedException {
-        Thread.sleep(10000); // TODO concurrency bug in the DockerComposeRule: wait for the topics to be created by startup script.
+        ServiceProperties serviceProperties = new ServiceProperties();
+        serviceProperties.initialize(new String[]{}); // Reads environment variables set by DockerComposeHelper
+
+        Thread.sleep(5000); // TODO concurrency bug in the DockerComposeRule: wait for the topics to be created by startup script.
+
 
         Topic ping = new Topic("ping");
         Topic pong = new Topic("pong");
+        final int N = 10;
 
-        servers = docker.containers().container("kafka").port(9092).inFormat("$HOST:$EXTERNAL_PORT");
-
-
-        Producer producer = new Producer(servers);
-
-
-
-        TypeDictionary typeDictionary = new ReflectionTypeDictionaryFactory().createTypeDictionaryFromClasspath();
-        PartitionProcessorFactory ppf = new PartitionProcessorFactory(typeDictionary, new DiscardFailedMessages());
-
-        Consumer requestConsumer = new Consumer(ping, "consumer-group-test-1", servers, ppf);
-        Consumer replyConsumer = new Consumer(pong, "consumer-group-test-1", servers, ppf);
-
+        Producer producer = new ProducerFactory(serviceProperties).createProducer();
         for (int i = 0; i < N; i++) {
             SayHelloToCmd cmd = SayHelloToCmd.newBuilder().setName(Integer.toString(i)).build();
             Message request = Messages.requestFor(ping, pong, RandomStringUtils.randomAscii(5), cmd, new OrangeContext());
             producer.send(request);
         }
 
-        assertTrue(requestLatch.await(10, TimeUnit.SECONDS));
-        assertTrue(responseLatch.await(10, TimeUnit.SECONDS));
+
+        final CountDownLatch requestLatch = new CountDownLatch(N);
+        final CountDownLatch responseLatch = new CountDownLatch(N);
+
+
+        TypeDictionary typeDictionary = new TypeDictionary();
+        ReflectionTypeDictionaryFactory typeDictionaryFactory = new ReflectionTypeDictionaryFactory(null);
+        typeDictionary.putAllParsers(typeDictionaryFactory.populateParsersFromClasspath());
+
+        typeDictionary.putHandler(MessageType.of(SayHelloToCmd.class), new MessageHandler<SayHelloToCmd>() {
+            @Override
+            public void onMessage(Message<SayHelloToCmd> message, OrangeContext context) {
+                System.err.println(message);
+
+                SayHelloToReply greeting = SayHelloToReply.newBuilder().setGreeting("Hello to " + message.getPayload().getName()).build();
+                Message reply = Messages.replyTo(message, greeting, context);
+
+                producer.send(reply);
+                requestLatch.countDown();
+
+            }
+        });
+
+        typeDictionary.putHandler(MessageType.of(SayHelloToReply.class), new MessageHandler<SayHelloToReply>() {
+            @Override
+            public void onMessage(Message<SayHelloToReply> message, OrangeContext context) {
+                System.err.println(message);
+                responseLatch.countDown();
+            }
+        });
+
+
+        ConsumerFactory consumerFactory = new ConsumerFactory(serviceProperties, typeDictionary);
+        Consumer requestConsumer = consumerFactory.consumerForTopic(ping, new DiscardFailedMessages());
+        Consumer replyConsumer = consumerFactory.consumerForTopic(pong, new DiscardFailedMessages());
+
+
+        assertTrue(requestLatch.await(30, TimeUnit.SECONDS));
+        assertTrue(responseLatch.await(30, TimeUnit.SECONDS));
 
         producer.shutdown();
         requestConsumer.shutdown();
         replyConsumer.shutdown();
     }
 
-}
-
-
-
-class SayHelloToCmdHandler implements MessageHandler<SayHelloToCmd> {
-
-    Producer producer;
-
-    @Override
-    public void onMessage(Message<SayHelloToCmd> message, OrangeContext context) {
-        if (producer == null) {
-            producer = new Producer(KafkaIntegrationTest.servers);
-        }
-
-        System.err.println(message);
-
-        SayHelloToReply greeting = SayHelloToReply.newBuilder().setGreeting("Hello to " + message.getPayload().getName()).build();
-        Message reply = Messages.replyTo(message, greeting, context);
-
-        producer.send(reply);
-        KafkaIntegrationTest.requestLatch.countDown();
-
-    }
-}
-
-class SayHelloToReplyHandler implements MessageHandler<SayHelloToReply> {
-
-
-    @Override
-    public void onMessage(Message<SayHelloToReply> message, OrangeContext context) {
-        // FIXME
-        System.err.println(message);
-
-        KafkaIntegrationTest.responseLatch.countDown();
-    }
 }

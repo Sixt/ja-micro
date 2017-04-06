@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Producer {
     private static final Logger logger = LoggerFactory.getLogger(Producer.class);
@@ -45,6 +44,7 @@ public class Producer {
             Future future = kafka.send(record);
             future.get();
         } catch (Exception ex) {
+            logger.warn("Error sending message", ex);
             // TODO proper error handling
             throw new RuntimeException(ex);
         }
