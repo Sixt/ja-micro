@@ -13,6 +13,7 @@
 package com.sixt.service.framework.jetty;
 
 import com.google.gson.JsonObject;
+import com.sun.org.apache.xpath.internal.operations.And;
 import org.apache.commons.io.IOUtils;
 
 import javax.servlet.ServletInputStream;
@@ -42,24 +43,33 @@ public class RpcReadException extends Exception {
 
         obj.addProperty("exception_message", this.getMessage());
         obj.addProperty("request_query_string",req.getQueryString());
-        obj.addProperty("request_uri",req.getRequestURI());
+        obj.addProperty("request_url",req.getRequestURL().toString());
         obj.addProperty("request_remote_addr",req.getRemoteAddr());
         obj.addProperty("request_remote_port",req.getRemotePort());
         obj.addProperty("request_remote_host",req.getRemoteHost());
         obj.addProperty("request_remote_user" ,req.getRemoteUser());
 
+        String readBody = "success";
         // read the whole remaining body and put the joined base64 encoded message into the json object
         try {
             byte[] ba = IOUtils.toByteArray(this.in);
-            byte[] combined = new byte[ba.length + this.incomplete.length];
-            System.arraycopy(incomplete, 0, combined,0, this.incomplete.length);
-            System.arraycopy(ba, 0, combined, this.incomplete.length, ba.length);
-            obj.addProperty("request_body", Base64.getEncoder().encodeToString(combined));
+            byte[] combined;
+            if ((ba != null) && (this.incomplete != null)) {
+                combined = new byte[ba.length + this.incomplete.length];
+                System.arraycopy(incomplete, 0, combined, 0, this.incomplete.length);
+                System.arraycopy(ba, 0, combined, this.incomplete.length, ba.length);
+                obj.addProperty("request_body", Base64.getEncoder().encodeToString(combined));
+            } else if (ba != null) {
+                combined = ba;
+            } else if (this.incomplete != null ){
+                combined = this.incomplete;
+            } else {
+                readBody = "body is empty";
+            }
         } catch (Exception ex){
-            obj.addProperty("read_body", "failed");
-        } finally {
-            obj.addProperty("read_body", "success");
+            readBody = String.format("failed because: %s", ex.getCause());
         }
+        obj.addProperty("read_body", readBody);
 
         return obj.toString();
     }
