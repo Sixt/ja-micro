@@ -10,7 +10,7 @@ public class TypeDictionary {
 
     // synchronized because put may be exected in different thread than read access
     // if synchronization is found too heavy for this, extract interface and implement an immutable dictionary and another modifyable one
-    private final Map<MessageType, Parser> parsers = Collections.synchronizedMap(new HashMap<>());
+    private final Map<MessageType,  Parser<com.google.protobuf.Message>> parsers = Collections.synchronizedMap(new HashMap<>());
     private final Map<MessageType, MessageHandler<? extends com.google.protobuf.Message>> handlers = Collections.synchronizedMap(new HashMap<>());
 
 
@@ -18,7 +18,7 @@ public class TypeDictionary {
 
     }
 
-    public TypeDictionary(Map<MessageType, MessageHandler<? extends com.google.protobuf.Message>> handlers, Map<MessageType, Parser> parsers) {
+    public TypeDictionary(Map<MessageType, MessageHandler<? extends com.google.protobuf.Message>> handlers, Map<MessageType,  Parser<com.google.protobuf.Message>> parsers) {
         this.handlers.putAll(handlers);
         this.parsers.putAll(parsers);
     }
@@ -35,7 +35,7 @@ public class TypeDictionary {
      * @param type
      * @return null if no Parser was found for the type, otherwise the parser
      */
-    public Parser parserFor(MessageType type) {
+    public  Parser<com.google.protobuf.Message> parserFor(MessageType type) {
         return parsers.get(type);
     }
 
@@ -44,11 +44,11 @@ public class TypeDictionary {
         return handlers.put(type, handler);
     }
 
-    public Parser putParser(MessageType type, Parser parser) {
+    public Parser putParser(MessageType type,  Parser<com.google.protobuf.Message> parser) {
         return parsers.put(type, parser);
     }
 
-    public void putAllParsers(Map<MessageType, Parser> parsers) {
+    public void putAllParsers(Map<MessageType,  Parser<com.google.protobuf.Message>> parsers) {
         this.parsers.putAll(parsers);
     }
 

@@ -14,7 +14,7 @@ public class Messages {
 
     // Copy-paste is by intention here.
 
-    public static Message oneWayMessage(Topic target, String partitionKey, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
+    public static  Message<? extends com.google.protobuf.Message> oneWayMessage(Topic target, String partitionKey, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
         boolean wasReceived = false;
 
         String messageId = UUID.randomUUID().toString();
@@ -27,7 +27,7 @@ public class Messages {
         MessageType type = MessageType.of(protoPayloadMessage);
 
         Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
-        return new Message(protoPayloadMessage, meta);
+        return new Message<>(protoPayloadMessage, meta);
     }
 
 
@@ -38,7 +38,7 @@ public class Messages {
     }
     */
 
-    public static Message requestFor(Topic target, Topic replyTo, String partitionKey, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
+    public static Message<? extends com.google.protobuf.Message> requestFor(Topic target, Topic replyTo, String partitionKey, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
         boolean wasReceived = false;
 
         String messageId = UUID.randomUUID().toString();
@@ -61,12 +61,12 @@ public class Messages {
 
 
         Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
-        return new Message(protoPayloadMessage, meta);
+        return new Message<>(protoPayloadMessage, meta);
 
     }
 
 
-    public static Message replyTo(Message originalRequest, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
+    public static  Message<? extends com.google.protobuf.Message> replyTo(Message originalRequest, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
         boolean wasReceived = false;
 
         // By default, return to sender topic using same partitioning scheme.
@@ -83,11 +83,11 @@ public class Messages {
         MessageType type = MessageType.of(protoPayloadMessage);
 
         Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
-        return new Message(protoPayloadMessage, meta);
+        return new Message<>(protoPayloadMessage, meta);
     }
 
 
-    static Message fromKafka(com.google.protobuf.Message protoMessage, Envelope envelope, ConsumerRecord<String, byte[]> record) {
+    static  Message<? extends com.google.protobuf.Message> fromKafka(com.google.protobuf.Message protoMessage, Envelope envelope, ConsumerRecord<String, byte[]> record) {
         boolean wasReceived = true;
 
         Topic topic = new Topic(record.topic());
@@ -109,7 +109,7 @@ public class Messages {
 
 
         Metadata meta = new Metadata(wasReceived, topic, partitioningKey, partitionId, offset, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
-        return new Message(protoMessage, meta);
+        return new Message<>(protoMessage, meta);
     }
 
 
