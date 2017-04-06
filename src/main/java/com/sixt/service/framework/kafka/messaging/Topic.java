@@ -43,7 +43,7 @@ public class Topic {
         topic.append(serviceName);
 
 
-        return new Topic("inbox_"+ inboxName);
+        return new Topic(topic.toString());
     }
 
     public boolean isEmpty() {

@@ -1,6 +1,7 @@
 package com.sixt.service.framework.kafka.messaging;
 
 import com.google.common.collect.Lists;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -8,6 +9,8 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Properties;
@@ -18,30 +21,34 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Consumer {
+    private static final Logger logger = LoggerFactory.getLogger(Consumer.class);
 
     private final Topic topic;
+    private final String consumerGroupId;
     private final KafkaConsumer<String, byte[]> kafka;
     private final AssignedPartitions partitions;
     private final ExecutorService consumerLoopExecutor = Executors.newSingleThreadExecutor();
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
 
-    // TODO Regular task to commit all offsets to not loose the offset after inactivty for e.g. a day
+    // TODO Regular task to commit all offsets to not loose the offset after inactivity for e.g. a day
     // -> to refresh the retention on the internal committed offset topic
 
-    // TODO injection
-    public Consumer(Topic topic, String groupId, String servers, PartitionProcessorFactory processorFactory) {
+    // Build by ConsumerFactory
+    Consumer(Topic topic, String consumerGroupId, String servers, PartitionProcessorFactory processorFactory) {
         this.topic = topic;
+        this.consumerGroupId = consumerGroupId;
 
         // Kafka consumer set up
         Properties props = new Properties();
         props.put("bootstrap.servers", servers);
-        props.put("group.id", groupId);
+        props.put("group.id", consumerGroupId);
         props.put("key.deserializer", StringDeserializer.class.getName());
         props.put("value.deserializer", ByteArrayDeserializer.class.getName());
         props.put("heartbeat.interval.ms", "10000");
         props.put("session.timeout.ms", "20000");
         props.put("enable.auto.commit", "false");
         props.put("auto.offset.reset", "earliest");
+
         kafka = new KafkaConsumer<>(props);
 
         partitions = new AssignedPartitions(processorFactory);
@@ -71,8 +78,15 @@ public class Consumer {
 
     class ConsumerLoop implements Runnable {
         @Override
+
         public void run() {
-            kafka.subscribe(Lists.newArrayList(topic.toString()), new PartitionAssignmentChange());
+            try {
+                kafka.subscribe(Lists.newArrayList(topic.toString()), new PartitionAssignmentChange());
+                logger.info("Consumer in group {} subscribed to topic {}", consumerGroupId, topic.toString());
+            } catch (Exception unexpected){
+                logger.error("Dead consumer in group {}: Cannot subscribe to topic {}", consumerGroupId, topic.toString(), unexpected);
+                return;
+            }
 
             while (!isStopped.get()) {
                 // Note that poll() may also execute the ConsumerRebalanceListener callbacks and may take substantially more time to return.

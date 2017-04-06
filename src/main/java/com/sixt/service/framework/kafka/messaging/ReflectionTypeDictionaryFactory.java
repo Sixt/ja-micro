@@ -1,10 +1,12 @@
 package com.sixt.service.framework.kafka.messaging;
 
-import com.google.protobuf.Parser;
+import com.google.inject.*;
+import com.google.protobuf.*;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -24,12 +26,18 @@ import java.util.Map;
 public final class ReflectionTypeDictionaryFactory {
     private static final Logger logger = LoggerFactory.getLogger(ReflectionTypeDictionaryFactory.class);
 
+    private final Injector injector;
 
-    public TypeDictionary createTypeDictionaryFromClasspath() {
+    public ReflectionTypeDictionaryFactory(@NotNull Injector injector) {
+        this.injector = injector;
+    }
+
+    public TypeDictionary createFromClasspath() {
+        logger.info("Creating TypeDictionary using reflection from standard classpath.");
         return new TypeDictionary(populateHandlersFromClasspath(), populateParsersFromClasspath());
     }
 
-    private Map<MessageType, MessageHandler<? extends com.google.protobuf.Message>> populateHandlersFromClasspath() {
+    public Map<MessageType, MessageHandler<? extends com.google.protobuf.Message>> populateHandlersFromClasspath() {
         Map<MessageType, MessageHandler<? extends com.google.protobuf.Message>> handlers = new HashMap<>();
 
         List<Class> foundHandlers = new ArrayList<>();
@@ -55,12 +63,15 @@ public final class ReflectionTypeDictionaryFactory {
                         MessageHandler<? extends com.google.protobuf.Message> handler = null;
 
                         try {
-                            // FIXME we would use the guice injector to get an instance
-                            // This way, we do not rely on the no-args default constructor.
-                            handler = (MessageHandler<? extends com.google.protobuf.Message>) handlerClass.newInstance();
-                        } catch (InstantiationException | IllegalAccessException e) {
-                            logger.warn("Cannot instantiate MessageHandler {}. Ensure it provides an accessible default constructor.", handlerClass, e);
+                            // Ask Guice for an instance of the handler.
+                            // We cannot simply use e.g. the default constructor as any meaningful handler would need to
+                            // be wired to dependencies such as databases, metrics, etc.
+                            handler = (MessageHandler<? extends com.google.protobuf.Message>) injector.getInstance(handlerClass);
+                        } catch (ConfigurationException | ProvisionException e) {
+                            logger.warn("Cannot instantiate MessageHandler {} using Guice.", handlerClass, e);
                         }
+
+
 
                         if (handler != null) {
                             MessageHandler previous = handlers.put(type, handler);
@@ -80,7 +91,7 @@ public final class ReflectionTypeDictionaryFactory {
         return handlers;
     }
 
-    private Map<MessageType, Parser> populateParsersFromClasspath() {
+    public Map<MessageType, Parser> populateParsersFromClasspath() {
         Map<MessageType, Parser> parsers = new HashMap<>();
         List<Class> foundProtoMessages = new ArrayList<>();
 
@@ -97,9 +108,9 @@ public final class ReflectionTypeDictionaryFactory {
                 Parser parser = (Parser) method.invoke(null, null); // static method, no arguments
                 parsers.put(MessageType.of(clazz), parser);
 
-               // too noisy: logger.debug("Added parser for protobuf type {}", clazz.getTypeName());
+                // too noisy: logger.debug("Added parser for protobuf type {}", clazz.getTypeName());
 
-            } catch (NoSuchMethodException |InvocationTargetException| IllegalAccessException ignored) {
+            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {
                 // too noisy: logger.debug("Ignoring protobuf type {} as we cannot invoke static method parse().", clazz.getTypeName());
             }
         }

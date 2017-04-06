@@ -2,7 +2,6 @@ package com.sixt.service.framework.kafka.messaging;
 
 import com.google.common.base.Strings;
 import com.sixt.service.framework.OrangeContext;
-
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.util.UUID;
@@ -44,18 +43,26 @@ public class Messages {
 
         String messageId = UUID.randomUUID().toString();
         String correlationId = context.getCorrelationId();
-        String traceId = ""; // TODO
-
-        // Use default inbox for service.
-        if(replyTo == null) {
-            throw new IllegalArgumentException("replyTo required");
-        }
-        String requestCorrelationId = ""; // not required
 
         MessageType type = MessageType.of(protoPayloadMessage);
 
+
+        String traceId = "";
+
+        // Use default inbox for service.
+        if (replyTo == null)
+
+        {
+            throw new IllegalArgumentException("replyTo required");
+        }
+
+        String requestCorrelationId = ""; // not required
+
+
+
         Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
         return new Message(protoPayloadMessage, meta);
+
     }
 
 
@@ -90,12 +97,16 @@ public class Messages {
 
         String messageId = envelope.getMessageId();
         String correlationId = envelope.getCorrelationId();
+
+        MessageType type = MessageType.of(protoMessage);
+
         String traceId = envelope.getTraceId();
+
 
         String requestCorrelationId = envelope.getRequestCorrelationId();
         Topic replyTo = new Topic(envelope.getReplyTo());
 
-        MessageType type = MessageType.of(protoMessage);
+
 
         Metadata meta = new Metadata(wasReceived, topic, partitioningKey, partitionId, offset, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
         return new Message(protoMessage, meta);

@@ -12,8 +12,8 @@ public class RequestReplyMessageHandler implements MessageHandler<Greeting> {
     private final Producer producer;
 
     @Inject
-    public RequestReplyMessageHandler(Producer sender) {
-        this.producer = sender;
+    public RequestReplyMessageHandler(ProducerFactory factory) {
+        this.producer = factory.createProducer();
     }
 
     @Override
@@ -28,9 +28,9 @@ public class RequestReplyMessageHandler implements MessageHandler<Greeting> {
         Message response = Messages.replyTo(command, echo, context);
 
         //Message sayHello = Messages.requestFor(target, "a crufty key", echo, context);
-        Message sayHelloAgain = Messages.requestFor(target, trash, "a crufty key", echo, context);
+        //Message sayHelloAgain = Messages.requestFor(target, trash, "a crufty key", echo, context);
 
-        Message fireAndForget = Messages.oneWayMessage(target, "another key", echo, context);
+        //Message fireAndForget = Messages.oneWayMessage(target, "another key", echo, context);
 
 
         producer.send(response);
