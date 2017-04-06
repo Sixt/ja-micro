@@ -33,6 +33,7 @@ import org.slf4j.MDC;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
@@ -57,6 +58,8 @@ public class ProtobufHandler extends RpcHandler {
         Span span = null;
         Map<String, String> headers = gatherHttpHeaders(req);
         OrangeContext context = new OrangeContext(headers);
+        HttpServletRequest blubb = new HttpServletRequestWrapper(req);
+
         try {
             MDC.put(OrangeContext.CORRELATION_ID, context.getCorrelationId());
 
@@ -95,6 +98,14 @@ public class ProtobufHandler extends RpcHandler {
                     context.getRpcOriginMethod());
         } catch (RpcCallException rpcEx) {
             sendErrorResponse(resp, rpcRequest, rpcEx.toString(), rpcEx.getCategory().getHttpStatus());
+            if (span != null) {
+                Tags.ERROR.set(span, true);
+            }
+            incrementFailureCounter(methodName, context.getRpcOriginService(),
+                    context.getRpcOriginMethod());
+        } catch (RPCReadException ex) {
+            logger.warn("bad request ( cannot decode rpc message )", ex.toJSON(req));
+            sendErrorResponse(resp, rpcRequest, ex.getMessage(), HttpServletResponse.SC_BAD_REQUEST);
             if (span != null) {
                 Tags.ERROR.set(span, true);
             }
@@ -176,7 +187,7 @@ public class ProtobufHandler extends RpcHandler {
         int size = Ints.fromByteArray(chunkSize);
         if (size <= 0 || size > ProtobufUtil.MAX_HEADER_CHUNK_SIZE) {
             String message = "Invalid header chunk size: " + size;
-            throw new IllegalArgumentException(message);
+            throw new RPCReadException(chunkSize, in, message);
         }
         byte headerData[] = readyFully(in, size);
         RpcEnvelope.Request rpcRequest = RpcEnvelope.Request.parseFrom(headerData);
@@ -193,7 +204,7 @@ public class ProtobufHandler extends RpcHandler {
         }
         if (size > ProtobufUtil.MAX_BODY_CHUNK_SIZE) {
             String message = "Invalid body chunk size: " + size;
-            throw new IllegalArgumentException(message);
+            throw new RPCReadException(chunkSize, in, message);
         }
         byte bodyData[] = readyFully(in, size);
         Message pbRequest = ProtobufUtil.byteArrayToProtobuf(bodyData, requestClass);
