@@ -35,8 +35,6 @@ import static org.junit.Assert.assertTrue;
 
 public class MessagingServiceIntegrationTest {
 
-    private static ServiceUnderTest testService;
-
     @ClassRule
     public static DockerComposeRule docker = DockerComposeRule.builder()
             .file("src/serviceTest/resources/docker-compose.yml")
@@ -54,7 +52,6 @@ public class MessagingServiceIntegrationTest {
     @BeforeClass
     public static void setupClass() throws Exception {
         DockerComposeHelper.setKafkaEnvironment(docker);
-        DockerComposeHelper.setConsulEnvironment(docker);
     }
 
     @Test
