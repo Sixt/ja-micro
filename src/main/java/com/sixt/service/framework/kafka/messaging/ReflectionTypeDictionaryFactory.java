@@ -40,7 +40,7 @@ public final class ReflectionTypeDictionaryFactory {
     public Map<MessageType, MessageHandler<? extends com.google.protobuf.Message>> populateHandlersFromClasspath() {
         Map<MessageType, MessageHandler<? extends com.google.protobuf.Message>> handlers = new HashMap<>();
 
-        List<Class> foundHandlers = new ArrayList<>();
+        List<Class<? extends MessageHandler>> foundHandlers = new ArrayList<>();
 
         new FastClasspathScanner()
                 .matchClassesImplementing(MessageHandler.class, matchingClass ->
@@ -91,9 +91,9 @@ public final class ReflectionTypeDictionaryFactory {
         return handlers;
     }
 
-    public Map<MessageType, Parser> populateParsersFromClasspath() {
-        Map<MessageType, Parser> parsers = new HashMap<>();
-        List<Class> foundProtoMessages = new ArrayList<>();
+    public Map<MessageType, Parser<com.google.protobuf.Message>> populateParsersFromClasspath() {
+        Map<MessageType, Parser<com.google.protobuf.Message>> parsers = new HashMap<>();
+        List<Class<? extends com.google.protobuf.GeneratedMessageV3>> foundProtoMessages = new ArrayList<>();
 
         new FastClasspathScanner()
                 .matchSubclassesOf(com.google.protobuf.GeneratedMessageV3.class, matchingClass ->
@@ -102,10 +102,11 @@ public final class ReflectionTypeDictionaryFactory {
         // This algorithm adds parsers for all protobuf messages in the classpath including base types such as com.google.protobuf.DoubleValue.
 
 
-        for (Class clazz : foundProtoMessages) {
+        for (Class<? extends com.google.protobuf.GeneratedMessageV3> clazz : foundProtoMessages) {
             try {
-                java.lang.reflect.Method method = clazz.getMethod("parser", null); // static method, no arguments
-                Parser parser = (Parser) method.invoke(null, null); // static method, no arguments
+                java.lang.reflect.Method method = clazz.getMethod("parser"); // static method, no arguments
+                @SuppressWarnings("unchecked")
+                Parser<com.google.protobuf.Message> parser = (Parser<com.google.protobuf.Message>) method.invoke(null, (Object[]) null); // static method, no arguments
                 parsers.put(MessageType.of(clazz), parser);
 
                 // too noisy: logger.debug("Added parser for protobuf type {}", clazz.getTypeName());

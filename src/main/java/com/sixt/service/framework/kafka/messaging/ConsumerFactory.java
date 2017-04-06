@@ -17,7 +17,7 @@ public class ConsumerFactory {
         this.typeDictionary = typeDictionary;
     }
 
-    // There is no default for the FailedMessageProcessor because I want users to explicitly think about error handling.
+    // Note: There is no default for the FailedMessageProcessor because I want users to explicitly think about error handling.
 
     // TODO  make group id settable by caller
     // TODO allow caller to specify kafka config (different from default one)

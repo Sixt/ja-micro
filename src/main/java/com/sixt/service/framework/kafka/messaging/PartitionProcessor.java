@@ -154,7 +154,7 @@ class PartitionProcessor {
         }
 
 
-        private void deliverToMessageHandler(Message<? extends com.google.protobuf.Message> message) {
+        private void deliverToMessageHandler(Message message) {
             boolean deliverMessage = true;
 
             OrangeContext context = message.getMetadata().newContextFromMetadata();
