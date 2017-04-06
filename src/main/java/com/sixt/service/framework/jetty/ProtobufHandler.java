@@ -103,7 +103,7 @@ public class ProtobufHandler extends RpcHandler {
             }
             incrementFailureCounter(methodName, context.getRpcOriginService(),
                     context.getRpcOriginMethod());
-        } catch (RPCReadException ex) {
+        } catch (RpcReadException ex) {
             logger.warn("bad request ( cannot decode rpc message )", ex.toJSON(req));
             sendErrorResponse(resp, rpcRequest, ex.getMessage(), HttpServletResponse.SC_BAD_REQUEST);
             if (span != null) {
@@ -187,7 +187,7 @@ public class ProtobufHandler extends RpcHandler {
         int size = Ints.fromByteArray(chunkSize);
         if (size <= 0 || size > ProtobufUtil.MAX_HEADER_CHUNK_SIZE) {
             String message = "Invalid header chunk size: " + size;
-            throw new RPCReadException(chunkSize, in, message);
+            throw new RpcReadException(chunkSize, in, message);
         }
         byte headerData[] = readyFully(in, size);
         RpcEnvelope.Request rpcRequest = RpcEnvelope.Request.parseFrom(headerData);
@@ -204,7 +204,7 @@ public class ProtobufHandler extends RpcHandler {
         }
         if (size > ProtobufUtil.MAX_BODY_CHUNK_SIZE) {
             String message = "Invalid body chunk size: " + size;
-            throw new RPCReadException(chunkSize, in, message);
+            throw new RpcReadException(chunkSize, in, message);
         }
         byte bodyData[] = readyFully(in, size);
         Message pbRequest = ProtobufUtil.byteArrayToProtobuf(bodyData, requestClass);

@@ -20,11 +20,11 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Base64;
 import java.util.Enumeration;
 
-public class RPCReadException extends Exception {
+public class RpcReadException extends Exception {
     private ServletInputStream in;
     private byte[] incomplete;
 
-    public RPCReadException(byte[] incomplete, ServletInputStream in, String message) {
+    public RpcReadException(byte[] incomplete, ServletInputStream in, String message) {
         super(message);
         this.in = in;
         this.incomplete = incomplete;
