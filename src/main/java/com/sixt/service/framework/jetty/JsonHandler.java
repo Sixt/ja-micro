@@ -165,7 +165,9 @@ public class JsonHandler extends RpcHandler {
             jsonResponse.setStatusCode(rpcEx.getCategory().getHttpStatus());
         } catch (Exception ex) {
             logger.warn("Error processing request", ex);
-            jsonResponse.setError(new JsonPrimitive(ex.getMessage()));
+            if (ex.getMessage() != null) {
+                jsonResponse.setError(new JsonPrimitive(ex.getMessage()));
+            }
             jsonResponse.setStatusCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return jsonResponse;

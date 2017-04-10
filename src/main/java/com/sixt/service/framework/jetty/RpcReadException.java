@@ -13,7 +13,6 @@
 package com.sixt.service.framework.jetty;
 
 import com.google.gson.JsonObject;
-import com.sun.org.apache.xpath.internal.operations.And;
 import org.apache.commons.io.IOUtils;
 
 import javax.servlet.ServletInputStream;

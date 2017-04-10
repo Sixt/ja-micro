@@ -179,6 +179,8 @@ public class HttpClientWrapper {
             return lastStatusCode == 200 && response != null && response.getContent().length > 0;
         } else if (lastStatusCode != 0 && lastStatusCode != 200) {
             return false;
+        } else if (response == null || response.getContent() == null) {
+            return false;
         }
         RpcCallException exception = decoder.decodeException(response);
         return (exception == null);
