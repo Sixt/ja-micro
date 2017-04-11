@@ -40,6 +40,8 @@ final class AssignedPartitions {
     }
 
     PartitionProcessor assignNewPartition(TopicPartition partitionKey) {
+        logger.debug("Assigning new PartitionProcessor for partition {}", partitionKey);
+
         PartitionProcessor proccessor = processorFactory.newProcessorFor(partitionKey);
         processors.put(partitionKey, proccessor);
 
@@ -133,6 +135,7 @@ final class AssignedPartitions {
                 throw new IllegalStateException("Processor must be terminated before removing it.");
             }
 
+            logger.debug("Removing PartitionProcessor for partition {}", key);
             processors.remove(key);
         });
     }

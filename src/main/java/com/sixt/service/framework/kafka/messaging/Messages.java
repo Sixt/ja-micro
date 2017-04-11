@@ -19,24 +19,15 @@ public class Messages {
 
         String messageId = UUID.randomUUID().toString();
         String correlationId = context.getCorrelationId();
-        String traceId = ""; // TODO
 
         Topic replyTo = null; // not required
         String requestCorrelationId = ""; // not required
 
         MessageType type = MessageType.of(protoPayloadMessage);
 
-        Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
+        Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId,  requestCorrelationId, replyTo, type);
         return new Message<>(protoPayloadMessage, meta);
     }
-
-
-    /*
-    public static Message requestFor(Topic target, String partitionKey, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
-        Topic defaultReplyTo = Topic.defaultServiceInbox("FIXME"); // FIXME where to get the service name from? context?
-        return requestFor(target, defaultReplyTo, partitionKey,protoPayloadMessage,context);
-    }
-    */
 
     public static Message<? extends com.google.protobuf.Message> requestFor(Topic target, Topic replyTo, String partitionKey, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
         boolean wasReceived = false;
@@ -46,8 +37,6 @@ public class Messages {
 
         MessageType type = MessageType.of(protoPayloadMessage);
 
-
-        String traceId = "";
 
         // Use default inbox for service.
         if (replyTo == null)
@@ -60,7 +49,7 @@ public class Messages {
 
 
 
-        Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
+        Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, requestCorrelationId, replyTo, type);
         return new Message<>(protoPayloadMessage, meta);
 
     }
@@ -75,14 +64,13 @@ public class Messages {
 
         String messageId = UUID.randomUUID().toString();
         String correlationId = context.getCorrelationId();
-        String traceId = ""; // TODO
 
         String requestCorrelationId = originalRequest.getMetadata().getMessageId();
         Topic replyTo = null; // not required
 
         MessageType type = MessageType.of(protoPayloadMessage);
 
-        Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
+        Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, requestCorrelationId, replyTo, type);
         return new Message<>(protoPayloadMessage, meta);
     }
 
@@ -100,15 +88,13 @@ public class Messages {
 
         MessageType type = MessageType.of(protoMessage);
 
-        String traceId = envelope.getTraceId();
-
 
         String requestCorrelationId = envelope.getRequestCorrelationId();
         Topic replyTo = new Topic(envelope.getReplyTo());
 
 
 
-        Metadata meta = new Metadata(wasReceived, topic, partitioningKey, partitionId, offset, messageId, correlationId, traceId, requestCorrelationId, replyTo, type);
+        Metadata meta = new Metadata(wasReceived, topic, partitioningKey, partitionId, offset, messageId, correlationId, requestCorrelationId, replyTo, type);
         return new Message<>(protoMessage, meta);
     }
 
@@ -122,9 +108,6 @@ public class Messages {
         // Correlation ids are set when building the message
         if (!Strings.isNullOrEmpty(meta.getCorrelationId())) {
             envelope.setCorrelationId(meta.getCorrelationId());
-        }
-        if (!Strings.isNullOrEmpty(meta.getTraceId())) {
-            envelope.setCorrelationId(meta.getTraceId());
         }
 
         // Message exchange pattern headers

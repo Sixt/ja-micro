@@ -2,6 +2,8 @@ package com.sixt.service.framework.kafka.messaging;
 
 import com.google.protobuf.Parser;
 import com.sixt.service.framework.OrangeContext;
+import com.sixt.service.framework.metrics.MetricBuilderFactory;
+import io.opentracing.Tracer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.Test;
@@ -78,7 +80,12 @@ public class PartitionProcessorTest {
         TypeDictionary typeDictionary = new TestTypeDictionary();
         FailedMessageProcessor failedMessageProcessor = new DiscardFailedMessages();
 
-        return new PartitionProcessor(topicKey, typeDictionary, failedMessageProcessor);
+
+        MetricBuilderFactory metricsBuilderFactory = null;
+        Tracer tracer = null;
+
+
+        return new PartitionProcessor(topicKey, typeDictionary, failedMessageProcessor, tracer, metricsBuilderFactory);
     }
 
     private ConsumerRecord<String, byte[]> testRecordWithOffset(long offset) {
@@ -163,16 +170,19 @@ public class PartitionProcessorTest {
             ConsumerRecord<String, byte[]> record = testRecordWithOffset(i);
             processor.enqueue(record);
         }
-        shortSleep(); // allow to fill queue
 
-        (getTestHandler(processor)).onMessageCalled.await();
+
+        while (processor.numberOfUnprocessedMessages() < PartitionProcessor.MAX_MESSAGES_IN_FLIGHT + 1) {
+            shortSleep(); // allow to fill queue
+        }
 
         assertEquals(PartitionProcessor.MAX_MESSAGES_IN_FLIGHT + 1, processor.numberOfUnprocessedMessages()); // 1 message currently in handler
         assertTrue(processor.isPaused()); // should throttle
         assertFalse(processor.shouldResume());
 
-
+        (getTestHandler(processor)).onMessageCalled.await();
         (getTestHandler(processor)).blockReturnFromOnMessage.countDown();
+
         shortSleep(); // allow handler to continue
 
         assertTrue(processor.hasUncommittedMessages());
@@ -281,7 +291,7 @@ public class PartitionProcessorTest {
         TopicPartition topicKey = new TopicPartition(TOPIC, PARTITION);
         TypeDictionary typeDictionary = new TestTypeDictionary();
         FailedMessageProcessor failedMessageProcessor = new DelayAndRetryOnRecoverableErrors(new DiscardFailedMessages(), new SimpleRetryDelayer(10, 100));
-        PartitionProcessor processor = new PartitionProcessor(topicKey, typeDictionary, failedMessageProcessor);
+        PartitionProcessor processor = new PartitionProcessor(topicKey, typeDictionary, failedMessageProcessor, null, null);
 
         processor.enqueue(testRecordWithOffset(42));
         getTestHandler(processor).exceptionToBeThrown = new RuntimeException("BOOM");

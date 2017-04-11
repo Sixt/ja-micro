@@ -22,10 +22,7 @@ import com.sixt.service.framework.servicetest.service.ServiceUnderTest;
 import com.sixt.service.test_service.api.Echo;
 import com.sixt.service.test_service.api.Greeting;
 import org.joda.time.Duration;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.Timeout;
 
 import java.util.concurrent.CountDownLatch;
@@ -47,7 +44,7 @@ public class MessagingServiceIntegrationTest {
             .build();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(182);
+    public Timeout globalTimeout = Timeout.seconds(300);
 
     @BeforeClass
     public static void setupClass() throws Exception {
@@ -87,7 +84,7 @@ public class MessagingServiceIntegrationTest {
         Consumer consumer = consumerFactory.consumerForTopic(replyTo, new DiscardFailedMessages());
 
         // ... and wait for the response.
-        assertTrue(messageReceived.await(60, TimeUnit.SECONDS));
+        assertTrue(messageReceived.await(2, TimeUnit.MINUTES));
 
         producer.shutdown();
         consumer.shutdown();

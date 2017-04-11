@@ -10,12 +10,10 @@ message Envelope {
 
 	// - Tracing/Correlation
 	string correlation_id = 10;  // OPTIONAL. A correlation id to correlate multiple messages, rpc request/responses, etc. belonging to a trace/flow/user request/etc..
-	string trace_id = 11;        // OPTIONAL. Another correlation id for tracing.
-
 
 	// - Message exchange patterns
 	// -- Request/Reply
-	string request_correlation_id = 20; // OPTIONAL. This response correlates to the request with the given id
+	string request_correlation_id = 20; // OPTIONAL. This response correlates to the request with the given message_id
 	string reply_to = 21; // OPTIONAL. Send responses for this request to the given address. See class Topic for syntax.
 
 
