@@ -107,13 +107,13 @@ public class KafkaIntegrationTest {
         });
 
 
-        ConsumerFactory consumerFactory = new ConsumerFactory(serviceProperties, typeDictionary);
+        ConsumerFactory consumerFactory = new ConsumerFactory(serviceProperties, typeDictionary, null, null);
         Consumer requestConsumer = consumerFactory.consumerForTopic(ping, new DiscardFailedMessages());
         Consumer replyConsumer = consumerFactory.consumerForTopic(pong, new DiscardFailedMessages());
 
 
-        assertTrue(requestLatch.await(30, TimeUnit.SECONDS));
-        assertTrue(responseLatch.await(30, TimeUnit.SECONDS));
+        assertTrue(requestLatch.await(60, TimeUnit.SECONDS));
+        assertTrue(responseLatch.await(60, TimeUnit.SECONDS));
 
         producer.shutdown();
         requestConsumer.shutdown();

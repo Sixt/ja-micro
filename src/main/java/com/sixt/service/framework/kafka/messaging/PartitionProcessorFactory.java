@@ -1,24 +1,23 @@
 package com.sixt.service.framework.kafka.messaging;
 
-import com.google.inject.Inject;
+import com.sixt.service.framework.metrics.MetricBuilderFactory;
+import io.opentracing.Tracer;
 import org.apache.kafka.common.TopicPartition;
 
-/**
- * Created by abjb on 3/29/17.
- */
-public class PartitionProcessorFactory {
+class PartitionProcessorFactory {
+    private final TypeDictionary typeDictionary;
+    private final FailedMessageProcessor failedMessageProcessor;
+    private final Tracer tracer;
+    private final MetricBuilderFactory metricBuilderFactory;
 
-    private TypeDictionary typeDictionary;
-    private FailedMessageProcessor failedMessageProcessor;
-
-
-    @Inject
-    public PartitionProcessorFactory(TypeDictionary typeDictionary, FailedMessageProcessor failedMessageProcessor) {
+    PartitionProcessorFactory(TypeDictionary typeDictionary, FailedMessageProcessor failedMessageProcessor, Tracer tracer, MetricBuilderFactory metricsBuilderFactory) {
         this.typeDictionary = typeDictionary;
         this.failedMessageProcessor = failedMessageProcessor;
+        this.tracer = tracer;
+        this.metricBuilderFactory = metricsBuilderFactory;
     }
 
-    public PartitionProcessor newProcessorFor(TopicPartition partitionKey) {
-        return new PartitionProcessor(partitionKey, typeDictionary, failedMessageProcessor);
+    PartitionProcessor newProcessorFor(TopicPartition partitionKey) {
+        return new PartitionProcessor(partitionKey, typeDictionary, failedMessageProcessor, tracer, metricBuilderFactory);
     }
 }

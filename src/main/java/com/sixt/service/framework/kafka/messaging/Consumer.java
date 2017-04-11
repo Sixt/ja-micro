@@ -20,6 +20,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Consumer instances are Kafka clients that fetch records of (one or multiple partitions of) a topic.
+ *
+ * Consumers also handle the flow control (pausing/resuming busy partitions) as well as changes in the partition assignment.
+ *
+ * Threading model:
+ * The Consumer has a single thread polling Kafka and handing over raw records to PartitionProcessors for further processing.
+ * There is one PartitionProcessor per partition.
+ * A PartitionProcessor currently is single-threaded to keep the ordering guarantee on a partition.
+ *
+ * Consumer instances are created by the ConsumerFactory.
+ */
 public class Consumer {
     private static final Logger logger = LoggerFactory.getLogger(Consumer.class);
 
@@ -30,8 +42,7 @@ public class Consumer {
     private final ExecutorService consumerLoopExecutor = Executors.newSingleThreadExecutor();
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
 
-    // TODO Regular task to commit all offsets to not loose the offset after inactivity for e.g. a day
-    // -> to refresh the retention on the internal committed offset topic
+    // TODO Regular task to commit all offsets to not loose the offset after inactivity for e.g. a day -> to refresh the retention on the internal committed offset topic
 
     // Build by ConsumerFactory
     Consumer(Topic topic, String consumerGroupId, String servers, PartitionProcessorFactory processorFactory) {
@@ -77,8 +88,8 @@ public class Consumer {
 
 
     class ConsumerLoop implements Runnable {
-        @Override
 
+        @Override
         public void run() {
             try {
                 kafka.subscribe(Lists.newArrayList(topic.toString()), new PartitionAssignmentChange());
@@ -110,6 +121,8 @@ public class Consumer {
 
         @Override
         public void onPartitionsRevoked(Collection<TopicPartition> revokedPartitions) {
+            logger.debug("ConsumerRebalanceListener.onPartitionsRevoked on {}", revokedPartitions);
+
             partitions.stopProcessing(revokedPartitions);
             partitions.waitForHandlersToComplete(revokedPartitions, 500);
 
@@ -120,6 +133,7 @@ public class Consumer {
 
         @Override
         public void onPartitionsAssigned(Collection<TopicPartition> assignedPartitions) {
+            logger.debug("ConsumerRebalanceListener.onPartitionsAssigned on {}", assignedPartitions);
             partitions.assignNewPartitions(assignedPartitions);
         }
     }

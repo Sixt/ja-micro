@@ -71,7 +71,7 @@ public class AssignedPartitionsTest {
     private PartitionProcessorFactory processorFactory() {
         TypeDictionary typeDictionary = new TypeDictionary(new HashMap<>(), new HashMap<>());
         FailedMessageProcessor failedMessageProcessor = new DiscardFailedMessages();
-        return new PartitionProcessorFactory(typeDictionary, failedMessageProcessor);
+        return new PartitionProcessorFactory(typeDictionary, failedMessageProcessor, null, null);
     }
 
 }

@@ -51,7 +51,6 @@ public class InjectionModule extends AbstractModule {
     protected void configure() {
         bind(ServiceProperties.class).toInstance(serviceProperties);
         bind(HttpClient.class).toInstance(httpClient);
-        bind(ConsumerFactory.class).toProvider(ConsumerFactoryProvider.class);
     }
 
     @Provides

@@ -2,6 +2,9 @@ package com.sixt.service.framework.kafka.messaging;
 
 import com.google.common.base.Strings;
 import com.sixt.service.framework.OrangeContext;
+import org.slf4j.Marker;
+
+import static net.logstash.logback.marker.Markers.append;
 
 
 // Immutable
@@ -22,7 +25,6 @@ public class Metadata {
 
     // Tracing/correlation ids
     private final String correlationId;  // OPTIONAL. A correlation id to correlate multiple messages, rpc request/responses, etc. belonging to a trace/flow/user request/etc..
-    private final String traceId;  // OPTIONAL. Another correlation id for tracing.
 
     // Message exchange patterns
     // -> request/reply
@@ -67,10 +69,6 @@ public class Metadata {
         return correlationId;
     }
 
-    public String getTraceId() {
-        return traceId;
-    }
-
     public String getRequestCorrelationId() {
         return requestCorrelationId;
     }
@@ -101,7 +99,6 @@ public class Metadata {
                 ", offset=" + offset +
                 ", messageId='" + messageId + '\'' +
                 ", correlationId='" + correlationId + '\'' +
-                ", traceId='" + traceId + '\'' +
                 ", requestCorrelationId='" + requestCorrelationId + '\'' +
                 ", replyTo=" + replyTo +
                 ", type=" + type +
@@ -112,7 +109,7 @@ public class Metadata {
     // Object instantiation is done via factory
 
 
-    Metadata(boolean wasReceived, Topic topic, String partitioningKey, int partitionId, long offset, String messageId, String correlationId, String traceId, String requestCorrelationId, Topic replyTo, MessageType type) {
+    Metadata(boolean wasReceived, Topic topic, String partitioningKey, int partitionId, long offset, String messageId, String correlationId, String requestCorrelationId, Topic replyTo, MessageType type) {
         this.wasReceived = wasReceived;
 
         if (topic == null || topic.isEmpty()) {
@@ -134,7 +131,6 @@ public class Metadata {
         this.messageId = messageId;
 
         this.correlationId = correlationId;
-        this.traceId = traceId;
 
         this.requestCorrelationId = requestCorrelationId;
         this.replyTo = replyTo;
@@ -146,4 +142,19 @@ public class Metadata {
     }
 
 
+    public Marker getLoggingMarker() {
+        // If we have more optional header fields, we should probably exclude them if they are empty.
+        Marker messageMarker = append("topic", topic)
+                .and(append("partitionId", partitionId))
+                .and(append("partitioningKey", partitioningKey))
+                .and(append("offset", offset))
+                .and(append("messageId", messageId))
+                .and(append("correlationId", correlationId))
+                .and(append("requestCorrelationId", requestCorrelationId))
+                .and(append("replyTo", replyTo))
+                .and(append("messageType", type))
+                ;
+
+        return messageMarker;
+    }
 }

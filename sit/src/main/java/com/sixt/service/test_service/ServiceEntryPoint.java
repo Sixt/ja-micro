@@ -44,6 +44,9 @@ public class ServiceEntryPoint extends AbstractService {
         consumerFactory.defaultInboxConsumer(new DiscardFailedMessages());
 
         injector.getInstance(RandomEventHandler.class);
+
+        // waitForTopicCreation();
+
         super.bootstrapComplete();
     }
 }
