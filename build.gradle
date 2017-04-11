@@ -95,14 +95,14 @@ release {
 afterReleaseBuild.dependsOn bintrayUpload
 
 ext.versions = [
-        'jetty'    : '9.3.14.v20161028',
+        'jetty'    : '9.4.3.v20170317',
         'protobuf' : '3.2.0',
         'guice'    : '4.1.0',
         'kafka'    : '0.10.2.0',
         'guava'    : '21.0',
         'logback'  : '1.2.3',
         'slf4j'    : '1.7.25',
-        'tracing'  : '0.20.10',
+        'tracing'  : '0.21.0',
         'powermock': '1.6.6'
 ]
 

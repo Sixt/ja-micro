@@ -4,7 +4,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.bmuschko:gradle-docker-plugin:3.0.6'
-        classpath 'org.ajoberstar:grgit:1.9.0'
+        classpath 'org.ajoberstar:grgit:1.9.1'
     }
     configurations.classpath {
         resolutionStrategy {

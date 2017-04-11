@@ -29,10 +29,9 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static com.google.common.collect.ImmutableSortedSet.of;
 
 public abstract class RpcHandler {
 
@@ -43,6 +42,12 @@ public abstract class RpcHandler {
     protected final RpcHandlerMetrics handlerMetrics;
     protected final ServiceProperties serviceProps;
     protected final Tracer tracer;
+
+    //For now, we block services from getting certain input headers.
+    //The reason is that these headers are also then used for outgoing requests.
+    //If you need the incoming headers, we can create an additional bucket inside of OrangeContext to hold them.
+    private static final Set<String> blackListedHeaders = of("user-agent", "content-length", "content-type",
+            "date", "expect", "host");
 
     public RpcHandler(MethodHandlerDictionary handlers, MetricRegistry registry,
                       RpcHandlerMetrics handlerMetrics, ServiceProperties serviceProperties,
@@ -101,12 +106,17 @@ public abstract class RpcHandler {
                 continue;
             }
 
-            if (headerValues.hasMoreElements()) {
-                headers.put(headerName.toLowerCase(), headerValues.nextElement());
-            }
+            String headerNameLower = headerName.toLowerCase();
+            if (! blackListedHeaders.contains(headerNameLower)) {
+                if (headerValues.hasMoreElements()) {
+                    headers.put(headerNameLower, headerValues.nextElement());
+                }
 
-            while (headerValues.hasMoreElements()) {
-                logger.info("Duplicate http-header, discarding: {} = {}", headerName, headerValues.nextElement());
+                while (headerValues.hasMoreElements()) {
+                    logger.debug("Duplicate http-header, discarding: {} = {}", headerName, headerValues.nextElement());
+                }
+            } else {
+                logger.trace("Blocking header {}", headerNameLower);
             }
         }
 
