@@ -82,10 +82,9 @@ public class Metadata {
     }
 
 
-// Helper methods --------------------------
+    // Helper methods --------------------------
 
     public OrangeContext newContextFromMetadata() {
-        // FIXME tracing context
         return new OrangeContext(correlationId);
     }
 
@@ -106,9 +105,24 @@ public class Metadata {
     }
 
 
+    public Marker getLoggingMarker() {
+        // If we get more optional header fields, we should probably exclude them if they are empty.
+        Marker messageMarker = append("topic", topic)
+                .and(append("partitionId", partitionId))
+                .and(append("partitioningKey", partitioningKey))
+                .and(append("offset", offset))
+                .and(append("messageId", messageId))
+                .and(append("correlationId", correlationId))
+                .and(append("requestCorrelationId", requestCorrelationId))
+                .and(append("replyTo", replyTo))
+                .and(append("messageType", type))
+                ;
+
+        return messageMarker;
+    }
+
+
     // Object instantiation is done via factory
-
-
     Metadata(boolean wasReceived, Topic topic, String partitioningKey, int partitionId, long offset, String messageId, String correlationId, String requestCorrelationId, Topic replyTo, MessageType type) {
         this.wasReceived = wasReceived;
 
@@ -141,20 +155,4 @@ public class Metadata {
         this.type = type;
     }
 
-
-    public Marker getLoggingMarker() {
-        // If we have more optional header fields, we should probably exclude them if they are empty.
-        Marker messageMarker = append("topic", topic)
-                .and(append("partitionId", partitionId))
-                .and(append("partitioningKey", partitioningKey))
-                .and(append("offset", offset))
-                .and(append("messageId", messageId))
-                .and(append("correlationId", correlationId))
-                .and(append("requestCorrelationId", requestCorrelationId))
-                .and(append("replyTo", replyTo))
-                .and(append("messageType", type))
-                ;
-
-        return messageMarker;
-    }
 }

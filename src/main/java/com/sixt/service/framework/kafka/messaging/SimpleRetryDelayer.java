@@ -3,7 +3,10 @@ package com.sixt.service.framework.kafka.messaging;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Delay with a fixed interval  up to a maximum timeout
+ * Delay with a fixed interval up to a maximum total delay.
+ *
+ * The maximum total delay is simply the sum of all delays, but not the real time spend in delaying.
+ *
  */
 public class SimpleRetryDelayer implements RetryDelayer {
 

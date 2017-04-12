@@ -37,7 +37,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Ignore // FIXME
+
 public class RandomServiceIntegrationTest {
 
     private static ServiceUnderTest testService;
@@ -113,6 +113,7 @@ public class RandomServiceIntegrationTest {
                 "{\"name\":\"test_servlet\",\"status\":\"CRITICAL\",\"reason\":\"" + failureMessage + "\"}]}");
     }
 
+    @Ignore // Test is broken, need to ensure topics are created before running the test.
     @Test
     public void testRandomSampleEventHandler() throws Exception {
         serviceImpersonator.publishEvent("events", TestServiceOuterClass.RandomSampleEvent.newBuilder()

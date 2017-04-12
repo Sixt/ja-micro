@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static junit.framework.TestCase.*;
 
@@ -25,24 +26,35 @@ public class PartitionProcessorTest {
 
     static class TestHandler implements MessageHandler {
 
+        final AtomicInteger nbHandlerInvokations = new AtomicInteger(0);
         final CountDownLatch onMessageCalled = new CountDownLatch(1);
         final CountDownLatch blockReturnFromOnMessage = new CountDownLatch(1);
-        final List<Message> handledMessage = Collections.synchronizedList(new ArrayList<>());
+        final CountDownLatch handlerReturnedNormally = new CountDownLatch(1);
+
+        final List<Message> handledMessages = Collections.synchronizedList(new ArrayList<>());
         volatile Message lastMessage = null;
         volatile OrangeContext lastContext = null;
         volatile RuntimeException exceptionToBeThrown = null;
+        volatile boolean resetExceptionToNull = true;
 
 
         @Override
         public void onMessage(Message msg, OrangeContext context) {
-            handledMessage.add(msg);
+            nbHandlerInvokations.incrementAndGet();
+
+            handledMessages.add(msg);
+
             lastMessage = msg;
             lastContext = context;
 
             onMessageCalled.countDown();
 
             if (exceptionToBeThrown != null) {
-                throw exceptionToBeThrown;
+                RuntimeException boom = exceptionToBeThrown;
+                if (resetExceptionToNull) {
+                    exceptionToBeThrown = null;
+                }
+                throw boom;
             }
 
             try {
@@ -50,6 +62,9 @@ public class PartitionProcessorTest {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+
+
+            handlerReturnedNormally.countDown();
         }
     }
 
@@ -259,7 +274,7 @@ public class PartitionProcessorTest {
         shortSleep(); // for the reply handling
 
         Message receivedReply = getTestHandler(processor).lastMessage;
-        assertEquals(2, getTestHandler(processor).handledMessage.size());
+        assertEquals(2, getTestHandler(processor).handledMessages.size());
 
 
         assertEquals(sentRequest.getMetadata().getReplyTo(), receivedReply.getMetadata().getTopic());
@@ -290,14 +305,88 @@ public class PartitionProcessorTest {
     public void retryFailedMessages() throws InterruptedException {
         TopicPartition topicKey = new TopicPartition(TOPIC, PARTITION);
         TypeDictionary typeDictionary = new TestTypeDictionary();
-        FailedMessageProcessor failedMessageProcessor = new DelayAndRetryOnRecoverableErrors(new DiscardFailedMessages(), new SimpleRetryDelayer(10, 100));
+
+
+        class RetryableTestException extends RuntimeException {
+
+        }
+
+        class RetryTestFailureHandler extends DelayAndRetryOnRecoverableErrors {
+
+            public RetryTestFailureHandler(FailedMessageProcessor fallbackStrategy, RetryDelayer retryStrategy) {
+                super(fallbackStrategy, retryStrategy);
+            }
+
+            @Override
+            protected boolean isRecoverable(Throwable failureCause) {
+
+                if (failureCause instanceof RetryableTestException) {
+                    return true;
+                }
+
+
+                return super.isRecoverable(failureCause);
+            }
+        }
+
+        FailedMessageProcessor failedMessageProcessor = new RetryTestFailureHandler(new DiscardFailedMessages(), new SimpleRetryDelayer(10, 100));
         PartitionProcessor processor = new PartitionProcessor(topicKey, typeDictionary, failedMessageProcessor, null, null);
 
+        getTestHandler(processor).exceptionToBeThrown = new RetryableTestException();
         processor.enqueue(testRecordWithOffset(42));
-        getTestHandler(processor).exceptionToBeThrown = new RuntimeException("BOOM");
-        getTestHandler(processor).onMessageCalled.await();
-        shortSleep();
-        shortSleep();
+
+        getTestHandler(processor).blockReturnFromOnMessage.countDown();
+        getTestHandler(processor).handlerReturnedNormally.await();
+
+        assertEquals(2, getTestHandler(processor).nbHandlerInvokations.get());
+        assertTrue(processor.hasUncommittedMessages());
+        assertEquals(43, processor.getCommitOffsetAndClear());
+        processor.waitForHandlersToTerminate(1);
+    }
+
+
+    @Test
+    public void retryFailedMessagesHitsRetryLimit() throws InterruptedException {
+        TopicPartition topicKey = new TopicPartition(TOPIC, PARTITION);
+        TypeDictionary typeDictionary = new TestTypeDictionary();
+
+
+        class RetryableTestException extends RuntimeException {
+
+        }
+
+        class RetryTestFailureHandler extends DelayAndRetryOnRecoverableErrors {
+
+            public RetryTestFailureHandler(FailedMessageProcessor fallbackStrategy, RetryDelayer retryStrategy) {
+                super(fallbackStrategy, retryStrategy);
+            }
+
+            @Override
+            protected boolean isRecoverable(Throwable failureCause) {
+
+                if (failureCause instanceof RetryableTestException) {
+                    return true;
+                }
+
+
+                return super.isRecoverable(failureCause);
+            }
+        }
+
+        FailedMessageProcessor failedMessageProcessor = new RetryTestFailureHandler(new DiscardFailedMessages(), new SimpleRetryDelayer(10, 200));
+        PartitionProcessor processor = new PartitionProcessor(topicKey, typeDictionary, failedMessageProcessor, null, null);
+
+        getTestHandler(processor).exceptionToBeThrown = new RetryableTestException();
+        getTestHandler(processor).resetExceptionToNull = false; // Never terminate normally
+
+        processor.enqueue(testRecordWithOffset(42));
+
+
+        assertFalse(getTestHandler(processor).handlerReturnedNormally.await(2, TimeUnit.SECONDS));
+
+        // new SimpleRetryDelayer(10, 200) -> 20 retries
+        // timing of retry delays manually checked by timestamps in log output -> is OK
+        assertEquals(20, getTestHandler(processor).nbHandlerInvokations.get());
 
         assertTrue(processor.hasUncommittedMessages());
         assertEquals(43, processor.getCommitOffsetAndClear());

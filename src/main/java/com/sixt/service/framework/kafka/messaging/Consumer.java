@@ -25,6 +25,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * Consumers also handle the flow control (pausing/resuming busy partitions) as well as changes in the partition assignment.
  *
+ * The topic a consumer subscribes to must have been created before. When starting a consumer, it will check Kafka if the topic
+ * exists.
+ *
  * Threading model:
  * The Consumer has a single thread polling Kafka and handing over raw records to PartitionProcessors for further processing.
  * There is one PartitionProcessor per partition.
@@ -55,10 +58,17 @@ public class Consumer {
         props.put("group.id", consumerGroupId);
         props.put("key.deserializer", StringDeserializer.class.getName());
         props.put("value.deserializer", ByteArrayDeserializer.class.getName());
+
+        // The heartbeat is send in the background by the client library
         props.put("heartbeat.interval.ms", "10000");
-        props.put("session.timeout.ms", "20000");
+        props.put("session.timeout.ms", "30000");
+
         props.put("enable.auto.commit", "false");
         props.put("auto.offset.reset", "earliest");
+
+        // This is the actual timeout for the ConsumerLoop thread before Kafka rebalances the group.
+        props.put("max.poll.interval.ms", 10000);
+
 
         kafka = new KafkaConsumer<>(props);
 
@@ -70,7 +80,10 @@ public class Consumer {
 
 
     public void shutdown() {
+        logger.debug("Shutdown requested for consumer in group {} for topic {}", consumerGroupId, topic.toString());
+
         isStopped.set(true);
+        consumerLoopExecutor.shutdown();
 
         try {
             consumerLoopExecutor.awaitTermination(2, TimeUnit.SECONDS);
@@ -84,6 +97,8 @@ public class Consumer {
         kafka.commitSync(partitions.offsetsToBeCommitted());
 
         kafka.close();
+
+        logger.info("Consumer in group {} for topic {} was shut down.", consumerGroupId, topic.toString());
     }
 
 
@@ -99,15 +114,26 @@ public class Consumer {
                 return;
             }
 
-            while (!isStopped.get()) {
-                // Note that poll() may also execute the ConsumerRebalanceListener callbacks and may take substantially more time to return.
-                ConsumerRecords<String, byte[]> records = kafka.poll(300);
+            try {
+                while (!isStopped.get()) {
+                    // Note that poll() may also execute the ConsumerRebalanceListener callbacks and may take substantially more time to return.
+                    ConsumerRecords<String, byte[]> records = kafka.poll(300);
 
-                partitions.enqueue(records);
-                kafka.commitSync(partitions.offsetsToBeCommitted());
+                    partitions.enqueue(records);
+                    kafka.commitSync(partitions.offsetsToBeCommitted());
 
-                kafka.pause(partitions.partitionsToBePaused());
-                kafka.resume(partitions.partitionsToBeResumed());
+                    kafka.pause(partitions.partitionsToBePaused());
+                    kafka.resume(partitions.partitionsToBeResumed());
+                }
+            } catch (Throwable unexpectedError) {
+                logger.error("Unexpected exception in main consumer loop (group="+ consumerGroupId + " ,topic=" + topic.toString() + "). Consumer now dead.", unexpectedError);
+
+                // Try to close the connection to Kafka
+                kafka.close();
+
+                // Let the thread and the consumer die. Kafka needs to rebalance the group.
+                // Anyway, this points to a serious bug that needs to be fixed.
+                throw unexpectedError;
             }
         }
     }
@@ -118,6 +144,8 @@ public class Consumer {
         // 1. This callback will execute in the user thread as part of the {@link Consumer#poll(long) poll(long)} call whenever partition assignment changes.
         // 2. It is guaranteed that all consumer processes will invoke {@link #onPartitionsRevoked(Collection) onPartitionsRevoked} prior to
         //    any process invoking {@link #onPartitionsAssigned(Collection) onPartitionsAssigned}.
+
+        // Note that when Kafka rebalances partitions, all currently assigned partitions are revoked and then the remaining partitions are newly assigned.
 
         @Override
         public void onPartitionsRevoked(Collection<TopicPartition> revokedPartitions) {
@@ -137,5 +165,4 @@ public class Consumer {
             partitions.assignNewPartitions(assignedPartitions);
         }
     }
-
 }

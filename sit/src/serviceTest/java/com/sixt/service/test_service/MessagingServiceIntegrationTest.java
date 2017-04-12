@@ -16,19 +16,26 @@ import com.palantir.docker.compose.DockerComposeRule;
 import com.palantir.docker.compose.configuration.ProjectName;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
+import com.sixt.service.framework.kafka.TopicVerification;
 import com.sixt.service.framework.kafka.messaging.*;
 import com.sixt.service.framework.servicetest.helper.DockerComposeHelper;
-import com.sixt.service.framework.servicetest.service.ServiceUnderTest;
+import com.sixt.service.framework.util.Sleeper;
 import com.sixt.service.test_service.api.Echo;
 import com.sixt.service.test_service.api.Greeting;
 import org.joda.time.Duration;
-import org.junit.*;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.Timeout;
 
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.collect.ImmutableSet.of;
 import static org.junit.Assert.assertTrue;
+
 
 public class MessagingServiceIntegrationTest {
 
@@ -56,11 +63,14 @@ public class MessagingServiceIntegrationTest {
         ServiceProperties sp = new ServiceProperties();
         sp.initialize(new String[]{}); // Reads environment variables set by DockerComposeHelper
 
+        Topic testServiceInbox = Topic.defaultServiceInbox("com.sixt.service.test-service");
+        Topic replyTo = new Topic("inbox_test");
+
+        ensureTopicsExist(sp, of(testServiceInbox.toString(), replyTo.toString()));
+
         // Send a message...
         Producer producer = new ProducerFactory(sp).createProducer();
 
-        Topic testServiceInbox = Topic.defaultServiceInbox("com.sixt.service.test-service");
-        Topic replyTo = new Topic("inbox_test");
 
         Greeting hello = Greeting.newBuilder().setGreeting("Hello, world!").build();
         producer.send(Messages.requestFor(testServiceInbox, replyTo, "aKey", hello, new OrangeContext()));
@@ -88,6 +98,16 @@ public class MessagingServiceIntegrationTest {
 
         producer.shutdown();
         consumer.shutdown();
+    }
+
+    private void ensureTopicsExist(ServiceProperties serviceProperties, Set<String> topics) {
+        TopicVerification verifier = new TopicVerification();
+        Sleeper sleeper = new Sleeper();
+
+        while (!verifier.verifyTopicsExist(serviceProperties.getKafkaServer(), topics
+                , false)) {
+            sleeper.sleepNoException(100);
+        }
     }
 
 }

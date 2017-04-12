@@ -236,14 +236,18 @@ final class PartitionProcessor {
 
         private void parsingFailed(Envelope envelope) {
             String messageType = "Envelope";
+            String topic = record.topic();
+
+
             if (envelope != null) {
                 messageType = envelope.getMessageType();
             }
 
             if (metricsBuilderFactory != null) {
-                // TODO all metrics - should we add the topic?
                 GoCounter parsingFailureCounter = metricsBuilderFactory.newMetric("messaging_consumer_parse_failures")
-                        .withTag("messageType", messageType).buildCounter();
+                        .withTag("messageType", messageType)
+                        .withTag("topic", topic)
+                        .buildCounter();
 
                 parsingFailureCounter.incFailure();
             }
@@ -263,6 +267,7 @@ final class PartitionProcessor {
             if (metricsBuilderFactory != null) {
                 handlerTimer = metricsBuilderFactory.newMetric("messaging_consumer_message_handler")
                         .withTag("messageType", message.getMetadata().getType().toString())
+                        .withTag("topic", message.getMetadata().getTopic().toString())
                         .buildTimer();
                 startTime = handlerTimer.start();
             }
@@ -275,13 +280,18 @@ final class PartitionProcessor {
                 metricsBuilderFactory.newMetric("messaging_consumer_delivery_failures")
                         .withTag("retryable", Boolean.toString(tryDeliverMessage))
                         .withTag("messageType", message.getMetadata().getType().toString())
+                        .withTag("topic", message.getMetadata().getTopic().toString())
                         .buildCounter();
             }
 
         }
 
         private void deliveryEnded(Message message, boolean deliveryFailed) {
-            logger.debug(message.getMetadata().getLoggingMarker(), "Message {} with offset {} marked as consumed.", message.getMetadata().getType(), message.getMetadata().getOffset());
+            logger.debug(message.getMetadata().getLoggingMarker(), "Message {} with offset {} in {}-{} marked as consumed.",
+                    message.getMetadata().getType(),
+                    message.getMetadata().getOffset(),
+                    message.getMetadata().getTopic().toString(),
+                    message.getMetadata().getPartitionId());
 
             if (span != null) {
                 if (deliveryFailed) {
@@ -293,6 +303,7 @@ final class PartitionProcessor {
             if (metricsBuilderFactory != null) {
                 GoCounter consumedMessages = metricsBuilderFactory.newMetric("messaging_consumer_consumed_messages")
                         .withTag("messageType", message.getMetadata().getType().toString())
+                        .withTag("topic", message.getMetadata().getTopic().toString())
                         .buildCounter();
 
                 if (deliveryFailed) {

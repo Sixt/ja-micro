@@ -15,7 +15,9 @@ package com.sixt.service.test_service;
 import com.sixt.service.framework.AbstractService;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.annotation.OrangeMicroservice;
+import com.sixt.service.framework.kafka.TopicVerification;
 import com.sixt.service.framework.kafka.messaging.*;
+import com.sixt.service.framework.util.Sleeper;
 import com.sixt.service.test_service.handler.*;
 
 import java.io.PrintStream;
@@ -33,11 +35,13 @@ public class ServiceEntryPoint extends AbstractService {
 
     @Override
     public void displayHelp(PrintStream out) {
-        //TODO: display required and optional configuration information
     }
+
 
     @Override
     public void bootstrapComplete() throws InterruptedException {
+
+        // TODO: wait for topic creation
 
         // Start a messaging consumer for the default inbox.
         ConsumerFactory consumerFactory = injector.getInstance(ConsumerFactory.class);
@@ -45,7 +49,6 @@ public class ServiceEntryPoint extends AbstractService {
 
         injector.getInstance(RandomEventHandler.class);
 
-        // waitForTopicCreation();
 
         super.bootstrapComplete();
     }
