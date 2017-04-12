@@ -306,7 +306,6 @@ public class PartitionProcessorTest {
         TopicPartition topicKey = new TopicPartition(TOPIC, PARTITION);
         TypeDictionary typeDictionary = new TestTypeDictionary();
 
-
         class RetryableTestException extends RuntimeException {
 
         }

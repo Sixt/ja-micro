@@ -104,7 +104,6 @@ public class Metadata {
                 '}';
     }
 
-
     public Marker getLoggingMarker() {
         // If we get more optional header fields, we should probably exclude them if they are empty.
         Marker messageMarker = append("topic", topic)
@@ -154,5 +153,4 @@ public class Metadata {
         }
         this.type = type;
     }
-
 }

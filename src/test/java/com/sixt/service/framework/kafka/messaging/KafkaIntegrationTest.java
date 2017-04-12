@@ -13,10 +13,8 @@
 package com.sixt.service.framework.kafka.messaging;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.palantir.docker.compose.DockerComposeRule;
 import com.palantir.docker.compose.configuration.ProjectName;
-import com.palantir.docker.compose.connection.DockerPort;
 import com.sixt.service.framework.IntegrationTest;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
@@ -25,13 +23,15 @@ import com.sixt.service.framework.servicetest.helper.DockerComposeHelper;
 import com.sixt.service.framework.util.Sleeper;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.joda.time.Duration;
-import org.junit.*;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -45,8 +45,7 @@ import static org.junit.Assert.assertTrue;
 
 @Category(IntegrationTest.class)
 public class KafkaIntegrationTest {
-
-    private static final Logger logger = LoggerFactory.getLogger(Producer.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaIntegrationTest.class);
 
     @Rule
     public Timeout globalTimeout = Timeout.seconds(300);
@@ -64,7 +63,7 @@ public class KafkaIntegrationTest {
 
     @BeforeClass
     public static void setupClass() throws Exception {
-            DockerComposeHelper.setKafkaEnvironment(docker);
+        DockerComposeHelper.setKafkaEnvironment(docker);
     }
 
 
@@ -77,7 +76,6 @@ public class KafkaIntegrationTest {
         Topic pong = new Topic("pong");
 
         ensureTopicsExist(serviceProperties, ImmutableSet.of(ping.toString(), pong.toString()));
-
 
         final int N = 10;
 
@@ -156,7 +154,6 @@ public class KafkaIntegrationTest {
 
         final AtomicInteger receivedMessagesConsumer3 = new AtomicInteger(0);
         final CountDownLatch firstMessageProcessedConsumer3 = new CountDownLatch(1);
-
 
 
         // Produce messages until test tells producer to stop.
@@ -238,7 +235,6 @@ public class KafkaIntegrationTest {
         Thread.sleep(5000);
 
 
-
         // Now shut down the first consumer.
         consumer1.shutdown();
         Thread.sleep(10000);
@@ -302,8 +298,4 @@ public class KafkaIntegrationTest {
             sleeper.sleepNoException(300);
         }
     }
-
-
-
-
 }

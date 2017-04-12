@@ -38,7 +38,6 @@ public class DelayAndRetryOnRecoverableErrors implements FailedMessageProcessor 
         return shouldRetry;
     }
 
-
     /**
      * This method can be overridden to specify custom behaviour.
      *

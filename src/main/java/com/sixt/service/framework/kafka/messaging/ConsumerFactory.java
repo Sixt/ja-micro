@@ -10,6 +10,7 @@ import io.opentracing.Tracer;
 
 import static com.google.common.collect.ImmutableSet.of;
 
+
 public class ConsumerFactory {
 
     private final ServiceProperties serviceProperties;

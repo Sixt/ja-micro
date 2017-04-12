@@ -238,7 +238,6 @@ final class PartitionProcessor {
             String messageType = "Envelope";
             String topic = record.topic();
 
-
             if (envelope != null) {
                 messageType = envelope.getMessageType();
             }
@@ -248,7 +247,6 @@ final class PartitionProcessor {
                         .withTag("messageType", messageType)
                         .withTag("topic", topic)
                         .buildCounter();
-
                 parsingFailureCounter.incFailure();
             }
         }
@@ -292,6 +290,7 @@ final class PartitionProcessor {
                     message.getMetadata().getOffset(),
                     message.getMetadata().getTopic().toString(),
                     message.getMetadata().getPartitionId());
+            logger.debug(message.getMetadata().getLoggingMarker(), "Message {} with offset {} marked as consumed.", message.getMetadata().getType(), message.getMetadata().getOffset());
 
             if (span != null) {
                 if (deliveryFailed) {

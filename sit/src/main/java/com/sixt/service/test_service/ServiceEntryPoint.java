@@ -49,7 +49,6 @@ public class ServiceEntryPoint extends AbstractService {
 
         injector.getInstance(RandomEventHandler.class);
 
-
         super.bootstrapComplete();
     }
 }

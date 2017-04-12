@@ -69,7 +69,6 @@ public class Consumer {
         // This is the actual timeout for the ConsumerLoop thread before Kafka rebalances the group.
         props.put("max.poll.interval.ms", 10000);
 
-
         kafka = new KafkaConsumer<>(props);
 
         partitions = new AssignedPartitions(processorFactory);
@@ -84,6 +83,7 @@ public class Consumer {
 
         isStopped.set(true);
         consumerLoopExecutor.shutdown();
+
 
         try {
             consumerLoopExecutor.awaitTermination(2, TimeUnit.SECONDS);
@@ -113,6 +113,7 @@ public class Consumer {
                 logger.error("Dead consumer in group {}: Cannot subscribe to topic {}", consumerGroupId, topic.toString(), unexpected);
                 return;
             }
+
 
             try {
                 while (!isStopped.get()) {

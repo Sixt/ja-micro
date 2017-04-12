@@ -71,7 +71,6 @@ public class MessagingServiceIntegrationTest {
         // Send a message...
         Producer producer = new ProducerFactory(sp).createProducer();
 
-
         Greeting hello = Greeting.newBuilder().setGreeting("Hello, world!").build();
         producer.send(Messages.requestFor(testServiceInbox, replyTo, "aKey", hello, new OrangeContext()));
 
