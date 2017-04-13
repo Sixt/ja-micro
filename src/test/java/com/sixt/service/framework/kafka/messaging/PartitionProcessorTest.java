@@ -337,10 +337,11 @@ public class PartitionProcessorTest {
         getTestHandler(processor).blockReturnFromOnMessage.countDown();
         getTestHandler(processor).handlerReturnedNormally.await();
 
+        processor.waitForHandlersToTerminate(100);
+
         assertEquals(2, getTestHandler(processor).nbHandlerInvokations.get());
         assertTrue(processor.hasUncommittedMessages());
         assertEquals(43, processor.getCommitOffsetAndClear());
-        processor.waitForHandlersToTerminate(1);
     }
 
 
