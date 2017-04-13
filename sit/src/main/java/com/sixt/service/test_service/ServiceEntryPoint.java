@@ -12,15 +12,18 @@
 
 package com.sixt.service.test_service;
 
+import com.google.common.collect.ImmutableSet;
 import com.sixt.service.framework.AbstractService;
-import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.annotation.OrangeMicroservice;
 import com.sixt.service.framework.kafka.TopicVerification;
-import com.sixt.service.framework.kafka.messaging.*;
+import com.sixt.service.framework.kafka.messaging.ConsumerFactory;
+import com.sixt.service.framework.kafka.messaging.DiscardFailedMessages;
+import com.sixt.service.framework.kafka.messaging.Topic;
 import com.sixt.service.framework.util.Sleeper;
 import com.sixt.service.test_service.handler.*;
 
 import java.io.PrintStream;
+import java.util.Set;
 
 @OrangeMicroservice
 public class ServiceEntryPoint extends AbstractService {
@@ -40,6 +43,17 @@ public class ServiceEntryPoint extends AbstractService {
 
     @Override
     public void bootstrapComplete() throws InterruptedException {
+
+        // To avoid sporadic test failures, we need to ensure the topics are created before we start the test service.
+        TopicVerification topicVerification = new TopicVerification();
+        Sleeper sleeper = new Sleeper();
+        String serviceName = serviceProperties.getServiceName();
+        Topic defaultInbox = Topic.defaultServiceInbox(serviceName);
+
+        Set<String> requiredTopics = ImmutableSet.of(defaultInbox.toString(), "events");
+        while(! topicVerification.verifyTopicsExist(serviceProperties.getKafkaServer(), requiredTopics, false)) {
+            sleeper.sleep(500);
+        }
 
         // Start a messaging consumer for the default inbox.
         ConsumerFactory consumerFactory = injector.getInstance(ConsumerFactory.class);
