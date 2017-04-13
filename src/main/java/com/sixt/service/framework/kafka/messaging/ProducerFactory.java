@@ -3,6 +3,9 @@ package com.sixt.service.framework.kafka.messaging;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.sixt.service.framework.ServiceProperties;
+import org.apache.kafka.clients.CommonClientConfigs;
+
+import java.util.Properties;
 
 public class ProducerFactory {
 
@@ -13,12 +16,13 @@ public class ProducerFactory {
         this.serviceProperties = serviceProperties;
     }
 
-    // TODO May want to be able to override default Kakfa config.
-
-    @Provides
     public Producer createProducer() {
         String kafkaBootstrapServers = serviceProperties.getKafkaServer();
-        return new Producer(kafkaBootstrapServers);
+
+        Properties kafkaProducerConfig = new Properties();
+        kafkaProducerConfig.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+
+        return new Producer(kafkaProducerConfig);
     }
 
 }

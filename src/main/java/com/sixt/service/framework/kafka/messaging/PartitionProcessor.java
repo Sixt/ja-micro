@@ -114,7 +114,6 @@ final class PartitionProcessor {
         executor.submit(new MessageDeliveryTask(record));
     }
 
-
     class MessageDeliveryTask implements Runnable {
 
         private final ConsumerRecord<String, byte[]> record;
@@ -290,7 +289,6 @@ final class PartitionProcessor {
                     message.getMetadata().getOffset(),
                     message.getMetadata().getTopic().toString(),
                     message.getMetadata().getPartitionId());
-            logger.debug(message.getMetadata().getLoggingMarker(), "Message {} with offset {} marked as consumed.", message.getMetadata().getType(), message.getMetadata().getOffset());
 
             if (span != null) {
                 if (deliveryFailed) {
@@ -336,6 +334,11 @@ final class PartitionProcessor {
 
     // Offset / commit handling --------------------------------------------------
 
+    TopicPartition getAssignedPartition() {
+        return partitionKey;
+    }
+
+
     int numberOfUnprocessedMessages() {
         // Thread safety: snapshot value
         return undeliveredMessages.size();
@@ -361,6 +364,15 @@ final class PartitionProcessor {
         return lastComittedOffset.get();
     }
 
+    long getLastCommittedOffset() {
+        return lastComittedOffset.get();
+    }
+
+    void forceSetLastCommittedOffset(long lastComittedOffset) {
+        logger.info("forceSetLastCommittedOffset of partition {} to {}", partitionKey, lastComittedOffset);
+        this.lastComittedOffset.set(lastComittedOffset);
+    }
+
 
     // Flow control --------------------------------------------------
 
@@ -369,7 +381,7 @@ final class PartitionProcessor {
     }
 
     boolean shouldResume() {
-        // simple logic for now
+        // simple logic for now - from the resume docs: "If the partitions were not previously paused, this method is a no-op."
         return !isPaused();
     }
 

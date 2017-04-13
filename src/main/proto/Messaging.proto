@@ -13,8 +13,8 @@ message Envelope {
 
 	// - Message exchange patterns
 	// -- Request/Reply
-	string request_correlation_id = 20; // OPTIONAL. This response correlates to the request with the given message_id
-	string reply_to = 21; // OPTIONAL. Send responses for this request to the given address. See class Topic for syntax.
+	string request_correlation_id = 20; // REQUIRED for RESPONSE. This response correlates to the message id of the original request.
+	string reply_to = 21; // REQUIRED for REQUEST. Send responses for this request to the given address. See class Topic for syntax.
 
 
 	// Payload:

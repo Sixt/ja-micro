@@ -99,6 +99,8 @@ public class MessagingServiceIntegrationTest {
         consumer.shutdown();
     }
 
+
+
     private void ensureTopicsExist(ServiceProperties serviceProperties, Set<String> topics) {
         TopicVerification verifier = new TopicVerification();
         Sleeper sleeper = new Sleeper();

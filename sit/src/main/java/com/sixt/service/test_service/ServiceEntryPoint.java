@@ -41,8 +41,6 @@ public class ServiceEntryPoint extends AbstractService {
     @Override
     public void bootstrapComplete() throws InterruptedException {
 
-        // TODO: wait for topic creation
-
         // Start a messaging consumer for the default inbox.
         ConsumerFactory consumerFactory = injector.getInstance(ConsumerFactory.class);
         consumerFactory.defaultInboxConsumer(new DiscardFailedMessages());

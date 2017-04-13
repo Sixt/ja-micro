@@ -6,6 +6,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.util.UUID;
 
+/**
+ * Factory to support in Message creation for the common use cases.
+ */
 public class Messages {
 
     private Messages() {

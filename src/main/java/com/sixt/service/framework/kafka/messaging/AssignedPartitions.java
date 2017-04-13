@@ -10,13 +10,13 @@ import java.util.*;
 
 /**
  * AssignedPartitions represents the set of PartitionProcessors for the partitions assigned to a certain consumer.
- *
+ * <p>
  * Read records are dispatched to the right processor. It aggregates over the individual processors to get the set of
  * committed offset, paused or resumed partitions.
- *
+ * <p>
  * Additionally it manages creation, termination and removal of PartitionProcessors as partitions are distributed across
  * consumers.
- *
+ * <p>
  * Thread safety policy: single-thread use by MessagingConsumer
  */
 final class AssignedPartitions {
@@ -140,4 +140,13 @@ final class AssignedPartitions {
         });
     }
 
+    Collection<PartitionProcessor> allProcessors() {
+        Collection<PartitionProcessor> allProcessors = new ArrayList<>();
+
+        processors.forEach((key, processor) -> {
+            allProcessors.add(processor);
+        });
+
+        return allProcessors;
+    }
 }

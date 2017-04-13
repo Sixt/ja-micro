@@ -6,9 +6,22 @@ import org.slf4j.Marker;
 
 import static net.logstash.logback.marker.Markers.append;
 
-
-// Immutable
+/**
+ * Metadata information about the Message such as
+ * - If it was received from Kafka or is a newly created mesage.
+ * - Kafka related information such as topic, partition id, partitioning key and the offset of the message in the partition.
+ * - Header fields sent with the Message (in the Envolope), e.g. message id, type of the inner message, correlation ids, etc.
+ *
+ * Depending on the message exchange pattern, some fields are optional.
+ *
+ * For request-response, the request requires to have the reply-to topic set. The consumer of the request must send the response
+ * back to the reply-to topic. In the response, the requestCorrelationId is required and refers to the message id of the original request.
+ *
+ */
 public class Metadata {
+    // Immutable
+
+    // Keep in sync with Messaging.proto / message Envelope
 
     // Inbound or outbound message, i.e. did we receive it or is it a newly created one?
     private final boolean wasReceived;
@@ -28,8 +41,8 @@ public class Metadata {
 
     // Message exchange patterns
     // -> request/reply
-    private final String requestCorrelationId; // OPTIONAL. This response correlates to the request with the given id
-    private final Topic replyTo; // OPTIONAL. Send responses for this request to the given address. See class Topic for syntax.
+    private final String requestCorrelationId; // REQUIRED for RESPONSE. This response correlates to the message id of the original request.
+    private final Topic replyTo; // REQUIRED for REQUEST. Send responses for this request to the given address. See class Topic for syntax.
 
     private final MessageType type; // REQUIRED.
 

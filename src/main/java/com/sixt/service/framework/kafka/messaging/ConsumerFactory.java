@@ -1,14 +1,11 @@
 package com.sixt.service.framework.kafka.messaging;
 
 import com.google.inject.Inject;
-import com.jcabi.log.Logger;
 import com.sixt.service.framework.ServiceProperties;
-import com.sixt.service.framework.kafka.TopicVerification;
 import com.sixt.service.framework.metrics.MetricBuilderFactory;
-import com.sixt.service.framework.util.Sleeper;
 import io.opentracing.Tracer;
 
-import static com.google.common.collect.ImmutableSet.of;
+import java.util.Properties;
 
 
 public class ConsumerFactory {
@@ -31,35 +28,20 @@ public class ConsumerFactory {
         this.metricBuilderFactory = metricBuilderFactory;
     }
 
-    // Note: There is no default for the FailedMessageProcessor because I want users to explicitly think about error handling.
-
-    // TODO  make group id settable by caller
-    // TODO allow caller to specify kafka config (different from default one)
-    // TODO allow poll interval to be settable
+    // Design note: There is no default for the FailedMessageProcessor because I want users to explicitly think about error handling.
 
     public Consumer defaultInboxConsumer(FailedMessageProcessor failedMessageStrategy) {
-        PartitionProcessorFactory partitionProcessorFactory = new PartitionProcessorFactory(typeDictionary, failedMessageStrategy, tracer, metricBuilderFactory);
-
-        String kafkaBootstrapServers = serviceProperties.getKafkaServer();
         String serviceName = serviceProperties.getServiceName();
-
         Topic defaultInbox = Topic.defaultServiceInbox(serviceName);
         String consumerGroupId = defaultConsumerGroupId(defaultInbox);
 
-        ensureTopicIsPresent(defaultInbox);
-
-        return new Consumer(defaultInbox, consumerGroupId, kafkaBootstrapServers, partitionProcessorFactory);
+        return new Consumer(defaultInbox, consumerGroupId, defaultKafkaConfig(), defaultPartitionProcessorFactory(failedMessageStrategy));
     }
 
     public Consumer consumerForTopic(Topic topic, DiscardFailedMessages failedMessageStrategy) {
-        PartitionProcessorFactory partitionProcessorFactory = new PartitionProcessorFactory(typeDictionary, failedMessageStrategy, tracer, metricBuilderFactory);
-
-        String kafkaBootstrapServers = serviceProperties.getKafkaServer();
         String consumerGroupId = defaultConsumerGroupId(topic);
 
-        ensureTopicIsPresent(topic);
-
-        return new Consumer(topic, consumerGroupId, kafkaBootstrapServers, partitionProcessorFactory);
+        return new Consumer(topic, consumerGroupId, defaultKafkaConfig(), defaultPartitionProcessorFactory(failedMessageStrategy));
     }
 
     private String defaultConsumerGroupId(Topic topic) {
@@ -67,18 +49,31 @@ public class ConsumerFactory {
         return topic + "-" + serviceProperties.getServiceName();
     }
 
+    private Properties defaultKafkaConfig() {
+        String kafkaBootstrapServers = serviceProperties.getKafkaServer();
 
-    private void ensureTopicIsPresent(Topic topic) {
-        TopicVerification verifier = new TopicVerification();
-        Sleeper sleeper = new Sleeper();
+        Properties kafkaConfig = new Properties();
+        kafkaConfig.put("bootstrap.servers", kafkaBootstrapServers);
 
-        // FIXME is is a good idea to ensure the topic here? 
-        // FIXME specify the maximum amout of time to wait
+        // The heartbeat is send in the background by the client library itself
+        kafkaConfig.put("heartbeat.interval.ms", "10000");
+        kafkaConfig.put("session.timeout.ms", "30000");
 
-        while (!verifier.verifyTopicsExist(serviceProperties.getKafkaServer(), of(topic.toString()), false)) {
-            Logger.debug("Verify if topic {} exisits.", topic.toString());
-            sleeper.sleepNoException(100);
-        }
+        // Require explicit commit handling.
+        kafkaConfig.put("enable.auto.commit", "false");
 
+        // If this is a new group, start reading the topic from the beginning.
+        kafkaConfig.put("auto.offset.reset", "earliest");
+
+        // This is the actual timeout for the consumer loop thread calling poll() before Kafka rebalances the group.
+        kafkaConfig.put("max.poll.interval.ms", 10000);
+
+        return kafkaConfig;
     }
+
+    private PartitionProcessorFactory defaultPartitionProcessorFactory(FailedMessageProcessor failedMessageStrategy) {
+        PartitionProcessorFactory partitionProcessorFactory = new PartitionProcessorFactory(typeDictionary, failedMessageStrategy, tracer, metricBuilderFactory);
+        return partitionProcessorFactory;
+    }
+
 }

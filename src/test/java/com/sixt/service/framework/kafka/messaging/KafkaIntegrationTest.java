@@ -75,8 +75,6 @@ public class KafkaIntegrationTest {
         Topic ping = new Topic("ping");
         Topic pong = new Topic("pong");
 
-        ensureTopicsExist(serviceProperties, ImmutableSet.of(ping.toString(), pong.toString()));
-
         final int N = 10;
 
         Producer producer = new ProducerFactory(serviceProperties).createProducer();
@@ -258,11 +256,6 @@ public class KafkaIntegrationTest {
         assertTrue(receivedMessagesConsumer3.get() > 0);
     }
 
-
-    // TODO test cases for producing on a non-existing topic
-    // TODO test cases for subscribing to a non-exiting topic
-
-
     private void brutallyKillConsumer(String victimName) {
         int nbThreads = Thread.activeCount();
         Thread[] threads = new Thread[nbThreads];
@@ -276,7 +269,6 @@ public class KafkaIntegrationTest {
         }
     }
 
-
     private <T extends com.google.protobuf.Message> ConsumerFactory consumerFactoryWithHandler(ServiceProperties serviceProperties, Class<T> messageType, MessageHandler<T> handler) {
         TypeDictionary typeDictionary = new TypeDictionary();
         ReflectionTypeDictionaryFactory reflectionCruft = new ReflectionTypeDictionaryFactory(null);
@@ -288,14 +280,4 @@ public class KafkaIntegrationTest {
         return consumerFactory;
     }
 
-
-    private void ensureTopicsExist(ServiceProperties serviceProperties, Set<String> topics) {
-        TopicVerification verifier = new TopicVerification();
-        Sleeper sleeper = new Sleeper();
-
-        while (!verifier.verifyTopicsExist(serviceProperties.getKafkaServer(), topics
-                , false)) {
-            sleeper.sleepNoException(300);
-        }
-    }
 }
