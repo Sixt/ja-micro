@@ -129,10 +129,10 @@ public class HttpClientWrapper {
             } catch (TimeoutException timeout) {
                 lastStatusCode = RpcCallException.Category.RequestTimedOut.getHttpStatus();
                 //TODO: RequestTimedOut should be retried as long as there is time budget left
-                logger.warn(getRemoteMethod(), "Caught TimeoutException executing request");
+                logger.info(getRemoteMethod(), "Caught TimeoutException executing request");
             } catch (Exception ex) {
                 lastStatusCode = RpcCallException.Category.InternalServerError.getHttpStatus();
-                logger.warn(getRemoteMethod(), "Caught exception executing request", ex);
+                logger.debug(getRemoteMethod(), "Caught exception executing request", ex);
             }
 
             //content.length must always be > 0, because we have an envelope

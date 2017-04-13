@@ -104,7 +104,7 @@ public class ProtobufHandler extends RpcHandler {
             incrementFailureCounter(methodName, context.getRpcOriginService(),
                     context.getRpcOriginMethod());
         } catch (RpcReadException ex) {
-            logger.warn("bad request ( cannot decode rpc message )", ex.toJSON(req));
+            logger.warn("Bad request, cannot decode rpc message: {}", ex.toJson(req));
             sendErrorResponse(resp, rpcRequest, ex.getMessage(), HttpServletResponse.SC_BAD_REQUEST);
             if (span != null) {
                 Tags.ERROR.set(span, true);

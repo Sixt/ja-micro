@@ -52,7 +52,7 @@ public class RpcReadExceptionTest {
                 .thenReturn(new StringBuffer("http://fizz.buzz"));
 
         RpcReadException rpcReadException = new RpcReadException(first.getBytes(), x, "i am a message");
-        String json = rpcReadException.toJSON(request);
+        String json = rpcReadException.toJson(request);
 
         try {
             JsonElement root = new JsonParser().parse(json);
@@ -99,7 +99,7 @@ public class RpcReadExceptionTest {
         try {
             throw new RpcReadException("beg".getBytes(),request.getInputStream(),"i am a message");
         } catch (RpcReadException ex) {
-            json = ex.toJSON(request);
+            json = ex.toJson(request);
             caught = true;
         } catch (Exception ex) {
             Assert.fail(ex.toString());

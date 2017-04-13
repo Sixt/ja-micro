@@ -30,7 +30,7 @@ public class RpcReadException extends Exception {
         this.incomplete = incomplete;
     }
 
-    public String toJSON(HttpServletRequest req) {
+    public String toJson(HttpServletRequest req) {
         JsonObject obj = new JsonObject();
 
         Enumeration<String> h = req.getHeaderNames();
