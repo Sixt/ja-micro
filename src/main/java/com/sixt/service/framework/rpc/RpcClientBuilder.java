@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Builds RpcClients to interact with remote services.
  */
-public class RpcClientBuilder {
+public class RpcClientBuilder<RESPONSE> {
 
     private static final Logger logger = LoggerFactory.getLogger(RpcClientBuilder.class);
 
@@ -35,7 +35,7 @@ public class RpcClientBuilder {
     private String methodName;
     private int retries;
     private int timeout;
-    private Class<? extends Message> responseClass;
+    private Class<RESPONSE> responseClass;
 
     @Inject
     public RpcClientBuilder(Injector injector) {
@@ -69,7 +69,7 @@ public class RpcClientBuilder {
     }
 
     @SuppressWarnings("unchecked") //TODO: generic-ize this class
-    public RpcClient build() {
+    public <RESPONSE extends Message> RpcClient<RESPONSE> build() {
         if (StringUtils.isBlank(serviceName)) {
             throw new IllegalStateException("RpcClientBuilder: Service name was not set");
         }
@@ -81,7 +81,7 @@ public class RpcClientBuilder {
         return new RpcClient(loadBalancer, serviceName, methodName, retries, timeout, responseClass);
     }
 
-    public void setResponseClass(Class<? extends Message> responseClass) {
+    public void setResponseClass(Class<RESPONSE> responseClass) {
         this.responseClass = responseClass;
     }
 

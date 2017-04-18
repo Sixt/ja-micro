@@ -55,7 +55,7 @@ public class RpcClientIntegrationTest {
     private final String featureFlag;
     private RpcClientFactory clientFactory;
     private LoadBalancerFactory loadBalancerFactory;
-    private RpcClient rpcClient;
+    private RpcClient<FrameworkTest.Foobar> rpcClient;
     private LoadBalancer loadBalancer;
     private MockHttpClient httpClient;
     private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(2);

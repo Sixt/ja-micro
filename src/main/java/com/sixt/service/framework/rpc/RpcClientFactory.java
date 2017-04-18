@@ -34,8 +34,8 @@ public class RpcClientFactory {
      * Build an RpcClientBuilder.  Use the withXXX methods to customize the behavior
      * of the client, then finish with builder.build().
      */
-    public RpcClientBuilder newClient(String serviceName, String methodName,
-                                      Class<? extends Message> responseClass) {
+    public <RESPONSE extends Message> RpcClientBuilder<RESPONSE> newClient(String serviceName, String methodName,
+                                      Class<RESPONSE> responseClass) {
         RpcClientBuilder retval = injector.getInstance(RpcClientBuilder.class);
         retval.setServiceName(serviceName);
         retval.setMethodName(methodName);
