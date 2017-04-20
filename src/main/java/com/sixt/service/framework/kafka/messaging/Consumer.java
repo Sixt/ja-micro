@@ -28,7 +28,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Consumer instances are Kafka clients that fetch records of (one or multiple partitions of) a topic.
@@ -50,7 +49,7 @@ public final class Consumer {
 
     private static final int HANDLER_TIMEOUT_MILLIS = 60_000;
     private static final int POLL_INTERVAL_MILLIS = 300;
-    private static final long COMMIT_REFRESH_INTERVAL_MILLIS = 6*60*60*1000; // every six hours
+    private static final long COMMIT_REFRESH_INTERVAL_MILLIS = 6 * 60 * 60 * 1000; // every six hours
 
     private final Topic topic;
     private final String consumerGroupId;
@@ -58,8 +57,6 @@ public final class Consumer {
     private final AssignedPartitions partitions;
     private final ExecutorService consumerLoopExecutor = Executors.newSingleThreadExecutor();
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
-
-
 
     // Build by ConsumerFactory
     Consumer(Topic topic, String consumerGroupId, Properties props, PartitionProcessorFactory processorFactory) {
@@ -79,7 +76,6 @@ public final class Consumer {
         // start it
         consumerLoopExecutor.execute(new ConsumerLoop());
     }
-
 
     public void shutdown() {
         logger.debug("Shutdown requested for consumer in group {} for topic {}", consumerGroupId, topic.toString());
@@ -104,9 +100,7 @@ public final class Consumer {
         logger.info("Consumer in group {} for topic {} was shut down.", consumerGroupId, topic.toString());
     }
 
-
     class ConsumerLoop implements Runnable {
-
         // single thread access only
         private long nextCommitRefreshRequiredTimestamp = System.currentTimeMillis() + COMMIT_REFRESH_INTERVAL_MILLIS;
 
@@ -158,7 +152,6 @@ public final class Consumer {
             }
         }
 
-
         private void checkIfRefreshCommitRequired() {
             // Here's the issue:
             // The retention of __consumer_offsets is less than most topics itself, so we need to re-commit regularly to keep the
@@ -167,17 +160,17 @@ public final class Consumer {
             Map<TopicPartition, OffsetAndMetadata> commitOffsets = new HashMap<>();
             long now = System.currentTimeMillis();
 
-            if(nextCommitRefreshRequiredTimestamp < now ) {
+            if (nextCommitRefreshRequiredTimestamp < now) {
                 nextCommitRefreshRequiredTimestamp = now + COMMIT_REFRESH_INTERVAL_MILLIS;
 
-               for(PartitionProcessor processor : partitions.allProcessors()) {
+                for (PartitionProcessor processor : partitions.allProcessors()) {
                     TopicPartition assignedPartition = processor.getAssignedPartition();
                     long lastCommittedOffset = processor.getLastCommittedOffset();
 
                     // We haven't committed from this partiton yet
-                    if(lastCommittedOffset < 0) {
+                    if (lastCommittedOffset < 0) {
                         OffsetAndMetadata offset = kafka.committed(assignedPartition);
-                        if(offset == null) {
+                        if (offset == null) {
                             // there was no commit on this partition at all
                             continue;
                         }
@@ -199,8 +192,6 @@ public final class Consumer {
         }
 
     }
-
-
 
     class PartitionAssignmentChange implements ConsumerRebalanceListener {
         // From the documentation:

@@ -64,8 +64,10 @@ final class PartitionProcessor {
     private final AtomicLong lastComittedOffset = new AtomicLong(-1); // i.e. unknown
 
     // Tracing and metrics (optional)
-    @Null private final Tracer tracer;
-    @Null private final MetricBuilderFactory metricsBuilderFactory;
+    @Null
+    private final Tracer tracer;
+    @Null
+    private final MetricBuilderFactory metricsBuilderFactory;
 
     // Lifecycle --------------------------------------------------
 

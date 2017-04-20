@@ -16,9 +16,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Delay with a fixed interval up to a maximum total delay.
- *
+ * <p>
  * The maximum total delay is simply the sum of all delays, but not the real time spend in delaying.
- *
  */
 public final class SimpleRetryDelayer implements RetryDelayer {
 

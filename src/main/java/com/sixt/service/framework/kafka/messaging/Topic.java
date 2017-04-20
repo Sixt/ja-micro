@@ -13,18 +13,17 @@
 package com.sixt.service.framework.kafka.messaging;
 
 import com.google.common.base.Strings;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.constraints.NotNull;
 
 /**
-    Naming scheme for messaging:
-
-    topic = "inbox" ["_" inbox_name ] "-" service_name
-    service_name = kafka_topic_char
-    inbox_name = kafka_topic_char
-
-    kafka_topic_char = "[a-zA-Z0-9\\._\\-]"        // letters, numbers, ".", "_", "-"
+ * Naming scheme for messaging:
+ * <p>
+ * topic = "inbox" ["_" inbox_name ] "-" service_name
+ * service_name = kafka_topic_char
+ * inbox_name = kafka_topic_char
+ * <p>
+ * kafka_topic_char = "[a-zA-Z0-9\\._\\-]"        // letters, numbers, ".", "_", "-"
  */
 public final class Topic {
 
@@ -42,12 +41,12 @@ public final class Topic {
         StringBuilder topic = new StringBuilder();
         topic.append("inbox");
 
-        if(!Strings.isNullOrEmpty(inboxName)) {
+        if (!Strings.isNullOrEmpty(inboxName)) {
             topic.append("_");
             topic.append(inboxName);
         }
 
-        if(Strings.isNullOrEmpty(serviceName)) {
+        if (Strings.isNullOrEmpty(serviceName)) {
             throw new IllegalArgumentException("service name must not be null or empty");
         }
 

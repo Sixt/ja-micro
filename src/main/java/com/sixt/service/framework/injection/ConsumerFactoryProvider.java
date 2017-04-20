@@ -17,6 +17,8 @@ public class ConsumerFactoryProvider implements Provider<ConsumerFactory> {
     private final Tracer tracer;
     private final MetricBuilderFactory metricBuilderFactory;
 
+    private TypeDictionary typeDictionary = null;
+
     @Inject
     public ConsumerFactoryProvider(Injector injector, ServiceProperties serviceProperties, Tracer tracer, MetricBuilderFactory metricBuilderFactory) {
         this.injector = injector;
@@ -27,12 +29,13 @@ public class ConsumerFactoryProvider implements Provider<ConsumerFactory> {
 
     @Override
     public ConsumerFactory get() {
-        ReflectionTypeDictionaryFactory dictionaryFactory = new ReflectionTypeDictionaryFactory(injector);
-        TypeDictionary typeDictionary = dictionaryFactory.createFromClasspath();
+        if(typeDictionary == null) {
+            // Thread safety: no need for volatile / synchronization - it doesn't hurt much if the TypeDictionary is created multiple times.
+            ReflectionTypeDictionaryFactory  dictionaryFactory = new ReflectionTypeDictionaryFactory(injector);
+            typeDictionary = dictionaryFactory.createFromClasspath();
+        }
 
         return new ConsumerFactory(serviceProperties, typeDictionary, tracer, metricBuilderFactory);
     }
-
-
 }
 

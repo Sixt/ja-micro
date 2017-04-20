@@ -23,12 +23,11 @@ import static net.logstash.logback.marker.Markers.append;
  * - If it was received from Kafka or is a newly created mesage.
  * - Kafka related information such as topic, partition id, partitioning key and the offset of the message in the partition.
  * - Header fields sent with the Message (in the Envolope), e.g. message id, type of the inner message, correlation ids, etc.
- *
+ * <p>
  * Depending on the message exchange pattern, some fields are optional.
- *
+ * <p>
  * For request-response, the request requires to have the reply-to topic set. The consumer of the request must send the response
  * back to the reply-to topic. In the response, the requestCorrelationId is required and refers to the message id of the original request.
- *
  */
 public class Metadata {
     // Immutable
@@ -139,8 +138,7 @@ public class Metadata {
                 .and(append("correlationId", correlationId))
                 .and(append("requestCorrelationId", requestCorrelationId))
                 .and(append("replyTo", replyTo))
-                .and(append("messageType", type))
-                ;
+                .and(append("messageType", type));
 
         return messageMarker;
     }

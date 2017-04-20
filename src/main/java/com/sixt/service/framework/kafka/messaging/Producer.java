@@ -13,7 +13,6 @@
 package com.sixt.service.framework.kafka.messaging;
 
 import com.sixt.service.framework.kafka.SixtPartitioner;
-import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -84,7 +83,7 @@ public final class Producer {
             // If for example the producer is used in a synchronous context, it probably does not make sense to retry.
             // However, in an asynchronous context (e.g. in a MessageHandler) it would be wise to retry.
             if (cause instanceof RuntimeException) {
-                throw (RuntimeException)cause;
+                throw (RuntimeException) cause;
             } else {
                 throw new RuntimeException(ex);
             }

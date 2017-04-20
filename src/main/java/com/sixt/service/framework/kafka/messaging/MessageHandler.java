@@ -19,7 +19,7 @@ public interface MessageHandler<T extends com.google.protobuf.Message> {
 
     /**
      * Callback interface to hand over a message.
-     *
+     * <p>
      * Implementors need to consider that we have at least once deliery, i.e. messages may be delivered multiple times (and potentially out of order).
      * Thus, message handlers need to handle duplicate messages gracefully / be idempotent.
      *

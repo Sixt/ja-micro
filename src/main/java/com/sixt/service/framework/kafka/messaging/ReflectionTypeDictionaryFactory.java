@@ -12,8 +12,10 @@
 
 package com.sixt.service.framework.kafka.messaging;
 
-import com.google.inject.*;
-import com.google.protobuf.*;
+import com.google.inject.ConfigurationException;
+import com.google.inject.Injector;
+import com.google.inject.ProvisionException;
+import com.google.protobuf.Parser;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +60,6 @@ public final class ReflectionTypeDictionaryFactory {
                 .matchClassesImplementing(MessageHandler.class, matchingClass ->
                         foundHandlers.add(matchingClass)).scan();
 
-
         foundHandlers.forEach((handlerClass) -> {
             Type[] interfaces = handlerClass.getGenericInterfaces();
 
@@ -82,8 +83,6 @@ public final class ReflectionTypeDictionaryFactory {
                         } catch (ConfigurationException | ProvisionException e) {
                             logger.warn("Cannot instantiate MessageHandler {} using Guice.", handlerClass, e);
                         }
-
-
 
                         if (handler != null) {
                             MessageHandler previous = handlers.put(type, handler);
@@ -112,8 +111,6 @@ public final class ReflectionTypeDictionaryFactory {
                         foundProtoMessages.add(matchingClass)).scan();
 
         // This algorithm adds parsers for all protobuf messages in the classpath including base types such as com.google.protobuf.DoubleValue.
-
-
         for (Class<? extends com.google.protobuf.GeneratedMessageV3> clazz : foundProtoMessages) {
             try {
                 java.lang.reflect.Method method = clazz.getMethod("parser"); // static method, no arguments
@@ -127,7 +124,6 @@ public final class ReflectionTypeDictionaryFactory {
                 // too noisy: logger.debug("Ignoring protobuf type {} as we cannot invoke static method parse().", clazz.getTypeName());
             }
         }
-
 
         return parsers;
     }

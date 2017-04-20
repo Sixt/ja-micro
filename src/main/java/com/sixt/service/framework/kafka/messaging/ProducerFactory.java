@@ -13,7 +13,6 @@
 package com.sixt.service.framework.kafka.messaging;
 
 import com.google.inject.Inject;
-import com.google.inject.Provides;
 import com.sixt.service.framework.ServiceProperties;
 import org.apache.kafka.clients.CommonClientConfigs;
 

@@ -40,7 +40,7 @@ public class DelayAndRetryOnRecoverableErrors implements FailedMessageProcessor 
         // blocks the message handler thread -> flow control may pause the partition
         boolean shouldRetry = retryStrategy.delay();
 
-        if(!shouldRetry) {
+        if (!shouldRetry) {
             return fallbackStrategy.onFailedMessage(failed, failureCause);
         }
 
@@ -49,9 +49,8 @@ public class DelayAndRetryOnRecoverableErrors implements FailedMessageProcessor 
 
     /**
      * This method can be overridden to specify custom behaviour.
-     *
+     * <p>
      * The default implementation simply returns false (non-retryable) in all cases.
-     *
      *
      * @param failureCause The exception thrown when delivering the message.
      * @return true if the message delivery should be retried, false otherwise.

@@ -17,10 +17,10 @@ import java.lang.reflect.Type;
 /**
  * Value object to represent the type of a (protobuf) message.
  * Used to specify the type of the inner message in the messaging envelope.
- *
+ * <p>
  * Conventions:
  * - The type name is the Java Type.getTypeName() of the generated protobuf message.
- *
+ * <p>
  * - In the defining proto file
  * -- specify option java_multiple_files = true; to avoid the OuterClass that nests the message types.
  * -- use package com.sixt.service.{SERVICENAME}.api; as default namespace/package for the asynchronous messaging contract

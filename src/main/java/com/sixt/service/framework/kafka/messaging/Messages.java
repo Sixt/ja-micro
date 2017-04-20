@@ -29,7 +29,7 @@ public final class Messages {
 
     // Design note: copy-paste is by intention here to keep it readable.
 
-    public static  Message<? extends com.google.protobuf.Message> oneWayMessage(Topic target, String partitionKey, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
+    public static Message<? extends com.google.protobuf.Message> oneWayMessage(Topic target, String partitionKey, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
         boolean wasReceived = false;
 
         String messageId = UUID.randomUUID().toString();
@@ -40,7 +40,7 @@ public final class Messages {
 
         MessageType type = MessageType.of(protoPayloadMessage);
 
-        Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId,  requestCorrelationId, replyTo, type);
+        Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, requestCorrelationId, replyTo, type);
         return new Message<>(protoPayloadMessage, meta);
     }
 
@@ -52,25 +52,19 @@ public final class Messages {
 
         MessageType type = MessageType.of(protoPayloadMessage);
 
-
         // Use default inbox for service.
-        if (replyTo == null)
-
-        {
+        if (replyTo == null) {
             throw new IllegalArgumentException("replyTo required");
         }
 
         String requestCorrelationId = ""; // not required
 
-
-
         Metadata meta = new Metadata(wasReceived, target, partitionKey, -1, -1, messageId, correlationId, requestCorrelationId, replyTo, type);
         return new Message<>(protoPayloadMessage, meta);
-
     }
 
 
-    public static  Message<? extends com.google.protobuf.Message> replyTo(Message originalRequest, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
+    public static Message<? extends com.google.protobuf.Message> replyTo(Message originalRequest, com.google.protobuf.Message protoPayloadMessage, OrangeContext context) {
         boolean wasReceived = false;
 
         // By default, return to sender topic using same partitioning scheme.
@@ -90,7 +84,7 @@ public final class Messages {
     }
 
 
-    static  Message<? extends com.google.protobuf.Message> fromKafka(com.google.protobuf.Message protoMessage, Envelope envelope, ConsumerRecord<String, byte[]> record) {
+    static Message<? extends com.google.protobuf.Message> fromKafka(com.google.protobuf.Message protoMessage, Envelope envelope, ConsumerRecord<String, byte[]> record) {
         boolean wasReceived = true;
 
         Topic topic = new Topic(record.topic());
@@ -103,11 +97,8 @@ public final class Messages {
 
         MessageType type = MessageType.of(protoMessage);
 
-
         String requestCorrelationId = envelope.getRequestCorrelationId();
         Topic replyTo = new Topic(envelope.getReplyTo());
-
-
 
         Metadata meta = new Metadata(wasReceived, topic, partitioningKey, partitionId, offset, messageId, correlationId, requestCorrelationId, replyTo, type);
         return new Message<>(protoMessage, meta);
