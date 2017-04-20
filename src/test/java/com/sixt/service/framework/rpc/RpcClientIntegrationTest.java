@@ -18,6 +18,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.sixt.service.framework.FeatureFlags;
+import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.injection.ServiceRegistryModule;
 import com.sixt.service.framework.injection.TracingModule;
@@ -69,6 +70,7 @@ public class RpcClientIntegrationTest {
         TestInjectionModule module = new TestInjectionModule(featureFlag);
         ServiceProperties props = new ServiceProperties();
         props.addProperty(FeatureFlags.FLAG_EXPOSE_ERRORS_HTTP, featureFlag);
+        props.addProperty(FeatureFlags.DISABLE_RPC_INSTANCE_RETRY, "true");
         props.addProperty(ServiceProperties.REGISTRY_SERVER_KEY, "localhost:65432");
         props.addProperty("registry", "consul");
         module.setServiceProperties(props);
@@ -93,7 +95,7 @@ public class RpcClientIntegrationTest {
         loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1"));
 
         for (int i = 0; i < 4; i++) {
-            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build());
+            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
         }
 
         assertThat(httpClient.verifyRequestsProcessed(2, "localhost:20001")).isTrue();
@@ -105,7 +107,7 @@ public class RpcClientIntegrationTest {
         //no service endpoints available
         int errorCount = 0;
         try {
-            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build());
+            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
         } catch (RpcCallException ex) {
             errorCount++;
             assertThat(ex.getCategory()).isEqualTo(RpcCallException.Category.InternalServerError);
@@ -121,12 +123,12 @@ public class RpcClientIntegrationTest {
         loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1"));
         loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1"));
         for (int i = 0; i < 4; i++) {
-            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build());
+            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
         }
 
         loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20003", "dc1"));
         for (int i = 0; i < 3; i++) {
-            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build());
+            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
         }
 
         assertThat(httpClient.verifyRequestsProcessed(3, "localhost:20001")).isTrue();
@@ -141,7 +143,7 @@ public class RpcClientIntegrationTest {
         loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1"));
         rpcClient = clientFactory.newClient(serviceName, "testing", FrameworkTest.Foobar.class).
                 withRetries(0).build();
-        rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build());
+        rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
 
         assertThat(httpClient.verifyRequestsProcessed(1, "localhost:20001")).isTrue();
     }
@@ -156,7 +158,7 @@ public class RpcClientIntegrationTest {
 
         int failureCount = 0;
         try {
-            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build());
+            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
         } catch (java.lang.Exception e) {
             failureCount++;
         }
@@ -178,7 +180,7 @@ public class RpcClientIntegrationTest {
 
         int failureCount = 0;
         try {
-            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build());
+            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
         } catch (java.lang.Exception e) {
             e.printStackTrace();
             failureCount++;
@@ -200,7 +202,7 @@ public class RpcClientIntegrationTest {
         httpClient.makeFirstRequestTimeout();
 
         try {
-            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build());
+            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
         } catch (java.lang.Exception e) {
             e.printStackTrace();
         }
@@ -220,7 +222,7 @@ public class RpcClientIntegrationTest {
 
         int failureCount = 0;
         try {
-            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build());
+            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
         } catch (RpcCallException ex) {
             failureCount++;
             assertThat(ex.getCategory()).isEqualTo(RpcCallException.Category.RequestTimedOut);
@@ -243,7 +245,7 @@ public class RpcClientIntegrationTest {
 
         int failureCount = 0;
         try {
-            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build());
+            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
         } catch (RpcCallException ex) {
             failureCount++;
             assertThat(ex.getCategory()).isEqualTo(RpcCallException.Category.InsufficientPermissions);
@@ -266,7 +268,7 @@ public class RpcClientIntegrationTest {
 
         int failureCount = 0;
         try {
-            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build());
+            rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
         } catch (RpcCallException ex) {
             failureCount++;
             assertThat(ex.getCategory()).isEqualTo(RpcCallException.Category.InternalServerError);
