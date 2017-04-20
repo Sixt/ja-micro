@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package com.sixt.service.framework.kafka.messaging;
+
+option java_multiple_files = true;
+
+message Envelope {
+	// Header fields:
+	string message_id = 1; // REQUIRED. A unique identfier for this message.
+
+	// - Tracing/Correlation
+	string correlation_id = 10;  // OPTIONAL. A correlation id to correlate multiple messages, rpc request/responses, etc. belonging to a trace/flow/user request/etc..
+
+	// - Message exchange patterns
+	// -- Request/Reply
+	string request_correlation_id = 20; // REQUIRED for RESPONSE. This response correlates to the message id of the original request.
+	string reply_to = 21; // REQUIRED for REQUEST. Send responses for this request to the given address. See class Topic for syntax.
+
+
+	// Payload:
+	// inner message type and serialized bytes
+	string message_type = 100; // REQUIRED. See class MessageType for syntax.
+	bytes innerMessage = 101;  // REQUIRED. byte[] for the serialized inner protobuf message
+}
+

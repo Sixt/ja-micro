@@ -120,6 +120,7 @@ public abstract class AbstractService {
                 modules = new ArrayList<>(modules);
             }
 
+            modules.add(0, new MessagingModule());
             modules.add(0, new OrangeServletModule());
             modules.add(0, registryModule);
             modules.add(0, metricsModule);

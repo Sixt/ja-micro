@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+
+// Asynchronous messaging conventions
+
+// 1. The default namespace of the asynchronous contract is com.sixt.service.{SERVICENAME}.api
+//    This namespace is currently shared with the RPC messages to allow dual use (sync/async) of messages.
+package com.sixt.service.test_service.api;
+
+// 2. For each top-level type in this file, we will generate a separate file/class to avoid the outer class wrapper.
+//    For example, we will get classes like  com.sixt.service.test_service.api.Greeting
+option java_multiple_files = true;
+
+// 3. There is no need for the redundant option java_package directive
+
+// 4. The Java Type.getTypeName() is used as string message_type in the MessagingEnvelope
+//    See also class MessageType
+
+
+
+// These message form the asynchronous messaging contract of the test_service
+message Greeting {
+    string greeting = 1;
+}
+
+message Echo {
+    string echo = 1;
+}

@@ -98,7 +98,8 @@ public class DockerComposeHelper {
      * @return SuccessOrFailure
      */
     public static SuccessOrFailure waitForKafka(String logFile) {
-        return waitFor(logFile, "Completed load of log events-0", "Kafka not ready yet");
+        // Since we don't know which partition is placed on which replica, do now wait for any particular partition.
+        return waitFor(logFile, "Completed load of log events", "Kafka not ready yet");
     }
 
     /**
