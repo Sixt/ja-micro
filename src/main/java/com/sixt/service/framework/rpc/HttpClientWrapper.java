@@ -73,7 +73,7 @@ public class HttpClientWrapper {
         ServiceEndpoint instance = loadBalancer.getHealthyInstanceExclude(triedEndpoints);
         if (instance == null) {
             throw new RpcCallException(RpcCallException.Category.InternalServerError,
-                    "RpcCallException" + loadBalancer.getServiceName()).
+                    "RpcCallException calling " + loadBalancer.getServiceName() + ", no available instance").
                     withSource(serviceProps.getServiceName());
         }
         //TODO: There may still be a problem where retries are setting chunked encoding

@@ -155,7 +155,7 @@ public class LoadBalancer {
             Set<ServiceEndpoint> seenInstances = new HashSet<>();
             while (true) {
                 ServiceEndpoint retval = getHealthyInstance();
-                if (!FeatureFlags.shouldDisableRpcInstanceRetry(serviceProps)) {
+                if (FeatureFlags.shouldDisableRpcInstanceRetry(serviceProps)) {
                     if (seenInstances.contains(retval)) {
                         //we've made a complete loop
                         return null;
