@@ -12,6 +12,7 @@
 
 package com.sixt.service.framework.rpc;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -174,7 +175,7 @@ public class CircuitBreakerState {
         }
     }
 
-    private class StateChanger implements Runnable {
+    protected class StateChanger implements Runnable {
         private State fromState;
         private State toState;
 
@@ -198,6 +199,15 @@ public class CircuitBreakerState {
                             isTripped(CircuitBreakerState.this.getState())) {
                         // don't warn, because this could happen.
                         logger.trace("Not changing {} to {}, is tripped", fromState, toState);
+                    } else if (CircuitBreakerState.this.getState().equals(PRIMARY_HEALTHY) &&
+                            fromState.equals(PRIMARY_TRIPPED) && toState.equals(PRIMARY_PROBE)) {
+                        //do nothing, this can happen
+                    } else if (CircuitBreakerState.this.getState().equals(SECONDARY_HEALTHY) &&
+                            fromState.equals(SECONDARY_TRIPPED) && toState.equals(SECONDARY_PROBE)) {
+                        //do nothing, this can happen
+                    } else if (CircuitBreakerState.this.getState().equals(TERTIARY_HEALTHY) &&
+                            fromState.equals(TERTIARY_TRIPPED) && toState.equals(TERTIARY_PROBE)) {
+                        //do nothing, this can happen
                     } else {
                         logger.warn("CircuitBreaker wasn't in state {}" +
                                 ", so not changing it to {}. Current state = {}",
@@ -220,14 +230,15 @@ public class CircuitBreakerState {
         }
     }
 
-    private StateChanger primaryTrippedToPrimaryProbe = new StateChanger(
+    @VisibleForTesting
+    protected StateChanger primaryTrippedToPrimaryProbe = new StateChanger(
             State.PRIMARY_TRIPPED, State.PRIMARY_PROBE);
-    private StateChanger secondaryHealthyToPrimaryHealthy = new StateChanger(
+    protected StateChanger secondaryHealthyToPrimaryHealthy = new StateChanger(
             State.SECONDARY_HEALTHY, State.PRIMARY_HEALTHY);
-    private StateChanger secondaryTrippedToSecondaryProbe = new StateChanger(
+    protected StateChanger secondaryTrippedToSecondaryProbe = new StateChanger(
             State.SECONDARY_TRIPPED, State.SECONDARY_PROBE);
-    private StateChanger tertiaryTrippedToTertiaryProbe = new StateChanger(
+    protected StateChanger tertiaryTrippedToTertiaryProbe = new StateChanger(
             State.TERTIARY_TRIPPED, State.TERTIARY_PROBE);
-    private StateChanger tertiaryHealthyToSecondaryHealthy = new StateChanger(
+    protected StateChanger tertiaryHealthyToSecondaryHealthy = new StateChanger(
             State.TERTIARY_HEALTHY, State.SECONDARY_HEALTHY);
 }

@@ -12,74 +12,90 @@
 
 package com.sixt.service.framework.rpc;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+@RunWith(MockitoJUnitRunner.class)
 public class CircuitBreakerStateTest {
+
+    @Mock
+    private ScheduledThreadPoolExecutor executor;
+    private CircuitBreakerState breaker;
+
+    @Before
+    public void setup() {
+        breaker = new CircuitBreakerState(executor);
+    }
 
     @Test
     public void constructedHealthy() {
-        CircuitBreakerState cb = new CircuitBreakerState(null);
-        assertThat(cb.getState()).isEqualTo(CircuitBreakerState.State.PRIMARY_HEALTHY);
+        assertThat(breaker.getState()).isEqualTo(CircuitBreakerState.State.PRIMARY_HEALTHY);
     }
 
     @Test
     public void testCanServeRequests() {
-        CircuitBreakerState cb = new CircuitBreakerState(null);
-        assertThat(cb.canServeRequests(false)).isTrue();
-        cb.setState(CircuitBreakerState.State.SECONDARY_HEALTHY);
-        assertThat(cb.canServeRequests(false)).isTrue();
-        cb.setState(CircuitBreakerState.State.TERTIARY_HEALTHY);
-        assertThat(cb.canServeRequests(false)).isTrue();
-        cb.setState(CircuitBreakerState.State.PRIMARY_TRIPPED);
-        assertThat(cb.canServeRequests(false)).isFalse();
-        cb.setState(CircuitBreakerState.State.SECONDARY_TRIPPED);
-        assertThat(cb.canServeRequests(false)).isFalse();
-        cb.setState(CircuitBreakerState.State.TERTIARY_TRIPPED);
-        assertThat(cb.canServeRequests(false)).isFalse();
-        cb.setState(CircuitBreakerState.State.UNHEALTHY);
-        assertThat(cb.canServeRequests(false)).isFalse();
-        cb.setState(CircuitBreakerState.State.PRIMARY_PROBE);
-        assertThat(cb.canServeRequests(false)).isTrue();
-        cb.setState(CircuitBreakerState.State.SECONDARY_PROBE);
-        assertThat(cb.canServeRequests(false)).isTrue();
-        cb.setState(CircuitBreakerState.State.TERTIARY_PROBE);
-        assertThat(cb.canServeRequests(false)).isTrue();
-        cb.setState(CircuitBreakerState.State.PRIMARY_PROBE);
-        assertThat(cb.canServeRequests(true)).isFalse();
-        cb.setState(CircuitBreakerState.State.SECONDARY_PROBE);
-        assertThat(cb.canServeRequests(true)).isFalse();
-        cb.setState(CircuitBreakerState.State.TERTIARY_PROBE);
-        assertThat(cb.canServeRequests(true)).isFalse();
+        assertThat(breaker.canServeRequests(false)).isTrue();
+        breaker.setState(CircuitBreakerState.State.SECONDARY_HEALTHY);
+        assertThat(breaker.canServeRequests(false)).isTrue();
+        breaker.setState(CircuitBreakerState.State.TERTIARY_HEALTHY);
+        assertThat(breaker.canServeRequests(false)).isTrue();
+        breaker.setState(CircuitBreakerState.State.PRIMARY_TRIPPED);
+        assertThat(breaker.canServeRequests(false)).isFalse();
+        breaker.setState(CircuitBreakerState.State.SECONDARY_TRIPPED);
+        assertThat(breaker.canServeRequests(false)).isFalse();
+        breaker.setState(CircuitBreakerState.State.TERTIARY_TRIPPED);
+        assertThat(breaker.canServeRequests(false)).isFalse();
+        breaker.setState(CircuitBreakerState.State.UNHEALTHY);
+        assertThat(breaker.canServeRequests(false)).isFalse();
+        breaker.setState(CircuitBreakerState.State.PRIMARY_PROBE);
+        assertThat(breaker.canServeRequests(false)).isTrue();
+        breaker.setState(CircuitBreakerState.State.SECONDARY_PROBE);
+        assertThat(breaker.canServeRequests(false)).isTrue();
+        breaker.setState(CircuitBreakerState.State.TERTIARY_PROBE);
+        assertThat(breaker.canServeRequests(false)).isTrue();
+        breaker.setState(CircuitBreakerState.State.PRIMARY_PROBE);
+        assertThat(breaker.canServeRequests(true)).isFalse();
+        breaker.setState(CircuitBreakerState.State.SECONDARY_PROBE);
+        assertThat(breaker.canServeRequests(true)).isFalse();
+        breaker.setState(CircuitBreakerState.State.TERTIARY_PROBE);
+        assertThat(breaker.canServeRequests(true)).isFalse();
     }
 
     @Test
     public void intermittentFailuresDontTrip() {
-        CircuitBreakerState cb = new CircuitBreakerState(null);
         for (int i = 0; i < 10; i++) {
-            assertThat(cb.canServeRequests(false)).isTrue();
-            cb.requestComplete(true);
-            assertThat(cb.canServeRequests(false)).isTrue();
-            cb.requestComplete(false);
+            assertThat(breaker.canServeRequests(false)).isTrue();
+            breaker.requestComplete(true);
+            assertThat(breaker.canServeRequests(false)).isTrue();
+            breaker.requestComplete(false);
         }
-        assertThat(cb.canServeRequests(false)).isTrue();
+        assertThat(breaker.canServeRequests(false)).isTrue();
     }
 
     @Test
     public void testHasFailed() {
-        CircuitBreakerState cb = new CircuitBreakerState(
-                mock(ScheduledThreadPoolExecutor.class));
         for (int i = 0; i < CircuitBreakerState.HISTORY_SIZE - 1; i++) {
-            cb.requestComplete(false);
-            assertThat(cb.canServeRequests(false)).isTrue();
+            breaker.requestComplete(false);
+            assertThat(breaker.canServeRequests(false)).isTrue();
         }
-        cb.requestComplete(false);
-        assertThat(cb.canServeRequests(false)).isFalse();
+        breaker.requestComplete(false);
+        assertThat(breaker.canServeRequests(false)).isFalse();
     }
 
-    //TODO: detailed state change tests
+    @Test
+    public void timerCheckingHealthyStateDoesntWarn() {
+        //if multiple calls take a breaker to the tripped state, there will be
+        //multiple timer callbacks.  based on timing, it's possible for a breaker
+        //to already be healthy when the timer fires.  don't log in that case
+        breaker.primaryTrippedToPrimaryProbe.run();
+    }
+
 }
