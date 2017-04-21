@@ -78,4 +78,8 @@ public class HttpRequestWrapper {
     public void setHeaders(Map<String, String> headers) {
         this.headers = headers;
     }
+
+    public ContentProvider getContentProvider() {
+        return contentProvider;
+    }
 }

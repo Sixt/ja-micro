@@ -80,6 +80,7 @@ public class HttpClientWrapper {
         // or the content-length gets munged
         HttpRequestWrapper retval =  new HttpRequestWrapper("POST", instance);
         retval.setHeaders(previous.getHeaders());
+        retval.setContentProvider(previous.getContentProvider());
         return retval;
     }
 
@@ -93,7 +94,7 @@ public class HttpClientWrapper {
         ContentResponse retval = null;
         Span span = null;
         List<ServiceEndpoint> triedEndpoints = new ArrayList<>();
-        RpcCallException lastException;
+        RpcCallException lastException = null;
         int lastStatusCode;
         int tryCount = 0;
         do {
@@ -128,6 +129,7 @@ public class HttpClientWrapper {
                 lastStatusCode = retval.getStatus();
             } catch (TimeoutException timeout) {
                 lastStatusCode = RpcCallException.Category.RequestTimedOut.getHttpStatus();
+                lastException = new RpcCallException(RpcCallException.Category.RequestTimedOut, "Http-client timeout");
                 //TODO: RequestTimedOut should be retried as long as there is time budget left
                 logger.info(getRemoteMethod(), "Caught TimeoutException executing request");
             } catch (Exception ex) {
@@ -154,9 +156,11 @@ public class HttpClientWrapper {
                 //4xx errors should not change circuit-breaker state
                 request.getServiceEndpoint().requestComplete(lastStatusCode < 500);
 
-                lastException = decoder.decodeException(retval);
-                if (lastException != null && ! lastException.isRetriable()) {
-                    throw lastException;
+                if (lastStatusCode != RpcCallException.Category.RequestTimedOut.getHttpStatus()) {
+                    lastException = decoder.decodeException(retval);
+                    if (lastException != null && !lastException.isRetriable()) {
+                        throw lastException;
+                    }
                 }
                 if (tryCount < client.getRetries()) {
                     request = createHttpPost(request, triedEndpoints);
