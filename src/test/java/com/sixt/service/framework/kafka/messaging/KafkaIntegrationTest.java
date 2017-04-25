@@ -38,7 +38,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@Ignore //Ignore until we can properly fix the kafka SIT issue
 @Category(IntegrationTest.class)
 public class KafkaIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(KafkaIntegrationTest.class);
