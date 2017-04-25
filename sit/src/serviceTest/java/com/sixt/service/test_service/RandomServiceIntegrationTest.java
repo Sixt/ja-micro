@@ -21,6 +21,7 @@ import com.sixt.service.framework.rpc.LoadBalancer;
 import com.sixt.service.framework.rpc.RpcCallException;
 import com.sixt.service.framework.rpc.ServiceEndpoint;
 import com.sixt.service.framework.servicetest.helper.DockerComposeHelper;
+import com.sixt.service.framework.servicetest.helper.StagedDockerComposeRule;
 import com.sixt.service.framework.servicetest.mockservice.ServiceImpersonator;
 import com.sixt.service.framework.servicetest.service.ServiceUnderTest;
 import com.sixt.service.framework.servicetest.service.ServiceUnderTestImpl;
@@ -42,14 +43,17 @@ public class RandomServiceIntegrationTest {
     private static ServiceUnderTest testService;
 
     @ClassRule
-    public static DockerComposeRule docker = DockerComposeRule.builder()
+    public static StagedDockerComposeRule docker = StagedDockerComposeRule.customBuilder()
             .file("src/serviceTest/resources/docker-compose.yml")
             .saveLogsTo("build/dockerCompose/logs")
-            .waitingForService("consul", (container) -> DockerComposeHelper.
-                    waitForConsul("build/dockerCompose/logs/consul.log"), Duration.standardMinutes(1))
+            .stage("kafka")
+            .service("kafka")
             .waitingForService("kafka", (container) -> DockerComposeHelper.
                     waitForKafka("build/dockerCompose/logs/kafka.log"), Duration.standardMinutes(3))
-            .projectName(ProjectName.random())
+            .stage("framework")
+            .service("consul")
+            .waitingForService("consul", (container) -> DockerComposeHelper.
+                    waitForConsul("build/dockerCompose/logs/consul.log"), Duration.standardMinutes(1))
             .build();
 
     private static ServiceImpersonator serviceImpersonator;

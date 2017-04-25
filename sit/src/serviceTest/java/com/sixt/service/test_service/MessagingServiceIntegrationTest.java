@@ -19,6 +19,7 @@ import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.kafka.TopicVerification;
 import com.sixt.service.framework.kafka.messaging.*;
 import com.sixt.service.framework.servicetest.helper.DockerComposeHelper;
+import com.sixt.service.framework.servicetest.helper.StagedDockerComposeRule;
 import com.sixt.service.framework.util.Sleeper;
 import com.sixt.service.test_service.api.Echo;
 import com.sixt.service.test_service.api.Greeting;
@@ -40,15 +41,19 @@ import static org.junit.Assert.assertTrue;
 public class MessagingServiceIntegrationTest {
 
     @ClassRule
-    public static DockerComposeRule docker = DockerComposeRule.builder()
+    public static StagedDockerComposeRule docker = StagedDockerComposeRule.customBuilder()
             .file("src/serviceTest/resources/docker-compose.yml")
             .saveLogsTo("build/dockerCompose/logs")
+            .stage("kafka")
+            .service("kafka")
+            .waitingForService("kafka", (container) -> DockerComposeHelper.
+                    waitForKafka("build/dockerCompose/logs/kafka.log"), Duration.standardMinutes(3))
+            .stage("framework")
+            .service("consul")
             .waitingForService("consul", (container) -> DockerComposeHelper.
                     waitForConsul("build/dockerCompose/logs/consul.log"), Duration.standardMinutes(1))
-            .waitingForService("kafka", (container) -> DockerComposeHelper.
-                    waitForKafka("build/dockerCompose/logs/kafka.log"), Duration.standardMinutes(1))
-            .projectName(ProjectName.random())
             .build();
+
 
     @Rule
     public Timeout globalTimeout = Timeout.seconds(300);
