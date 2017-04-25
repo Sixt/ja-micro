@@ -19,6 +19,7 @@ import com.sixt.service.framework.IntegrationTest;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.servicetest.helper.DockerComposeHelper;
+import com.sixt.service.framework.servicetest.helper.StagedDockerComposeRule;
 import com.sixt.service.framework.util.Sleeper;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.joda.time.Duration;
@@ -52,10 +53,9 @@ public class KafkaFailoverIntegrationTest {
 
 
     @ClassRule
-    public static DockerComposeRule docker = DockerComposeRule.builder()
+    public static StagedDockerComposeRule docker = StagedDockerComposeRule.customBuilder()
             .file("src/test/resources/docker-compose-kafkafailover-integrationtest.yml")
             .saveLogsTo("build/dockerCompose/logs")
-            .projectName(ProjectName.random())
             .waitingForService("kafka1", (container) -> DockerComposeHelper.waitForKafka(
                     "build/dockerCompose/logs/kafka1.log"), Duration.standardMinutes(2))
             .waitingForService("kafka2", (container) -> DockerComposeHelper.waitForKafka(
