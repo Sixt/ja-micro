@@ -70,6 +70,15 @@ public interface ServiceUnderTest {
 
     <TYPE extends Message> List<TYPE> getEventsOfType(String eventName, Class<TYPE> eventClass);
 
+    /**
+     * Get a list of events from Kafka by the given event type class.
+     *
+     * @param eventClass The implementation of the {@link Message} interface e.g. VehicleUnlocked.class
+     * @param <TYPE> The type of the given event class.
+     * @return A list of events by the given type class.
+     */
+    <TYPE extends Message> List<TYPE> getEventsOfType(Class<TYPE> eventClass);
+
     List<JsonObject> getAllJsonEvents();
 
     /**

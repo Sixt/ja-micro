@@ -110,6 +110,25 @@ public class ServiceTestEventHandler implements EventReceivedCallback<String> {
         return foundEvents;
     }
 
+    public <TYPE extends Message> List<TYPE> getEventsOfType(Class<TYPE> eventClass) {
+        List<TYPE> foundEvents = Lists.newArrayList();
+
+        if (eventClass != null) {
+            List<JsonObject> capturedEvents = Arrays.asList(readEvents.toArray(new JsonObject[0]));
+
+            for (JsonObject event : capturedEvents) {
+                logger.info("Found event: " + event.toString());
+                if (EventUtils.getEventName(event).equals(eventClass.getSimpleName())) {
+                    foundEvents.add(ProtobufUtil.jsonToProtobuf(event.toString(), eventClass));
+                    readEvents.remove(event);
+                }
+            }
+        } else {
+            logger.error("Event class is null");
+        }
+        return foundEvents;
+    }
+
     @SuppressWarnings("unchecked")
     public <T>T getEvent(String eventName, Class eventClass, Predicate<T> predicate, long timeout){
         long start = System.currentTimeMillis();
