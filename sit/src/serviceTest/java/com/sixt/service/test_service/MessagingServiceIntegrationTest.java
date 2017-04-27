@@ -39,15 +39,13 @@ import static org.junit.Assert.assertTrue;
 
 public class MessagingServiceIntegrationTest {
 
+    // Nota bene: the DockerComposeRule automaticaly checks the healthcheck status of services (if defined).
     @ClassRule
     public static DockerComposeRule docker = DockerComposeRule.builder()
             .file("src/serviceTest/resources/docker-compose.yml")
             .saveLogsTo("build/dockerCompose/logs")
             .waitingForService("consul", (container) -> DockerComposeHelper.
                     waitForConsul("build/dockerCompose/logs/consul.log"), Duration.standardMinutes(1))
-            .waitingForService("kafka", (container) -> DockerComposeHelper.
-                    waitForKafka("build/dockerCompose/logs/kafka.log"), Duration.standardMinutes(1))
-            .projectName(ProjectName.random())
             .build();
 
     @Rule

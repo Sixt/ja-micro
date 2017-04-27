@@ -40,8 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertTrue;
 
-// This test is not automated and meant to be run manually: you kill/restart some Docker containers, look to the logs and see what happens.
-@Ignore
+@Ignore("This test is not automated and meant to be run manually: you kill/restart some Docker containers, look to the logs and see what happens.")
 @Category(IntegrationTest.class)
 public class KafkaFailoverIntegrationTest {
 
