@@ -5,7 +5,10 @@ script: ./travis-build.sh
 env:
   DOCKER_COMPOSE_VERSION: 1.11.2
 before_install:
-  - sudo mv /usr/local/bin/docker-compose /usr/local/bin/docker-compose-old
+  - docker --version
+  - docker-compose --version
+  - which docker-compose
+  - #sudo mv /usr/local/bin/docker-compose /usr/local/bin/docker-compose-old
   - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
