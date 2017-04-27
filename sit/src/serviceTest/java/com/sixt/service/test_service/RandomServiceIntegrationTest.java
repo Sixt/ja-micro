@@ -47,9 +47,6 @@ public class RandomServiceIntegrationTest {
             .saveLogsTo("build/dockerCompose/logs")
             .waitingForService("consul", (container) -> DockerComposeHelper.
                     waitForConsul("build/dockerCompose/logs/consul.log"), Duration.standardMinutes(1))
-            .waitingForService("kafka", (container) -> DockerComposeHelper.
-                    waitForKafka("build/dockerCompose/logs/kafka.log"), Duration.standardMinutes(3))
-            .projectName(ProjectName.random())
             .build();
 
     private static ServiceImpersonator serviceImpersonator;

@@ -1,4 +1,4 @@
-version: "2"
+version: "2.1"
 
 services:
   zookeeper:
@@ -14,8 +14,8 @@ services:
     environment:
       KAFKA_ADVERTISED_PORT: 9092
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_CREATE_TOPICS: "ping:3:1,pong:3:1,events:3:1"
+      KAFKA_CREATE_TOPICS: "ping:3:1,pong:3:1,events:3:1" # events mjust be last
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./scripts/start_kafka.sh:/tmp/start_kafka.sh
@@ -23,3 +23,10 @@ services:
       - zookeeper
     entrypoint: /tmp/start_kafka.sh
     hostname: kafka
+    healthcheck:
+      # nota bene: test command is executed inside the container
+      # the DockerComposeRule will check if this services goes to state healthy by this healthcheck
+      test: ["CMD-SHELL", "/opt/kafka_2.11-0.10.1.0/bin/kafka-topics.sh --zookeeper zookeeper:2181 --list | grep 'events$$' "]
+      interval: 10s  # test is executed every 10s
+      timeout: 10s   # timeout per test cmd
+      retries: 12    # try 12*10s = 120s = 2min

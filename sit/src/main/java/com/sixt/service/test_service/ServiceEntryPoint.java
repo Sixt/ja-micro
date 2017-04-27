@@ -43,18 +43,6 @@ public class ServiceEntryPoint extends AbstractService {
 
     @Override
     public void bootstrapComplete() throws InterruptedException {
-
-        // To avoid sporadic test failures, we need to ensure the topics are created before we start the test service.
-        TopicVerification topicVerification = new TopicVerification();
-        Sleeper sleeper = new Sleeper();
-        String serviceName = serviceProperties.getServiceName();
-        Topic defaultInbox = Topic.defaultServiceInbox(serviceName);
-
-        Set<String> requiredTopics = ImmutableSet.of(defaultInbox.toString(), "events");
-        while(! topicVerification.verifyTopicsExist(serviceProperties.getKafkaServer(), requiredTopics, false)) {
-            sleeper.sleep(500);
-        }
-
         // Start a messaging consumer for the default inbox.
         ConsumerFactory consumerFactory = injector.getInstance(ConsumerFactory.class);
         consumerFactory.defaultInboxConsumer(new DiscardFailedMessages());

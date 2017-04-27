@@ -1,4 +1,4 @@
-version: "2"
+version: "2.1"
 
 services:
   com.sixt.service.test-service:
@@ -15,9 +15,12 @@ services:
       - "5005"
       - "42000"
     depends_on:
-      - zookeeper
-      - consul
-      - kafka
+      zookeeper:
+        condition: service_started
+      consul:
+        condition: service_started
+      kafka:
+        condition: service_healthy
 
   consul:
     image: consul:0.7.5
@@ -38,9 +41,8 @@ services:
       - "9092"
     environment:
       KAFKA_ADVERTISED_PORT: 9092
-      KAFKA_CREATE_TOPICS: "inbox_test:3:1,inbox-com.sixt.service.test-service:3:1,events:1:1" # events should be last
+      KAFKA_CREATE_TOPICS: "inbox_test:3:1,inbox-com.sixt.service.test-service:3:1,events:1:1" # events must be last for the healthcheck to work
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      # Disable topic auto creation -> otherwise we have an occasional concurrency bug in the tests
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -49,3 +51,9 @@ services:
       - "zookeeper"
     entrypoint: /tmp/start_kafka.sh
     hostname: kafka
+    healthcheck:
+      # nota bene: test command is executed inside the container
+      test: ["CMD-SHELL", "/opt/kafka_2.11-0.10.1.0/bin/kafka-topics.sh --zookeeper zookeeper:2181 --list | grep 'events$$' "]
+      interval: 10s  # test is executed every 10s
+      timeout: 10s   # timeout per test cmd
+      retries: 12    # try 12*10s = 120s = 2min
