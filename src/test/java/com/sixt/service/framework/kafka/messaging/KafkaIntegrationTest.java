@@ -113,6 +113,7 @@ public class KafkaIntegrationTest {
         replyConsumer.shutdown();
     }
 
+    @Ignore("long running test")
     @Test
     public void partitionAssignmentChange() throws InterruptedException {
         ServiceProperties serviceProperties = new ServiceProperties();
