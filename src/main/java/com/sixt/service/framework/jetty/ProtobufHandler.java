@@ -143,13 +143,18 @@ public class ProtobufHandler extends RpcHandler {
             responseBody = pbResponse.toByteArray();
         }
 
-        ServletOutputStream out = response.getOutputStream();
+        try {
+            ServletOutputStream out = response.getOutputStream();
 
-        out.write(Ints.toByteArray(responseHeader.length));
-        out.write(responseHeader);
+            out.write(Ints.toByteArray(responseHeader.length));
+            out.write(responseHeader);
 
-        out.write(Ints.toByteArray(responseBody.length));
-        out.write(responseBody);
+            out.write(Ints.toByteArray(responseBody.length));
+            out.write(responseBody);
+        } catch (IOException ioex) {
+            //there is nothing we can do, client probably went away
+            logger.debug("Caught IOException, assuming client disconnected");
+        }
     }
 
     private void sendErrorResponse(HttpServletResponse resp,

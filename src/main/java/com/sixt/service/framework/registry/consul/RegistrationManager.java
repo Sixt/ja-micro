@@ -317,7 +317,14 @@ public class RegistrationManager implements Runnable {
     protected String getProtobufClassFieldDescriptions(Class<? extends Message> messageClass)
             throws Exception {
         StringBuilder sb = new StringBuilder();
-        Constructor<?> constructor = messageClass.getDeclaredConstructor();
+        Constructor<?> constructor = null;
+        try {
+            constructor = messageClass.getDeclaredConstructor();
+        } catch (NoSuchMethodException nsmex) {
+            //Issue #35
+            logger.info("Unsupported protobuf field: {}", messageClass.getName());
+            return sb.toString();
+        }
         constructor.setAccessible(true);
         Object instance = constructor.newInstance();
         Message.Builder builder = ((Message)instance).newBuilderForType();

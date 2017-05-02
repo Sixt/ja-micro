@@ -28,3 +28,6 @@ message MessageWithEnum {
     Error error = 1;
 }
 
+message MessageWithMap {
+    map<string, Error> error_map = 1;
+}

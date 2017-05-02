@@ -20,6 +20,7 @@ import com.sixt.service.configuration.api.ConfigurationOuterClass;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceMethodHandler;
 import com.sixt.service.framework.ServiceProperties;
+import com.sixt.service.framework.protobuf.FrameworkTest.MessageWithMap;
 import com.sixt.service.framework.protobuf.RpcEnvelope;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,6 +69,15 @@ public class RegistrationManagerTest {
                 "72fe3c1c9644407c8ddb6042532690c77539104ffa4a674bf1ee55634264ed860e71c9982c3" +
                 "aaedc740574c95e881b78d34f52fbdd3779ca55358cde05dab82e5127bb26ffb36d24317bfe" +
                 "f5512d57945061c45aae6c11da7a1e4d6992f31bda579619"));
+    }
+
+    @Test
+    public void verifyRegistrationWithMap() throws IOException {
+        Map<String, ServiceMethodHandler<? extends Message,
+                ? extends Message>> handlers = new HashMap<>();
+        handlers.put("withMap", new MessageWithMapMethodHandler());
+        manager.setRegisteredHandlers(handlers);
+        manager.buildJsonRequest();
     }
 
     @Test
@@ -140,6 +150,13 @@ public class RegistrationManagerTest {
     class DummyMethodHandler implements ServiceMethodHandler<RpcEnvelope.Request, RpcEnvelope.Response> {
         @Override
         public RpcEnvelope.Response handleRequest(RpcEnvelope.Request request, OrangeContext ctx) {
+            return null;
+        }
+    }
+
+    class MessageWithMapMethodHandler implements ServiceMethodHandler<MessageWithMap, MessageWithMap> {
+        @Override
+        public MessageWithMap handleRequest(MessageWithMap request, OrangeContext ctx) {
             return null;
         }
     }
