@@ -146,6 +146,17 @@ public class ServiceUnderTestImpl implements ServiceUnderTest {
     }
 
     @Override
+    public <TYPE extends Message> List<TYPE> getEventsOfType(Class<TYPE> eventClass) {
+
+        if (eventHandler == null) {
+            logger.warn("Event handler has not been initialized. Create the " +
+                    "ServiceUnderTest with true in the constructor.");
+            return new ArrayList<>();
+        }
+        return eventHandler.getEventsOfType(eventClass);
+    }
+
+    @Override
     public List<JsonObject> getAllJsonEvents() {
 
         if (eventHandler == null) {

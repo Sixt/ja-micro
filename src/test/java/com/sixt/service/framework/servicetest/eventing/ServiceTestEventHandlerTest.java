@@ -58,11 +58,19 @@ public class ServiceTestEventHandlerTest {
     }
 
     @Test
-    public void getEventsOfType_NoEvents() {
+    public void getEventsOfTypeIncludingEventName_NoEvents() {
         assertThat(eventHandler.kafkaSubscriber).isNotNull();
 
         List<TestEvent.OneTestEvent> foundEvents = eventHandler.getEventsOfType(ONE_TEST_EVENT_NAME, TestEvent.OneTestEvent.class);
         assertThat(foundEvents.isEmpty()).isTrue();
+    }
+
+    @Test
+    public void getEventsOfType_NoEvents() {
+        assertThat(eventHandler.kafkaSubscriber).isNotNull();
+
+        List<TestEvent.OneTestEvent> foundEvents = eventHandler.getEventsOfType(TestEvent.OneTestEvent.class);
+        assertThat(foundEvents).isEmpty();
     }
 
     @Test
@@ -98,12 +106,22 @@ public class ServiceTestEventHandlerTest {
     }
 
     @Test
-    public void getEventsOfType_EventsPresent() {
+    public void getEventsOfTypeIncludingEventName_EventsPresent() {
         eventHandler.kafkaSubscriber = mock(KafkaSubscriber.class);
         eventHandler.eventReceived(getOneTestEventBody(), new KafkaTopicInfo("topic", 0, 0, null));
 
         List<TestEvent.OneTestEvent> foundEvents = eventHandler.getEventsOfType(ONE_TEST_EVENT_NAME, TestEvent.OneTestEvent.class);
         assertThat(foundEvents.size()).isEqualTo(1);
+        verify(eventHandler.kafkaSubscriber).consume(any(KafkaTopicInfo.class));
+    }
+
+    @Test
+    public void getEventsOfType_EventsPresent() {
+        eventHandler.kafkaSubscriber = mock(KafkaSubscriber.class);
+        eventHandler.eventReceived(getOneTestEventBody(), new KafkaTopicInfo("topic", 0, 0, null));
+
+        List<TestEvent.OneTestEvent> foundEvents = eventHandler.getEventsOfType(TestEvent.OneTestEvent.class);
+        assertThat(foundEvents).hasSize(1);
         verify(eventHandler.kafkaSubscriber).consume(any(KafkaTopicInfo.class));
     }
 
