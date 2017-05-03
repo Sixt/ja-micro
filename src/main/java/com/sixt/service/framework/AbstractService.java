@@ -27,6 +27,7 @@ import com.sixt.service.framework.health.HealthCheckContributor;
 import com.sixt.service.framework.health.HealthCheckManager;
 import com.sixt.service.framework.injection.*;
 import com.sixt.service.framework.jetty.JettyComposer;
+import com.sixt.service.framework.health.ReadinessCheckServer;
 import com.sixt.service.framework.jetty.RpcServlet;
 import com.sixt.service.framework.logging.SixtLogbackContext;
 import com.sixt.service.framework.metrics.MetricsReporterProvider;
@@ -154,6 +155,7 @@ public abstract class AbstractService {
     public void bootstrapComplete() throws InterruptedException {
         startupComplete.set(true);
         injector.getInstance(RpcServlet.class).serveRequests();
+        injector.getInstance(ReadinessCheckServer.class).serveRequests();
         jettyServer.join();
     }
 

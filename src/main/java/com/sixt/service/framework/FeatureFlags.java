@@ -61,4 +61,10 @@ public class FeatureFlags {
                 DEFAULT_HTTP_ADDRESS_RESOLUTION_TIMEOUT);
     }
 
+    public final static String READINESS_CHECK_PORT = "readinessCheckPort";
+    public final static int DEFAULT_READINESS_CHECK_PORT = -1;
+    public static int getReadinessCheckPort(ServiceProperties serviceProps) {
+        return serviceProps.getIntegerProperty(READINESS_CHECK_PORT,
+                DEFAULT_READINESS_CHECK_PORT);
+    }
 }

@@ -10,6 +10,7 @@ services:
       - "logLevel=DEBUG"
       - "registry=consul"
       - "servicePort=42000"
+      - "readinessCheckPort=21000"
     entrypoint: java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -server -Dfile.encoding=UTF8 -XX:-OmitStackTraceInFastThrow -Djava.security.egd=file:/dev/./urandom -jar /app.jar -registryServer consul:8500
     ports:
       - "5005"
