@@ -31,8 +31,6 @@ import com.squareup.wire.schema.internal.parser.RpcMethodScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -124,46 +122,28 @@ public class ServiceUnderTestImpl implements ServiceUnderTest {
 
     @Override
     public Map<String, Message> getExpectedEvents(Map<String, Class> expectedEvents) {
-
-        if (eventHandler == null) {
-            logger.warn("Event handler has not been initialized. Create the " +
-                    "ServiceUnderTest with true in the constructor.");
-            return new HashMap<>();
-        }
+        verifyEventHandlerInitialized();
 
         return eventHandler.getExpectedEvents(expectedEvents);
     }
 
     @Override
     public <TYPE extends Message> List<TYPE> getEventsOfType(String eventName, Class<TYPE> eventClass) {
+        verifyEventHandlerInitialized();
 
-        if (eventHandler == null) {
-            logger.warn("Event handler has not been initialized. Create the " +
-                    "ServiceUnderTest with true in the constructor.");
-            return new ArrayList<>();
-        }
         return eventHandler.getEventsOfType(eventName, eventClass);
     }
 
     @Override
     public <TYPE extends Message> List<TYPE> getEventsOfType(Class<TYPE> eventClass) {
+        verifyEventHandlerInitialized();
 
-        if (eventHandler == null) {
-            logger.warn("Event handler has not been initialized. Create the " +
-                    "ServiceUnderTest with true in the constructor.");
-            return new ArrayList<>();
-        }
         return eventHandler.getEventsOfType(eventClass);
     }
 
     @Override
     public List<JsonObject> getAllJsonEvents() {
-
-        if (eventHandler == null) {
-            logger.warn("Event handler has not been initialized. Create the " +
-                    "ServiceUnderTest with true in the constructor.");
-            return new ArrayList<>();
-        }
+        verifyEventHandlerInitialized();
 
         return eventHandler.getAllJsonEvents();
     }
@@ -203,6 +183,13 @@ public class ServiceUnderTestImpl implements ServiceUnderTest {
     @Override
     public void shutdown() {
         loadBalancerFactory.shutdown();
+    }
+
+    private void verifyEventHandlerInitialized() {
+        if (eventHandler == null) {
+            throw new IllegalStateException("Event handler has not been initialized. Create the " +
+                    "ServiceUnderTest with true in the constructor.");
+        }
     }
 
 }
