@@ -14,8 +14,11 @@ package com.sixt.service.test_service;
 
 import com.google.gson.JsonObject;
 import com.palantir.docker.compose.DockerComposeRule;
-import com.palantir.docker.compose.configuration.ProjectName;
+import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.health.HealthCheck;
+import com.sixt.service.framework.kafka.KafkaPublisher;
+import com.sixt.service.framework.kafka.KafkaPublisherFactory;
+import com.sixt.service.framework.kafka.TopicMessageCounter;
 import com.sixt.service.framework.protobuf.ProtobufUtil;
 import com.sixt.service.framework.rpc.LoadBalancer;
 import com.sixt.service.framework.rpc.RpcCallException;
@@ -79,6 +82,20 @@ public class RandomServiceIntegrationTest {
         assertThat(response).isEqualTo("{\"summary\":\"CRITICAL\",\"details\":[" +
                 "{\"name\":\"database_migration\",\"status\":\"OK\",\"reason\":\"\"}," +
                 "{\"name\":\"test_servlet\",\"status\":\"CRITICAL\",\"reason\":\"" + failureMessage + "\"}]}");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testKafkaMessageCounting() {
+        String topic = "message-count";
+        ServiceProperties serviceProperties = new ServiceProperties();
+        serviceProperties.addProperty(ServiceProperties.KAFKA_SERVER_KEY,
+                System.getenv(ServiceProperties.KAFKA_SERVER_KEY));
+        KafkaPublisher publisher = new KafkaPublisherFactory(serviceProperties).newBuilder(topic).build();
+        publisher.publishSync("test", "test", "test");
+        TopicMessageCounter messageCounter = new TopicMessageCounter();
+        long messageCount = messageCounter.getCount(System.getenv(ServiceProperties.KAFKA_SERVER_KEY), topic);
+        assertThat(messageCount).isEqualTo(3);
     }
 
     @Ignore // Test fails when run with gradle, but works when run in IntelliJ. Why? Reason:  org.apache.kafka.common.errors.TimeoutException: Failed to update metadata after 60000 ms.
