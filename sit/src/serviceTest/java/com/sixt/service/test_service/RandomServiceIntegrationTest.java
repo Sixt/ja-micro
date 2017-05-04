@@ -39,41 +39,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class RandomServiceIntegrationTest {
 
-    private static ServiceUnderTest testService;
-
-    @ClassRule
-    public static DockerComposeRule docker = DockerComposeRule.builder()
-            .file("src/serviceTest/resources/docker-compose.yml")
-            .saveLogsTo("build/dockerCompose/logs")
-            .waitingForService("consul", (container) -> DockerComposeHelper.
-                    waitForConsul("build/dockerCompose/logs/consul.log"), Duration.standardMinutes(1))
-            .build();
-
-    private static ServiceImpersonator serviceImpersonator;
-
     @Rule
     public Timeout globalTimeout = Timeout.seconds(30);
-
-    @BeforeClass
-    public static void setupClass() throws Exception {
-        DockerComposeHelper.setKafkaEnvironment(docker);
-        DockerComposeHelper.setConsulEnvironment(docker);
-
-        serviceImpersonator = new ServiceImpersonator("com.sixt.service.another-service");
-
-        testService = new ServiceUnderTestImpl("com.sixt.service.test-service", "events");
-    }
-
-    @AfterClass
-    public static void shutdown() {
-        testService.shutdown();
-        serviceImpersonator.shutdown();
-    }
 
     @Test
     public void testGetRandomString() throws Exception {
         GetRandomStringQuery request = GetRandomStringQuery.newBuilder().build();
-        RandomStringResponse response = (RandomStringResponse) testService.sendRequest(
+        RandomStringResponse response = (RandomStringResponse) ServiceIntegrationTestSuite.testService.sendRequest(
                 "TestService.GetRandomString", request);
 
         String result = response.getRandom();
@@ -83,7 +55,7 @@ public class RandomServiceIntegrationTest {
     @Test
     public void testSlowRespondingService() {
         try {
-            testService.sendRequest("TestService.SlowResponder",
+            ServiceIntegrationTestSuite.testService.sendRequest("TestService.SlowResponder",
                     GetRandomStringQuery.getDefaultInstance());
         } catch (RpcCallException ex) {
             ex.printStackTrace();
@@ -97,9 +69,9 @@ public class RandomServiceIntegrationTest {
                 .setStatus(HealthCheck.Status.FAIL.toString()).setMessage(failureMessage).build();
         //we have to work around the normal communication channels, as the load-balancer
         //won't let us talk to a failing instance
-        LoadBalancer loadBalancer = testService.getLoadBalancer();
+        LoadBalancer loadBalancer = ServiceIntegrationTestSuite.testService.getLoadBalancer();
         ServiceEndpoint endpoint = loadBalancer.getHealthyInstance();
-        testService.sendRequest("TestService.SetHealthCheckStatus", command);
+        ServiceIntegrationTestSuite.testService.sendRequest("TestService.SetHealthCheckStatus", command);
         String url = "http://" + endpoint.getHostAndPort() + "/health";
         HttpClient httpClient = new HttpClient();
         httpClient.start();
@@ -112,12 +84,12 @@ public class RandomServiceIntegrationTest {
     @Ignore // Test fails when run with gradle, but works when run in IntelliJ. Why? Reason:  org.apache.kafka.common.errors.TimeoutException: Failed to update metadata after 60000 ms.
     @Test
     public void testRandomSampleEventHandler() throws Exception {
-        serviceImpersonator.publishEvent("events", TestServiceOuterClass.RandomSampleEvent.newBuilder()
+        ServiceIntegrationTestSuite.serviceImpersonator.publishEvent("events", TestServiceOuterClass.RandomSampleEvent.newBuilder()
                 .setId("some-id")
                 .setMessage("The message")
                 .build());
 
-        List<JsonObject> receivedEvents = testService.getAllJsonEvents();
+        List<JsonObject> receivedEvents = ServiceIntegrationTestSuite.testService.getAllJsonEvents();
 
         assertThat(receivedEvents.size()).isEqualTo(1);
         TestServiceOuterClass.RandomSampleEvent event = ProtobufUtil.jsonToProtobuf(receivedEvents.get(0).toString(),
