@@ -42,7 +42,7 @@ services:
       - "9092"
     environment:
       KAFKA_ADVERTISED_PORT: 9092
-      KAFKA_CREATE_TOPICS: "inbox_test:3:1,inbox-com.sixt.service.test-service:3:1,events:1:1" # events must be last for the healthcheck to work
+      KAFKA_CREATE_TOPICS: "inbox_test:3:1,inbox-com.sixt.service.test-service:3:1,message-count:3:1,events:3:1" # events must be last for the healthcheck to work
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
     volumes:

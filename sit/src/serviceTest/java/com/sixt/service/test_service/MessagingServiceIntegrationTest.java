@@ -13,7 +13,6 @@
 package com.sixt.service.test_service;
 
 import com.palantir.docker.compose.DockerComposeRule;
-import com.palantir.docker.compose.configuration.ProjectName;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.kafka.TopicVerification;
@@ -36,10 +35,9 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.collect.ImmutableSet.of;
 import static org.junit.Assert.assertTrue;
 
-
 public class MessagingServiceIntegrationTest {
 
-    // Nota bene: the DockerComposeRule automaticaly checks the healthcheck status of services (if defined).
+    // Nota bene: the DockerComposeRule automatically checks the healthcheck status of services (if defined).
     @ClassRule
     public static DockerComposeRule docker = DockerComposeRule.builder()
             .file("src/serviceTest/resources/docker-compose.yml")
@@ -96,8 +94,6 @@ public class MessagingServiceIntegrationTest {
         producer.shutdown();
         consumer.shutdown();
     }
-
-
 
     private void ensureTopicsExist(ServiceProperties serviceProperties, Set<String> topics) {
         TopicVerification verifier = new TopicVerification();
