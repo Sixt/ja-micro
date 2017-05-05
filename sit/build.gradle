@@ -179,7 +179,7 @@ task prepareServiceTestEnvironment {
 task serviceIntegrationTest(type: Test, dependsOn: prepareServiceTestEnvironment) {
     description "Run service integration tests."
     group "verification"
-
+    include '**/ServiceIntegrationTestSuite.class'
     testClassesDir = sourceSets.serviceIntegrationTest.output.classesDir
     classpath = sourceSets.serviceIntegrationTest.runtimeClasspath
 

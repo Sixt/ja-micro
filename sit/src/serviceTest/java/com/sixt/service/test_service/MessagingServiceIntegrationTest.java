@@ -37,22 +37,8 @@ import static org.junit.Assert.assertTrue;
 
 public class MessagingServiceIntegrationTest {
 
-    // Nota bene: the DockerComposeRule automatically checks the healthcheck status of services (if defined).
-    @ClassRule
-    public static DockerComposeRule docker = DockerComposeRule.builder()
-            .file("src/serviceTest/resources/docker-compose.yml")
-            .saveLogsTo("build/dockerCompose/logs")
-            .waitingForService("consul", (container) -> DockerComposeHelper.
-                    waitForConsul("build/dockerCompose/logs/consul.log"), Duration.standardMinutes(1))
-            .build();
-
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(300);
-
-    @BeforeClass
-    public static void setupClass() throws Exception {
-        DockerComposeHelper.setKafkaEnvironment(docker);
-    }
+    public Timeout globalTimeout = Timeout.seconds(30);
 
     @Test
     public void fireOneMessageToService() throws Exception {
@@ -89,12 +75,12 @@ public class MessagingServiceIntegrationTest {
         Consumer consumer = consumerFactory.consumerForTopic(replyTo, new DiscardFailedMessages());
 
         // ... and wait for the response.
-        assertTrue(messageReceived.await(2, TimeUnit.MINUTES));
+        assertTrue(messageReceived.await(20, TimeUnit.SECONDS));
 
         producer.shutdown();
         consumer.shutdown();
     }
-
+  
     private void ensureTopicsExist(ServiceProperties serviceProperties, Set<String> topics) {
         TopicVerification verifier = new TopicVerification();
         Sleeper sleeper = new Sleeper();
