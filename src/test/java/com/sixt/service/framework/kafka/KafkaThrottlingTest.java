@@ -50,7 +50,7 @@ public class KafkaThrottlingTest {
 
     @Test
     public void throttleTest() throws InterruptedException {
-        int messageCount = KafkaSubscriber.THROTTLE_MESSAGE_COUNT * 2;
+        int messageCount = 200;
         CountDownLatch latch = new CountDownLatch(messageCount);
 
         DockerPort kafka = docker.containers().container("kafka").port(9092);

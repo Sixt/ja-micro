@@ -34,8 +34,6 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaSubscriber.class);
 
-    public final static int THROTTLE_MESSAGE_COUNT = 100;
-
     public enum OffsetReset {
         Earliest, Latest;
     }
@@ -48,6 +46,7 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
     protected int minThreads;
     protected int maxThreads;
     protected int idleTimeoutSeconds;
+    protected int throttleLimit;
     protected BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>();
     protected ThreadPoolExecutor executor;
     protected Map<TopicPartition, Long> messagesForConsume;
@@ -63,8 +62,9 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
     protected AtomicBoolean isInitialized = new AtomicBoolean(false);
 
     KafkaSubscriber(EventReceivedCallback<TYPE> callback, String topic,
-                           String groupId, boolean enableAutoCommit, OffsetReset offsetReset,
-                           int minThreads, int maxThreads, int idleTimeoutSeconds, int pollTime) {
+                    String groupId, boolean enableAutoCommit, OffsetReset offsetReset,
+                    int minThreads, int maxThreads, int idleTimeoutSeconds, int pollTime,
+                    int throttleLimit) {
         this.callback = callback;
         this.topic = topic;
         this.groupId = groupId;
@@ -74,6 +74,7 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
         this.maxThreads = maxThreads;
         this.idleTimeoutSeconds = idleTimeoutSeconds;
         this.pollTime = pollTime;
+        this.throttleLimit = throttleLimit;
 
         try {
             //the EventReceivedCallback class needs to use the generic parameter
@@ -227,10 +228,12 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
     }
 
     protected void checkForMessageThrottling() {
-        if (messageBacklog.get() >= THROTTLE_MESSAGE_COUNT) {
-            pauseAssignedPartitions();
-        } else {
-            resumeAssignedPartitions();
+        if (throttleLimit > 0) {
+            if (messageBacklog.get() >= throttleLimit) {
+                pauseAssignedPartitions();
+            } else {
+                resumeAssignedPartitions();
+            }
         }
     }
 

@@ -26,6 +26,7 @@ public class KafkaSubscriberBuilder<TYPE> {
     protected int maxThreads = 1;
     protected int idleTimeoutSeconds = 15;
     protected int pollTime = 1000;
+    protected int throttleLimit = 100;
 
     KafkaSubscriberBuilder(KafkaSubscriberFactory factory, String topic,
                                   EventReceivedCallback<TYPE> callback) {
@@ -73,10 +74,21 @@ public class KafkaSubscriberBuilder<TYPE> {
         return this;
     }
 
+    /**
+     * Sets the limit at which throttling occurs, which is pausing the consumption from
+     * kafka until the actual consumer can catch up.  Setting to -1 disables throttling
+     * (which can cause unexpected memory bloat).
+     */
+    public KafkaSubscriberBuilder withThrottlingLimit(int throttleLimit) {
+        this.throttleLimit = throttleLimit;
+        return this;
+    }
+
     @SuppressWarnings(value = "unchecked")
     public KafkaSubscriber<TYPE> build() {
         KafkaSubscriber<TYPE> retval = new KafkaSubscriber<>(callback, topic, groupId,
-                enableAutoCommit, offsetReset, minThreads, maxThreads, idleTimeoutSeconds, pollTime);
+                enableAutoCommit, offsetReset, minThreads, maxThreads, idleTimeoutSeconds,
+                pollTime, throttleLimit);
         parentFactory.builtSubscriber(retval);
         return retval;
     }
