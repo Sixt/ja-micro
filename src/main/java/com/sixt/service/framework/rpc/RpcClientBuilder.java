@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Builds RpcClients to interact with remote services.
  */
-public class RpcClientBuilder<RESPONSE> {
+public class RpcClientBuilder<RESPONSE extends Message> {
 
     private static final Logger logger = LoggerFactory.getLogger(RpcClientBuilder.class);
 
@@ -54,7 +54,7 @@ public class RpcClientBuilder<RESPONSE> {
     /**
      * Modify retry policy from default
      */
-    public RpcClientBuilder withRetries(int retries) {
+    public RpcClientBuilder<RESPONSE> withRetries(int retries) {
         this.retries = retries;
         return this;
     }
@@ -63,13 +63,12 @@ public class RpcClientBuilder<RESPONSE> {
      * Modify timeout policy from default
      * @param timeout milliseconds
      */
-    public RpcClientBuilder withTimeout(int timeout) {
+    public RpcClientBuilder<RESPONSE> withTimeout(int timeout) {
         this.timeout = timeout;
         return this;
     }
 
-    @SuppressWarnings("unchecked") //TODO: generic-ize this class
-    public <RESPONSE extends Message> RpcClient<RESPONSE> build() {
+    public RpcClient<RESPONSE> build() {
         if (StringUtils.isBlank(serviceName)) {
             throw new IllegalStateException("RpcClientBuilder: Service name was not set");
         }
@@ -78,7 +77,7 @@ public class RpcClientBuilder<RESPONSE> {
         }
         LoadBalancerFactory lbFactory = injector.getInstance(LoadBalancerFactory.class);
         LoadBalancer loadBalancer = lbFactory.getLoadBalancer(serviceName);
-        return new RpcClient(loadBalancer, serviceName, methodName, retries, timeout, responseClass);
+        return new RpcClient<>(loadBalancer, serviceName, methodName, retries, timeout, responseClass);
     }
 
     public void setResponseClass(Class<RESPONSE> responseClass) {

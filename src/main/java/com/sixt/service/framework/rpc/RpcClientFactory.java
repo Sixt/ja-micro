@@ -36,7 +36,8 @@ public class RpcClientFactory {
      */
     public <RESPONSE extends Message> RpcClientBuilder<RESPONSE> newClient(String serviceName, String methodName,
                                       Class<RESPONSE> responseClass) {
-        RpcClientBuilder retval = injector.getInstance(RpcClientBuilder.class);
+        @SuppressWarnings("unchecked")
+        RpcClientBuilder<RESPONSE> retval = (RpcClientBuilder<RESPONSE>) injector.getInstance(RpcClientBuilder.class);
         retval.setServiceName(serviceName);
         retval.setMethodName(methodName);
         retval.setResponseClass(responseClass);
