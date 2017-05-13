@@ -12,7 +12,6 @@
 
 package com.sixt.service.framework.kafka.messaging;
 
-import com.google.common.collect.Lists;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -107,7 +106,10 @@ public final class Consumer {
         @Override
         public void run() {
             try {
-                kafka.subscribe(Lists.newArrayList(topic.toString()), new PartitionAssignmentChange());
+                List<String> topics = new ArrayList<>();
+                topics.add(topic.toString());
+
+                kafka.subscribe(topics, new PartitionAssignmentChange());
                 logger.info("Consumer in group {} subscribed to topic {}", consumerGroupId, topic.toString());
             } catch (Exception unexpected) {
                 logger.error("Dead consumer in group {}: Cannot subscribe to topic {}", consumerGroupId, topic.toString(), unexpected);
