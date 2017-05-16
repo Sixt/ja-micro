@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p>
  * Consumer instances are created by the ConsumerFactory.
  */
-public final class Consumer {
+public class Consumer {
     private static final Logger logger = LoggerFactory.getLogger(Consumer.class);
 
     private static final int HANDLER_TIMEOUT_MILLIS = 60_000;

@@ -318,10 +318,14 @@ final class PartitionProcessor {
                         .buildCounter();
 
                 if (deliveryFailed) {
-                    handlerTimer.recordFailure(startTime);
+                    if (handlerTimer != null) {  // may be null in case of UnknownMessageHandlerException
+                        handlerTimer.recordFailure(startTime);
+                    }
                     consumedMessages.incFailure();
                 } else {
-                    handlerTimer.recordSuccess(startTime);
+                    if (handlerTimer != null) {
+                        handlerTimer.recordSuccess(startTime);
+                    }
                     consumedMessages.incSuccess();
                 }
             }

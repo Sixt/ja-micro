@@ -20,7 +20,7 @@ import io.opentracing.Tracer;
 import java.util.Properties;
 
 
-public final class ConsumerFactory {
+public class ConsumerFactory {
 
     private final ServiceProperties serviceProperties;
     private final TypeDictionary typeDictionary;

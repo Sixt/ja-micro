@@ -39,7 +39,7 @@ public class Metadata {
 
     // Kafka information
     private final Topic topic; // The topic this message was received on (INBOUND) or is to be send to (OUTBOUND).
-    private final String partitioningKey; // The key used to determine the partition in the topic.
+    private final String partitioningKey; // The key used to determine the partition in the topic. May be null.
     private final int partitionId; // The id of the topic partition - only for INBOUND.
     private final long offset; // The offset of the message - only for INBOUND
 
@@ -153,9 +153,7 @@ public class Metadata {
         }
         this.topic = topic;
 
-        if (Strings.isNullOrEmpty(partitioningKey)) {
-            throw new IllegalArgumentException("non-empty partitioningKey is required");
-        }
+        // null partitioningKey is ok, producer will select partition (round-robin)
         this.partitioningKey = partitioningKey;
 
         this.partitionId = partitionId;

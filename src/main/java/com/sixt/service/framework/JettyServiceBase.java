@@ -43,19 +43,19 @@ public class JettyServiceBase {
 
             new FastClasspathScanner()
                     .matchClassesWithAnnotation(OrangeMicroservice.class, matchingClass ->
-                            serviceEntries.add(matchingClass.getCanonicalName()))
+                            serviceEntries.add(matchingClass.getName()))
                     .matchClassesWithAnnotation(RpcHandler.class, matchingClass ->
-                            rpcHandlers.add(matchingClass.getCanonicalName()))
+                            rpcHandlers.add(matchingClass.getName()))
                     .matchClassesWithAnnotation(HealthCheckProvider.class, matchingClass ->
-                            hcProviders.add(matchingClass.getCanonicalName()))
+                            hcProviders.add(matchingClass.getName()))
                     .matchClassesWithAnnotation(ServiceRegistryPlugin.class, matchingClass ->
-                            serviceRegistryPlugins.add(matchingClass.getCanonicalName()))
+                            serviceRegistryPlugins.add(matchingClass.getName()))
                     .matchClassesWithAnnotation(ConfigurationPlugin.class, matchingClass ->
-                            configPlugins.add(matchingClass.getCanonicalName()))
+                            configPlugins.add(matchingClass.getName()))
                     .matchClassesWithAnnotation(MetricsReporterPlugin.class, matchingClass ->
-                            metricsReportingPlugins.add(matchingClass.getCanonicalName()))
+                            metricsReportingPlugins.add(matchingClass.getName()))
                     .matchClassesWithAnnotation(TracingPlugin.class, matchingClass ->
-                            tracingPlugins.add(matchingClass.getCanonicalName()))
+                            tracingPlugins.add(matchingClass.getName()))
                     .scan();
 
             if (serviceEntries.isEmpty()) {
