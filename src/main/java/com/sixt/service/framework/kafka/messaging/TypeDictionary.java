@@ -20,8 +20,8 @@ import java.util.Map;
 
 public class TypeDictionary {
 
-    // synchronized because put may be exected in different thread than read access
-    // if synchronization is found too heavy for this, extract interface and implement an immutable dictionary and another modifyable one
+    // synchronized because put may be executed in different thread than read access
+    // if synchronization is found too heavy for this, extract interface and implement an immutable dictionary and another modifiable one
     private final Map<MessageType, Parser<com.google.protobuf.Message>> parsers = Collections.synchronizedMap(new HashMap<>());
     private final Map<MessageType, MessageHandler<? extends com.google.protobuf.Message>> handlers = Collections.synchronizedMap(new HashMap<>());
 
