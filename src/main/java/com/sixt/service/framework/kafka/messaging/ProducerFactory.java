@@ -18,7 +18,7 @@ import org.apache.kafka.clients.CommonClientConfigs;
 
 import java.util.Properties;
 
-public final class ProducerFactory {
+public class ProducerFactory {
 
     private final ServiceProperties serviceProperties;
 
