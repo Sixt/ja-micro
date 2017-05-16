@@ -98,13 +98,11 @@ public class RpcClient<RESPONSE extends Message> {
     /**
      * @deprecated use {@link #callSynchronous(Message, OrangeContext)} instead and make sure to always pass the {@link OrangeContext}
      */
-    @SuppressWarnings("unchecked")
     @Deprecated
     public RESPONSE callSynchronous(Message request) throws RpcCallException {
         return callSynchronous(request, null);
     }
 
-    @SuppressWarnings("unchecked")
     public RESPONSE callSynchronous(Message request, OrangeContext orangeContext) throws RpcCallException {
         HttpClientWrapper clientWrapper = loadBalancer.getHttpClientWrapper();
         HttpRequestWrapper balancedPost = clientWrapper.createHttpPost(this);
