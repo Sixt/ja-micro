@@ -12,6 +12,8 @@
 
 package com.sixt.service.framework.kafka;
 
+import com.google.common.collect.Lists;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
@@ -21,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public class TopicMessageCounter {
+public class TopicMessageCounter implements ConsumerRebalanceListener {
 
     private static final Logger logger = LoggerFactory.getLogger(TopicMessageCounter.class);
 
@@ -42,10 +44,11 @@ public class TopicMessageCounter {
             } else {
                 Collection<TopicPartition> partitions = new ArrayList<>();
                 for (PartitionInfo partitionInfo : partitionInfos) {
-                    partitions.add(new TopicPartition(topic, partitionInfo.partition()));
+                    TopicPartition partition = new TopicPartition(topic, partitionInfo.partition());
+                    partitions.add(partition);
                 }
-                Map<TopicPartition, Long> beginningOffsets = consumer.beginningOffsets(partitions);
                 Map<TopicPartition, Long> endingOffsets = consumer.endOffsets(partitions);
+                Map<TopicPartition, Long> beginningOffsets = getBeginningOffsets(consumer, partitions);
                 return diffOffsets(beginningOffsets, endingOffsets);
             }
         } finally {
@@ -86,6 +89,7 @@ public class TopicMessageCounter {
         for (TopicPartition partition : beginning.keySet()) {
             Long beginningOffset = beginning.get(partition);
             Long endingOffset = ending.get(partition);
+            System.out.println("Begin = " + beginningOffset + ", end = " + endingOffset + " for partition " + partition);
             if (beginningOffset != null && endingOffset != null) {
                 retval += (endingOffset - beginningOffset);
             }
