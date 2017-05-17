@@ -130,15 +130,26 @@ public class Metadata {
 
     public Marker getLoggingMarker() {
         // If we get more optional header fields, we should probably exclude them if they are empty.
-        Marker messageMarker = append("topic", topic)
-                .and(append("partitionId", partitionId))
-                .and(append("partitioningKey", partitioningKey))
-                .and(append("offset", offset))
-                .and(append("messageId", messageId))
-                .and(append("correlationId", correlationId))
-                .and(append("requestCorrelationId", requestCorrelationId))
-                .and(append("replyTo", replyTo))
-                .and(append("messageType", type));
+        Marker messageMarker =
+                append("messageId", messageId)
+                        .and(append("partitionId", partitionId))
+                        .and(append("partitioningKey", partitioningKey))
+                        .and(append("offset", offset))
+                        .and(append("messageId", messageId))
+                        .and(append("correlationId", correlationId))
+                        .and(append("requestCorrelationId", requestCorrelationId));
+
+
+        // Nota bene: without the toString the marker tries to convert the object into Json, which produces strange results
+        if (topic != null) {
+            messageMarker.add(append("topic", topic.toString()));
+        }
+        if (replyTo != null) {
+            messageMarker.add(append("replyTo", replyTo.toString()));
+        }
+        if (type != null) {
+            messageMarker.add(append("messageType", type.toString()));
+        }
 
         return messageMarker;
     }

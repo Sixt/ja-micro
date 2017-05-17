@@ -82,8 +82,6 @@ public class KafkaIntegrationTest {
         typeDictionary.putHandler(MessageType.of(SayHelloToCmd.class), new MessageHandler<SayHelloToCmd>() {
             @Override
             public void onMessage(Message<SayHelloToCmd> message, OrangeContext context) {
-                System.err.println(message);
-
                 SayHelloToReply greeting = SayHelloToReply.newBuilder().setGreeting("Hello to " + message.getPayload().getName()).build();
                 Message reply = Messages.replyTo(message, greeting, context);
 
@@ -96,7 +94,6 @@ public class KafkaIntegrationTest {
         typeDictionary.putHandler(MessageType.of(SayHelloToReply.class), new MessageHandler<SayHelloToReply>() {
             @Override
             public void onMessage(Message<SayHelloToReply> message, OrangeContext context) {
-                System.err.println(message);
                 responseLatch.countDown();
             }
         });
