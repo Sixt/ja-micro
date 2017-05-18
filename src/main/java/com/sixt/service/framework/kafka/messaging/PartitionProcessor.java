@@ -155,7 +155,8 @@ final class PartitionProcessor {
             try {
                 Message<? extends com.google.protobuf.Message> message = parseMessage();
                 if (message == null) {
-                    return; // Could not even parse the message, so we give up.
+                    // Can not even parse the message, so we give up.
+                    return;
                 }
 
                 deliverToMessageHandler(message);
@@ -181,6 +182,7 @@ final class PartitionProcessor {
                 envelope = Envelope.parseFrom(record.value());
 
             } catch (InvalidProtocolBufferException parseError) {
+                markAsConsumed(record.offset());
                 parsingFailed(envelope);
                 logger.warn(logMarkerFromRecordAndEnvelope(envelope), "Cannot parse Envelope from raw record", parseError);
                 return null;
@@ -198,6 +200,7 @@ final class PartitionProcessor {
                 return Messages.fromKafka(innerMessage, envelope, record);
 
             } catch (InvalidProtocolBufferException | UnknownMessageTypeException unrecoverableParsingError) {
+                markAsConsumed(record.offset());
                 parsingFailed(envelope);
                 logger.warn(logMarkerFromRecordAndEnvelope(envelope), "Cannot parse inner payload message", unrecoverableParsingError);
                 return null;
@@ -288,11 +291,16 @@ final class PartitionProcessor {
             logger.debug(message.getMetadata().getLoggingMarker(), "Received tryDeliverMessage={} from {}.onFailedMessage({})", tryDeliverMessage, failedMessageProcessor.getClass().getTypeName(), failure.toString());
 
             if (metricsBuilderFactory != null) {
-                metricsBuilderFactory.newMetric("messaging_consumer_delivery_failures")
-                        .withTag("retryable", Boolean.toString(tryDeliverMessage))
+                GoCounter deliveryFailures = metricsBuilderFactory.newMetric("messaging_consumer_delivery_failures")
                         .withTag("messageType", message.getMetadata().getType().toString())
                         .withTag("topic", message.getMetadata().getTopic().toString())
                         .buildCounter();
+
+                if(tryDeliverMessage) {
+                    deliveryFailures.incSuccess();
+                } else {
+                    deliveryFailures.incFailure();
+                }
             }
 
         }
@@ -311,25 +319,13 @@ final class PartitionProcessor {
                 span.finish();
             }
 
-            if (metricsBuilderFactory != null) {
-                GoCounter consumedMessages = metricsBuilderFactory.newMetric("messaging_consumer_consumed_messages")
-                        .withTag("messageType", message.getMetadata().getType().toString())
-                        .withTag("topic", message.getMetadata().getTopic().toString())
-                        .buildCounter();
-
+            if (handlerTimer != null) { // may be null in case of UnknownMessageHandlerException
                 if (deliveryFailed) {
-                    if (handlerTimer != null) {  // may be null in case of UnknownMessageHandlerException
-                        handlerTimer.recordFailure(startTime);
-                    }
-                    consumedMessages.incFailure();
+                    handlerTimer.recordFailure(startTime);
                 } else {
-                    if (handlerTimer != null) {
-                        handlerTimer.recordSuccess(startTime);
-                    }
-                    consumedMessages.incSuccess();
+                    handlerTimer.recordSuccess(startTime);
                 }
             }
-
         }
 
 
