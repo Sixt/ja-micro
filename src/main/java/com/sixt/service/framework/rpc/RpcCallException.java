@@ -177,6 +177,8 @@ public class RpcCallException extends Exception {
             } else if (rawObject instanceof JsonPrimitive) {
                 logger.warn("Expected an RpcCallException json object, but received: {}", rawObject.toString());
             }
+        } catch (JsonParseException ex) {
+            logger.warn("Expected an RpcCallException json object, but received: {}", json);
         } catch (Exception ex) {
             logger.warn("Caught exception parsing RpcCallException: " + json, ex);
         }
