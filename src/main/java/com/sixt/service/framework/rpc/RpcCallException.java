@@ -13,12 +13,14 @@
 package com.sixt.service.framework.rpc;
 
 import com.google.gson.*;
+import net.logstash.logback.marker.Markers;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Marker;
 
 /**
  * Any error state triggered by interaction with a remote service will result
@@ -149,6 +151,8 @@ public class RpcCallException extends Exception {
     }
 
     public static RpcCallException fromJson(String json) {
+        Marker marker = Markers.append("payload", json);
+
         try {
             JsonParser parser = new JsonParser();
             JsonElement rawObject = parser.parse(json);
@@ -175,12 +179,12 @@ public class RpcCallException extends Exception {
                 }
                 return retval;
             } else if (rawObject instanceof JsonPrimitive) {
-                logger.warn("Expected an RpcCallException json object, but received: {}", rawObject.toString());
+                logger.warn(marker, "Expected an RpcCallException json object, but received: {}", rawObject.toString());
             }
         } catch (JsonParseException ex) {
-            logger.warn("Expected an RpcCallException json object, but received: {}", json);
+            logger.warn(marker, "Expected an RpcCallException json object, but received: {}", json);
         } catch (Exception ex) {
-            logger.warn("Caught exception parsing RpcCallException: " + json, ex);
+            logger.warn(marker, "Caught exception parsing RpcCallException: " + json, ex);
         }
         return null;
     }
