@@ -36,7 +36,7 @@ public class SixtProtoParser {
         List<RpcMethodDefinition> retval = new ArrayList<>();
         ProtoParser parser = new ProtoParser(Location.get(input.getCanonicalPath()), gulpFile(input));
         ProtoFileElement element = parser.readProtoFile();
-        if (protoFileMatchesPackage(element, serviceName)) {
+        if (protoFileMatchesPackage(element)) {
             List<ServiceElement> services = element.services();
             if (services != null) {
                 for (ServiceElement service : services) {
@@ -55,24 +55,28 @@ public class SixtProtoParser {
         return retval;
     }
 
-    public boolean protoFileMatchesPackage(ProtoFileElement element, String pkg) {
-        String declaredPackage = element.packageName();
-        if (declaredPackage == null) {
+    public boolean protoFileMatchesPackage(ProtoFileElement element) {
+        String packageFound = element.packageName();
+        if (packageFound == null) {
             List<OptionElement> options = element.options();
             if (options != null) {
                 for (OptionElement option : options) {
                     if (option.name().equals("java_package")) {
-                        if (option.value().toString().contains(pkg)) {
-                            System.out.println("Please update protofile for " + pkg);
+                        if (option.value().toString().contains(serviceName)) {
+                            System.out.println("Please update protofile for " + serviceName);
                             return true;
                         }
                     }
                 }
             }
         } else {
-            return declaredPackage.contains(pkg);
+            return matchesServiceName(packageFound);
         }
         return false;
+    }
+
+    boolean matchesServiceName(final String candidate){
+        return candidate.matches("^"+serviceName.replace(".", "\\.")+"\\..+");
     }
 
     protected char[] gulpFile(File input) throws FileNotFoundException {
