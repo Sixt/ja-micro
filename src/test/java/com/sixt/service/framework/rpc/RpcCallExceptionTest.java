@@ -51,4 +51,11 @@ public class RpcCallExceptionTest {
         assertThat(ex.getMessage()).isEqualTo("error message");
     }
 
+    @Test
+    public void testFromInvalidJson() {
+        String error = "invalid json";
+        RpcCallException ex = RpcCallException.fromJson(error);
+        assertThat(ex).isNull();
+    }
+
 }
