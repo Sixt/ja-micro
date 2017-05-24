@@ -8,20 +8,33 @@ import java.io.File;
 
 public class SixtProtoParserTest {
 
-    private final PackageMatcherTestParser testParser = new PackageMatcherTestParser("com.sixt.service.payment");
+    private PackageMatcherTestParser testParser;
 
     @Test
     public void positive_case() {
-        testParser.should_match("com.sixt.service.payment.com");
-        testParser.should_match("com.sixt.service.payment.proto");
-        testParser.should_match("com.sixt.service.payment.API.proto");
+        testParser = new PackageMatcherTestParser("com.sixt.service.payment");
+        testParser.should_match("com.sixt.service.payment");
+        testParser.should_match("com.sixt.service.payment.API");
+
+        testParser = new PackageMatcherTestParser("com.sixt.service.rating");
+        testParser.should_match("com.sixt.service.rating");
+        testParser.should_match("com.sixt.service.rating.api");
+
+        testParser = new PackageMatcherTestParser("com.sixt.service.accounting");
+        testParser.should_match("com.sixt.service.accounting.api");
+        testParser.should_match("com.sixt.service.accounting");
     }
 
     @Test
     public void negative_case() {
+        testParser = new PackageMatcherTestParser("com.sixt.service.payment");
         testParser.should_not_match("com.sixt.service.payment_authorization");
-        testParser.should_not_match("org.sixt.service.payment");
-        testParser.should_not_match("com.test.service.payment");
+
+        testParser = new PackageMatcherTestParser("com.sixt.service.rating");
+        testParser.should_not_match("org.sixt.service.rating_payment");
+
+        testParser = new PackageMatcherTestParser("com.sixt.service.accounting");
+        testParser.should_not_match("com.test.service.accounting_payment");
     }
 
     class PackageMatcherTestParser
