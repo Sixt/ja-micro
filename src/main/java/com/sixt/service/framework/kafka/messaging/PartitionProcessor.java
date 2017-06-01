@@ -79,6 +79,9 @@ final class PartitionProcessor {
         this.tracer = tracer;
         this.metricsBuilderFactory = metricBuilderFactory;
 
+
+
+
         undeliveredMessages = new LinkedBlockingQueue<>();
 
         // Single threaded execution per partition to preserve ordering guarantees.
@@ -133,14 +136,9 @@ final class PartitionProcessor {
         private final ConsumerRecord<String, byte[]> record;
 
         // Tracing / metrics stuff (optional, may be null)
-        private
-        @Null
-        Span span;
-        private
-        @Null
-        GoTimer handlerTimer;
+        private @Null Span span;
+        private @Null GoTimer handlerTimer;
         private long startTime;
-
 
         MessageDeliveryTask(ConsumerRecord<String, byte[]> record) {
             this.record = record;
@@ -155,8 +153,7 @@ final class PartitionProcessor {
             try {
                 Message<? extends com.google.protobuf.Message> message = parseMessage();
                 if (message == null) {
-                    // Can not even parse the message, so we give up.
-                    return;
+                    return; // Can not even parse the message, so we give up.
                 }
 
                 deliverToMessageHandler(message);
@@ -178,31 +175,26 @@ final class PartitionProcessor {
             Envelope envelope = null;
 
             try {
-
                 envelope = Envelope.parseFrom(record.value());
-
             } catch (InvalidProtocolBufferException parseError) {
                 markAsConsumed(record.offset());
-                parsingFailed(envelope);
-                logger.warn(logMarkerFromRecordAndEnvelope(envelope), "Cannot parse Envelope from raw record", parseError);
+                parsingFailed(envelope, parseError);
                 return null;
             }
 
             try {
                 MessageType type = new MessageType(envelope.getMessageType());
-                Parser<com.google.protobuf.Message> parser = typeDictionary.parserFor(type);
 
+                Parser<com.google.protobuf.Message> parser = typeDictionary.parserFor(type);
                 if (parser == null) {
                     throw new UnknownMessageTypeException(type);
                 }
 
                 com.google.protobuf.Message innerMessage = parser.parseFrom(envelope.getInnerMessage());
                 return Messages.fromKafka(innerMessage, envelope, record);
-
             } catch (InvalidProtocolBufferException | UnknownMessageTypeException unrecoverableParsingError) {
                 markAsConsumed(record.offset());
-                parsingFailed(envelope);
-                logger.warn(logMarkerFromRecordAndEnvelope(envelope), "Cannot parse inner payload message", unrecoverableParsingError);
+                parsingFailed(envelope, unrecoverableParsingError);
                 return null;
             }
         }
@@ -250,13 +242,25 @@ final class PartitionProcessor {
 
         // Helper methods to get the glue code for debug logging, tracing and metrics out of the main control flow
 
-        private void parsingFailed(Envelope envelope) {
-            String messageType = "Envelope";
+        private void parsingFailed(Envelope envelope, Exception parseException) {
+            String messageType = "NoValidEnvelope";
             String topic = record.topic();
+            String warnMsg;
 
             if (envelope != null) {
                 messageType = envelope.getMessageType();
+                warnMsg = "Cannot parse inner payload message.";
+            } else {
+                warnMsg = "Cannot parse Envelope from raw record.";
             }
+
+            logger.warn(logMarkerFromRecordAndEnvelope(envelope), warnMsg, parseException);
+            logger.debug(logMarkerFromRecordAndEnvelope(envelope), "Message {} with offset {} in {}-{} marked as consumed.",
+                    messageType,
+                    record.offset(),
+                    topic,
+                    record.partition());
+
 
             if (metricsBuilderFactory != null) {
                 GoCounter parsingFailureCounter = metricsBuilderFactory.newMetric("messaging_consumer_parse_failures")
