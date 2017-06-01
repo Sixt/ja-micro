@@ -53,6 +53,8 @@ public class KafkaPublisher {
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         props.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, SixtPartitioner.class.getName());
+        props.put(ProducerConfig.RETRIES_CONFIG, "3");
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
 
         properties.forEach(props::put);
 
