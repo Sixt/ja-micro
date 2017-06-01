@@ -12,18 +12,13 @@
 
 package com.sixt.service.test_service;
 
-import com.google.common.collect.ImmutableSet;
 import com.sixt.service.framework.AbstractService;
 import com.sixt.service.framework.annotation.OrangeMicroservice;
-import com.sixt.service.framework.kafka.TopicVerification;
 import com.sixt.service.framework.kafka.messaging.ConsumerFactory;
 import com.sixt.service.framework.kafka.messaging.DiscardFailedMessages;
-import com.sixt.service.framework.kafka.messaging.Topic;
-import com.sixt.service.framework.util.Sleeper;
 import com.sixt.service.test_service.handler.*;
 
 import java.io.PrintStream;
-import java.util.Set;
 
 @OrangeMicroservice
 public class ServiceEntryPoint extends AbstractService {
