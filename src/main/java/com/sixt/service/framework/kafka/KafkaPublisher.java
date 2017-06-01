@@ -100,14 +100,20 @@ public class KafkaPublisher {
         }
     }
 
-    protected boolean publishEvents(boolean sync, String key, String[] events) {
+    private boolean publishEvents(boolean sync, String key, String[] events) {
         if (realProducer == null) {
-            throw new IllegalStateException("kafka was null. was the factory initialized?");
+            throw new IllegalStateException("Kafka is null. Was the factory initialized?");
         }
         for (String event : events) {
             ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, event);
             try {
-                Future future = realProducer.send(record);
+                Future<RecordMetadata> future = realProducer.send(record, (metadata, ex) -> {
+                    if (ex == null) {
+                        logger.debug("Sent message to Kafka: {}", metadata);
+                    } else {
+                        logger.warn("Send failed for record {}", record, ex);
+                    }
+                });
                 if (sync) {
                     future.get();
                 }
