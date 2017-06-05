@@ -12,9 +12,12 @@
 
 package com.sixt.service.framework.kafka;
 
+import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -30,6 +33,8 @@ import java.util.Map;
  * partitions, we periodically recommit the offsets.
  */
 public class OffsetCommitter {
+
+    private static final Logger logger = LoggerFactory.getLogger(OffsetCommitter.class);
 
     final static Duration IDLE_DURATION = Duration.ofHours(1);
 
@@ -79,8 +84,13 @@ public class OffsetCommitter {
             for (TopicPartition tp : offsetData.keySet()) {
                 OffsetAndTime offsetAndTime = offsetData.get(tp);
                 if (now.isAfter(offsetAndTime.time.plus(IDLE_DURATION))) {
-                    consumer.commitSync(Collections.singletonMap(tp,
-                            new OffsetAndMetadata(offsetAndTime.offset)));
+                    try {
+                        consumer.commitSync(Collections.singletonMap(tp,
+                                new OffsetAndMetadata(offsetAndTime.offset)));
+                    } catch (CommitFailedException covfefe) {
+                        logger.info("Caught CommitFailedException attempting to commit {} {}",
+                                tp, offsetAndTime.offset);
+                    }
                     offsetAndTime.time = now;
                 }
             }
