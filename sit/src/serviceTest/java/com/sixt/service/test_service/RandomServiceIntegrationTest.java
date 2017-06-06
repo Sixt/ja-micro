@@ -20,6 +20,7 @@ import com.sixt.service.framework.kafka.TopicMessageCounter;
 import com.sixt.service.framework.rpc.LoadBalancer;
 import com.sixt.service.framework.rpc.RpcCallException;
 import com.sixt.service.framework.rpc.ServiceEndpoint;
+import com.sixt.service.framework.servicetest.mockservice.CommandResponseMapping;
 import com.sixt.service.test_service.api.TestServiceOuterClass;
 import com.sixt.service.test_service.api.TestServiceOuterClass.GetRandomStringQuery;
 import com.sixt.service.test_service.api.TestServiceOuterClass.RandomStringResponse;
@@ -31,7 +32,9 @@ import org.junit.rules.Timeout;
 
 import java.util.List;
 
+import static com.sixt.service.framework.rpc.RpcCallException.Category.InsufficientPermissions;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 public class RandomServiceIntegrationTest {
 
@@ -107,4 +110,21 @@ public class RandomServiceIntegrationTest {
         assertThat(publishedEvents.get(0).getMessage()).isEqualTo(message);
         assertThat(publishedEvents.get(0).getId()).isEqualTo(id);
     }
+
+    @Test
+    public void testImpersonatorThrowingException() {
+        ServiceIntegrationTestSuite.serviceImpersonator.addMapping(CommandResponseMapping.newBuilder()
+                .setCommand("AnotherService.ImpersonatorTest")
+                .setException(new RpcCallException(InsufficientPermissions, "go away"))
+                .build());
+        try {
+            ServiceIntegrationTestSuite.testService.sendRequest("TestService.CallsAnotherService",
+                    TestServiceOuterClass.CallAnotherServiceCommand.getDefaultInstance());
+            fail("Expected an RpcCallException");
+        } catch (RpcCallException rpcEx) {
+            assertThat(rpcEx.getCategory()).isEqualTo(InsufficientPermissions);
+            assertThat(rpcEx.getMessage()).isEqualTo("go away");
+        }
+    }
+
 }

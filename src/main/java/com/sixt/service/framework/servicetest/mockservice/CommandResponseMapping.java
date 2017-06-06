@@ -13,15 +13,18 @@
 package com.sixt.service.framework.servicetest.mockservice;
 
 import com.google.protobuf.Message;
+import com.sixt.service.framework.rpc.RpcCallException;
 
 public class CommandResponseMapping {
 
     private String command;
     private Message response;
+    private RpcCallException exception;
 
     private CommandResponseMapping(MappingBuilder builder) {
         this.command = builder.getCommand();
         this.response = builder.getResponse();
+        this.exception = builder.getException();
     }
 
     public static MappingBuilder newBuilder() {
@@ -36,9 +39,14 @@ public class CommandResponseMapping {
         return response;
     }
 
+    public RpcCallException getException() {
+        return exception;
+    }
+
     public static class MappingBuilder {
         private String command;
         private Message response;
+        private RpcCallException exception;
 
         public MappingBuilder setCommand(String command) {
             this.command = command;
@@ -47,6 +55,11 @@ public class CommandResponseMapping {
 
         public MappingBuilder setResponse(Message response) {
             this.response = response;
+            return this;
+        }
+
+        public MappingBuilder setException(RpcCallException exception) {
+            this.exception = exception;
             return this;
         }
 
@@ -60,6 +73,10 @@ public class CommandResponseMapping {
 
         public Message getResponse() {
             return response;
+        }
+
+        public RpcCallException getException() {
+            return exception;
         }
     }
 }

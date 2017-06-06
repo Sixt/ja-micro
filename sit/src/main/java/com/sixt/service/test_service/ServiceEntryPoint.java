@@ -35,7 +35,6 @@ public class ServiceEntryPoint extends AbstractService {
     public void displayHelp(PrintStream out) {
     }
 
-
     @Override
     public void bootstrapComplete() throws InterruptedException {
         // Start a messaging consumer for the default inbox.

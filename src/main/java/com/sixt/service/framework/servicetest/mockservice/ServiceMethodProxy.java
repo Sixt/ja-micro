@@ -15,6 +15,7 @@ package com.sixt.service.framework.servicetest.mockservice;
 import com.google.protobuf.Message;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceMethodHandler;
+import com.sixt.service.framework.rpc.RpcCallException;
 import com.sixt.service.framework.util.MockMethodHandler;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,6 +25,7 @@ public class ServiceMethodProxy implements MockMethodHandler, ServiceMethodHandl
     protected Class<?> requestType;
     protected Class<?> responseType;
     protected Message response;
+    protected RpcCallException exception;
     protected AtomicInteger methodCallCounter = new AtomicInteger(0);
 
     public ServiceMethodProxy(Class<?> requestType, Class<?> responseType) {
@@ -42,9 +44,13 @@ public class ServiceMethodProxy implements MockMethodHandler, ServiceMethodHandl
     }
 
     @Override
-    public Message handleRequest(Message requestMessage, OrangeContext orangeContext) {
+    public Message handleRequest(Message requestMessage, OrangeContext orangeContext)
+            throws RpcCallException {
         methodCallCounter.incrementAndGet();
 
+        if (exception != null) {
+            throw exception;
+        }
         return response;
     }
 
@@ -60,5 +66,9 @@ public class ServiceMethodProxy implements MockMethodHandler, ServiceMethodHandl
     @Override
     public int getMethodCallCounter() {
         return methodCallCounter.get();
+    }
+
+    public void setException(RpcCallException exception) {
+        this.exception = exception;
     }
 }

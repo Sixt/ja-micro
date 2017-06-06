@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package com.sixt.service.another_service.api;
+
+option java_multiple_files = true;
+option java_package = "com.sixt.service.another_service.api";
+
+service AnotherService {
+    rpc ImpersonatorTest (ImpersonatorTestCommand) returns (ImpersonatorTestResponse) {}
+}
+
+message ImpersonatorTestCommand {
+}
+
+message ImpersonatorTestResponse {
+}
