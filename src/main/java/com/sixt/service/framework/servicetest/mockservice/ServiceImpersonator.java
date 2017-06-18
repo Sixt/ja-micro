@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@SuppressWarnings("unchecked")
 public class ServiceImpersonator {
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceImpersonator.class);
@@ -60,14 +61,15 @@ public class ServiceImpersonator {
 
     public ServiceImpersonator(String serviceName) throws Exception {
         //ServiceImpersonator needs its own injection stack so that each mock service
-        //and service under servicetest get their own ecosystem
+        //and service under servicetest get their own independent environment
         this.serviceName = serviceName;
         TestInjectionModule testInjectionModule = new TestInjectionModule(serviceName);
         serviceProperties = testInjectionModule.getServiceProperties();
         serviceProperties.setServiceName(serviceName); //has to be before getting regMgr
         serviceProperties.setServiceInstanceId(UUID.randomUUID().toString());
         serviceProperties.addProperty("registry", "consul");
-        injector = Guice.createInjector(testInjectionModule, new ServiceRegistryModule(serviceProperties), new TracingModule(serviceProperties));
+        injector = Guice.createInjector(testInjectionModule, new ServiceRegistryModule(serviceProperties),
+                new TracingModule(serviceProperties));
         ServiceDiscoveryProvider provider = injector.getInstance(ServiceDiscoveryProvider.class);
         LoadBalancerFactory lbFactory = injector.getInstance(LoadBalancerFactory.class);
         lbFactory.initialize(provider);
@@ -113,7 +115,8 @@ public class ServiceImpersonator {
         ServiceMethodProxy proxy = ((ServiceMethodProxy) this.methodHandlers.getMethodHandler(mapping.getCommand()));
 
         if (proxy == null) {
-            throw new RuntimeException("The method " + mapping.getCommand() + " for " + this.serviceName + " could not be found");
+            throw new RuntimeException("The method " + mapping.getCommand() +
+                    " for " + this.serviceName + " could not be found");
         }
         logger.info("Adding mock response mapping for {}", mapping.getCommand());
 
