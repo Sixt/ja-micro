@@ -13,6 +13,7 @@
 package com.sixt.service.framework.rpc;
 
 import com.google.inject.Inject;
+import com.sixt.service.framework.FeatureFlags;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.metrics.GoTimer;
@@ -24,6 +25,8 @@ import io.opentracing.propagation.TextMapInjectAdapter;
 import io.opentracing.tag.Tags;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.FutureResponseListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -123,8 +126,11 @@ public class HttpClientWrapper {
                     }
                     tracer.inject(span.context(), Format.Builtin.HTTP_HEADERS, new TextMapInjectAdapter(request.getHeaders()));
                 }
-                retval = request.newRequest(httpClient).timeout(client.getTimeout(),
-                        TimeUnit.MILLISECONDS).send();
+                Request jettyRequest = request.newRequest(httpClient);
+                FutureResponseListener listener = new FutureResponseListener(jettyRequest, FeatureFlags
+                        .getMaximumJettyResponseBuffer(serviceProps));
+                jettyRequest.send(listener);
+                retval = listener.get(client.getTimeout(), TimeUnit.MILLISECONDS);
                 logger.debug(logMarker, "Http send completed");
                 lastStatusCode = retval.getStatus();
             } catch (TimeoutException timeout) {

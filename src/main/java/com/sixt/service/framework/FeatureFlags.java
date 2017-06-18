@@ -67,4 +67,16 @@ public class FeatureFlags {
         return serviceProps.getIntegerProperty(READINESS_CHECK_PORT,
                 DEFAULT_READINESS_CHECK_PORT);
     }
+
+    public final static String MAX_JETTY_RESPONSE_BUFFER = "maxJettyResponseBuffer";
+    public final static int DEFAULT_MAX_JETTY_RESPONSE_BUFFER = 10 * 1024 * 1024;
+    /**
+     * The default maximum response buffer of a Jetty HTTP request is 2M.  This
+     * will allow users to increase that, and makes the ja-micro default 10M.
+     */
+    public static int getMaximumJettyResponseBuffer(ServiceProperties serviceProps) {
+        return serviceProps.getIntegerProperty(MAX_JETTY_RESPONSE_BUFFER,
+                DEFAULT_MAX_JETTY_RESPONSE_BUFFER);
+    }
+
 }
