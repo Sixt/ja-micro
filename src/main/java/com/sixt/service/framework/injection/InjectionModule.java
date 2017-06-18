@@ -20,6 +20,7 @@ import com.sixt.service.framework.FeatureFlags;
 import com.sixt.service.framework.MethodHandlerDictionary;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.configuration.ConfigurationManager;
+import com.sixt.service.framework.kafka.messaging.ConsumerFactory;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
