@@ -1,6 +1,7 @@
 language: java
 dist: trusty
 sudo: required
+group: edge
 jdk:
   - oraclejdk8
 script: ./travis-build.sh
