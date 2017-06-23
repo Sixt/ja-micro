@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 public interface ServiceUnderTest {
+
     /**
      * Send a request to the service under test.
      *

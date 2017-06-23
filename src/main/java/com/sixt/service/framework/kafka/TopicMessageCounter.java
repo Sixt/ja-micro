@@ -25,14 +25,13 @@ public class TopicMessageCounter {
 
     private static final Logger logger = LoggerFactory.getLogger(TopicMessageCounter.class);
 
+    /**
+     * Gets the total message count for the topic.
+     * <b>WARNING: Don't use with compacted topics</b>
+     */
     @SuppressWarnings("unchecked")
     public long getCount(String kafkaBrokers, String topic) {
-        Properties props = new Properties();
-        props.put("bootstrap.servers", kafkaBrokers);
-        props.put("group.id", UUID.randomUUID().toString());
-        props.put("key.deserializer", StringDeserializer.class.getName());
-        props.put("value.deserializer", StringDeserializer.class.getName());
-        KafkaConsumer consumer = new KafkaConsumer(props);
+        KafkaConsumer consumer = buildConsumer(kafkaBrokers);
         try {
             @SuppressWarnings("unchecked")
             Map<String, List<PartitionInfo>> topics = consumer.listTopics();
@@ -43,10 +42,11 @@ public class TopicMessageCounter {
             } else {
                 Collection<TopicPartition> partitions = new ArrayList<>();
                 for (PartitionInfo partitionInfo : partitionInfos) {
-                    partitions.add(new TopicPartition(topic, partitionInfo.partition()));
+                    TopicPartition partition = new TopicPartition(topic, partitionInfo.partition());
+                    partitions.add(partition);
                 }
-                Map<TopicPartition, Long> beginningOffsets = consumer.beginningOffsets(partitions);
                 Map<TopicPartition, Long> endingOffsets = consumer.endOffsets(partitions);
+                Map<TopicPartition, Long> beginningOffsets = consumer.beginningOffsets(partitions);
                 return diffOffsets(beginningOffsets, endingOffsets);
             }
         } finally {
@@ -54,16 +54,55 @@ public class TopicMessageCounter {
         }
     }
 
+    /**
+     * Gets the last offset for each partition for the given topic.
+     */
+    @SuppressWarnings("unchecked")
+    public Map<Integer, Long> getEndingOffsets(String kafkaBrokers, String topic) {
+        Map<Integer, Long> retval = new HashMap<>();
+        KafkaConsumer consumer = buildConsumer(kafkaBrokers);
+        try {
+            Map<String, List<PartitionInfo>> topics = consumer.listTopics();
+            List<PartitionInfo> partitionInfos = topics.get(topic);
+            if (partitionInfos == null) {
+                logger.warn("Partition information was not found for topic {}", topic);
+            } else {
+                Collection<TopicPartition> partitions = new ArrayList<>();
+                for (PartitionInfo partitionInfo : partitionInfos) {
+                    partitions.add(new TopicPartition(topic, partitionInfo.partition()));
+                }
+                Map<TopicPartition, Long> endingOffsets = consumer.endOffsets(partitions);
+                for (TopicPartition partition : endingOffsets.keySet()) {
+                    retval.put(partition.partition(), endingOffsets.get(partition));
+                }
+            }
+        } finally {
+            consumer.close();
+        }
+        return retval;
+    }
+
     private long diffOffsets(Map<TopicPartition, Long> beginning, Map<TopicPartition, Long> ending) {
         long retval = 0;
         for (TopicPartition partition : beginning.keySet()) {
             Long beginningOffset = beginning.get(partition);
             Long endingOffset = ending.get(partition);
+            System.out.println("Begin = " + beginningOffset + ", end = " + endingOffset + " for partition " + partition);
             if (beginningOffset != null && endingOffset != null) {
                 retval += (endingOffset - beginningOffset);
             }
         }
         return retval;
+    }
+
+    private KafkaConsumer buildConsumer(String kafkaBrokers) {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", kafkaBrokers);
+        props.put("group.id", UUID.randomUUID().toString());
+        props.put("key.deserializer", StringDeserializer.class.getName());
+        props.put("value.deserializer", StringDeserializer.class.getName());
+        props.put("auto.offset.reset", "earliest");
+        return new KafkaConsumer(props);
     }
 
 }

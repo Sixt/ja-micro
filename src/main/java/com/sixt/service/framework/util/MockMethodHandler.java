@@ -12,13 +12,15 @@
 
 package com.sixt.service.framework.util;
 
+import com.google.protobuf.Message;
+
 // marker interface to bypass normal reflection mechanism for
 // our contract-testing infrastructure
-public interface MockMethodHandler {
+public interface MockMethodHandler<REQ extends Message, RES extends Message> {
 
-    Class<?> getRequestType();
+    Class<REQ> getRequestType();
 
-    Class<?> getResponseType();
+    Class<RES> getResponseType();
 
     int getMethodCallCounter();
 

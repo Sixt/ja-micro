@@ -12,7 +12,6 @@
 
 package com.sixt.service.framework.kafka.messaging;
 
-import com.google.common.collect.Lists;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -44,7 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p>
  * Consumer instances are created by the ConsumerFactory.
  */
-public final class Consumer {
+public class Consumer {
     private static final Logger logger = LoggerFactory.getLogger(Consumer.class);
 
     private static final int HANDLER_TIMEOUT_MILLIS = 60_000;
@@ -107,7 +106,10 @@ public final class Consumer {
         @Override
         public void run() {
             try {
-                kafka.subscribe(Lists.newArrayList(topic.toString()), new PartitionAssignmentChange());
+                List<String> topics = new ArrayList<>();
+                topics.add(topic.toString());
+
+                kafka.subscribe(topics, new PartitionAssignmentChange());
                 logger.info("Consumer in group {} subscribed to topic {}", consumerGroupId, topic.toString());
             } catch (Exception unexpected) {
                 logger.error("Dead consumer in group {}: Cannot subscribe to topic {}", consumerGroupId, topic.toString(), unexpected);

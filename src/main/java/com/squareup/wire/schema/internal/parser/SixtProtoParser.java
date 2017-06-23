@@ -1,12 +1,12 @@
 /**
  * Copyright 2016-2017 Sixt GmbH & Co. Autovermietung KG
- * Licensed under the Apache License, Version 2.0 (the "License"); you may 
- * not use this file except in compliance with the License. You may obtain a 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain a
  * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
  * under the License.
  */
 
@@ -36,7 +36,7 @@ public class SixtProtoParser {
         List<RpcMethodDefinition> retval = new ArrayList<>();
         ProtoParser parser = new ProtoParser(Location.get(input.getCanonicalPath()), gulpFile(input));
         ProtoFileElement element = parser.readProtoFile();
-        if (protoFileMatchesPackage(element, serviceName)) {
+        if (protoFileMatchesPackage(element)) {
             List<ServiceElement> services = element.services();
             if (services != null) {
                 for (ServiceElement service : services) {
@@ -45,7 +45,8 @@ public class SixtProtoParser {
                     if (rpcs != null) {
                         for (RpcElement rpc : rpcs) {
                             RpcMethodDefinition def = new RpcMethodDefinition(name + "." + rpc.name(),
-                                    rpc.requestType(), rpc.responseType());
+                                                                              rpc.requestType(), rpc.responseType()
+                            );
                             retval.add(def);
                         }
                     }
@@ -55,24 +56,28 @@ public class SixtProtoParser {
         return retval;
     }
 
-    public boolean protoFileMatchesPackage(ProtoFileElement element, String pkg) {
-        String declaredPackage = element.packageName();
-        if (declaredPackage == null) {
+    public boolean protoFileMatchesPackage(ProtoFileElement element) {
+        String packageFound = element.packageName();
+        if (packageFound == null) {
             List<OptionElement> options = element.options();
             if (options != null) {
                 for (OptionElement option : options) {
                     if (option.name().equals("java_package")) {
-                        if (option.value().toString().contains(pkg)) {
-                            System.out.println("Please update protofile for " + pkg);
+                        if (option.value().toString().contains(serviceName)) {
+                            System.out.println("Please update protofile for " + serviceName);
                             return true;
                         }
                     }
                 }
             }
         } else {
-            return declaredPackage.contains(pkg);
+            return matchesServiceName(packageFound);
         }
         return false;
+    }
+
+    boolean matchesServiceName(final String candidate) {
+        return candidate.equals(serviceName) || candidate.matches("^" + serviceName.replace(".", "\\.") + "\\..+");
     }
 
     protected char[] gulpFile(File input) throws FileNotFoundException {
@@ -88,7 +93,7 @@ public class SixtProtoParser {
         }
 
         scanner.close();
-        
+
         return sb.toString().toCharArray();
     }
 }

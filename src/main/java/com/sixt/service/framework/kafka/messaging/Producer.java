@@ -26,7 +26,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public final class Producer {
+public class Producer {
     private static final Logger logger = LoggerFactory.getLogger(Producer.class);
 
     private final KafkaProducer<String, byte[]> kafka;

@@ -1,18 +1,17 @@
 /**
  * Copyright 2016-2017 Sixt GmbH & Co. Autovermietung KG
- * Licensed under the Apache License, Version 2.0 (the "License"); you may 
- * not use this file except in compliance with the License. You may obtain a 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain a
  * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
  * under the License.
  */
 
 package com.sixt.service.framework.servicetest.helper;
 
-import com.google.common.collect.Maps;
 import com.palantir.docker.compose.DockerComposeRule;
 import com.palantir.docker.compose.connection.DockerPort;
 import com.palantir.docker.compose.connection.waiting.SuccessOrFailure;
@@ -26,6 +25,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 public class DockerComposeHelper {
@@ -38,7 +38,7 @@ public class DockerComposeHelper {
      */
     public static void setKafkaEnvironment(DockerComposeRule docker) {
         DockerPort kafka = docker.containers().container("kafka").port(9092);
-        Map<String, String> newEnv = Maps.newHashMap();
+        Map<String, String> newEnv = new HashMap<>();
         newEnv.put(ServiceProperties.KAFKA_SERVER_KEY, kafka.inFormat("$HOST:$EXTERNAL_PORT"));
         newEnv.putAll(System.getenv());
         setEnv(newEnv);
@@ -50,7 +50,7 @@ public class DockerComposeHelper {
      */
     public static void setConsulEnvironment(DockerComposeRule docker) {
         DockerPort consul = docker.containers().container("consul").port(8500);
-        Map<String, String> newEnv = Maps.newHashMap();
+        Map<String, String> newEnv = new HashMap<>();
         newEnv.put(ServiceProperties.REGISTRY_SERVER_KEY, consul.inFormat("$HOST:$EXTERNAL_PORT"));
         newEnv.putAll(System.getenv());
         setEnv(newEnv);
@@ -62,7 +62,7 @@ public class DockerComposeHelper {
      */
     public static void setEtcdEnvironment(DockerComposeRule docker) {
         DockerPort etcd = docker.containers().container("etcd").port(2379);
-        Map<String, String> newEnv = Maps.newHashMap();
+        Map<String, String> newEnv = new HashMap<>();
         newEnv.put("etcd_endpoints", etcd.inFormat("http://$HOST:$EXTERNAL_PORT"));
         newEnv.putAll(System.getenv());
         setEnv(newEnv);
@@ -165,7 +165,7 @@ public class DockerComposeHelper {
     public static SuccessOrFailure waitForDynamoDb(String logFile) {
         return waitFor(logFile, "CorsParams:", "Dynamo DB not ready yet");
     }
-    
+
     private static SuccessOrFailure waitFor(String logFile, String expected, String timeoutMsg) {
         try {
             String log = FileUtils.readFileToString(new File(logFile), Charset.defaultCharset());

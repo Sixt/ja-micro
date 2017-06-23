@@ -118,6 +118,7 @@ public class ServiceImpersonator {
         logger.info("Adding mock response mapping for {}", mapping.getCommand());
 
         proxy.setResponse(mapping.getResponse());
+        proxy.setException(mapping.getException());
 
         return this;
     }

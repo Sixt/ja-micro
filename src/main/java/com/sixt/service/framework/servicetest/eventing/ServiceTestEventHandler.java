@@ -92,7 +92,7 @@ public class ServiceTestEventHandler implements EventReceivedCallback<String> {
     }
 
     public <TYPE extends Message> List<TYPE> getEventsOfType(String eventName, Class<TYPE> eventClass) {
-        List<TYPE> foundEvents = Lists.newArrayList();
+        List<TYPE> foundEvents = new ArrayList<>();
 
         if (eventName != null && eventClass != null) {
             List<JsonObject> capturedEvents = Arrays.asList(readEvents.toArray(new JsonObject[0]));
@@ -111,7 +111,7 @@ public class ServiceTestEventHandler implements EventReceivedCallback<String> {
     }
 
     public <TYPE extends Message> List<TYPE> getEventsOfType(Class<TYPE> eventClass) {
-        List<TYPE> foundEvents = Lists.newArrayList();
+        List<TYPE> foundEvents = new ArrayList<>();
 
         if (eventClass != null) {
             List<JsonObject> capturedEvents = Arrays.asList(readEvents.toArray(new JsonObject[0]));
