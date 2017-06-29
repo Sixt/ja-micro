@@ -15,6 +15,7 @@ before_install:
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
   - docker-compose --version
+install: true #Skip the install step; otherwise gradle assemble is called by default.
 branches:
   except:
   - /^[0-9.]+/
