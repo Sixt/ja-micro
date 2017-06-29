@@ -16,11 +16,6 @@ before_install:
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
   - docker-compose --version
-install:
-  - rm -rf Sixt
-  - git clone https://github.com/Sixt/ja-micro.git Sixt/ja-micro
-  - cd Sixt/ja-micro
-  - git checkout master
 branches:
   except:
   - /^[0-9.]+/
