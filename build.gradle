@@ -170,7 +170,7 @@ dependencies { //achtung: order does matter!
     compile 'com.squareup.wire:wire-schema:2.2.0'
 
     // https://github.com/palantir/docker-compose-rule
-    compile 'com.palantir.docker.compose:docker-compose-rule-junit4:0.31.1'
+    compile 'com.palantir.docker.compose:docker-compose-rule-junit4:0.32.0'
 
     compile 'org.nanohttpd:nanohttpd:2.3.1'
 
