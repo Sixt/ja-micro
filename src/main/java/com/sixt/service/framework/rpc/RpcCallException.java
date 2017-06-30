@@ -17,10 +17,10 @@ import net.logstash.logback.marker.Markers;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.slf4j.Marker;
 
 /**
  * Any error state triggered by interaction with a remote service will result
@@ -44,7 +44,8 @@ public class RpcCallException extends Exception {
         BadRequest(400, false),               //invalid params or malformed
         Unauthorized(401, false),             //not logged in
         InsufficientPermissions(403, false),  //not enough perms
-        ResourceNotFound(404, false),
+        ResourceNotFound(404, false),         //resource not found
+        Conflict(409, false),                 //resource conflict
         InternalServerError(500, true),       //unexpected exception
         BackendError(501, false),             //business logic failure
         RequestTimedOut(504, true);
