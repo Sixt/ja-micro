@@ -29,10 +29,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -91,11 +88,26 @@ public class RpcMethodScanner {
     }
 
     public List<String> getGeneratedProtoClasses(String serviceName) {
-        FastClasspathScanner cpScanner = new FastClasspathScanner(serviceName);
+        FastClasspathScanner cpScanner = new FastClasspathScanner();
         ScanResult scanResult = cpScanner.scan();
         List<String> oldProtobuf = scanResult.getNamesOfSubclassesOf(GeneratedMessage.class);
         List<String> newProtobuf = scanResult.getNamesOfSubclassesOf(GeneratedMessageV3.class);
-        return Stream.concat(oldProtobuf.stream(), newProtobuf.stream()).collect(Collectors.toList());
+        List<String> retval = Stream.concat(oldProtobuf.stream(),
+                newProtobuf.stream()).collect(Collectors.toList());
+        String[] packageTokens = serviceName.split("\\.");
+        return retval.stream().filter(s -> protoFilePackageMatches(s, packageTokens)).collect(Collectors.toList());
+    }
+
+    //has to roughly match.  com.example.api.foo matches com.example.foo
+    protected boolean protoFilePackageMatches(String protoClass, String[] packageTokens) {
+        int index = 0;
+        for (int i = 0; i < packageTokens.length; i++) {
+            index = protoClass.indexOf(packageTokens[i], index);
+            if (index == -1) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @SuppressWarnings("unchecked")

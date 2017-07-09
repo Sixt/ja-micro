@@ -109,11 +109,12 @@ public class ServiceImpersonator {
     }
 
     public ServiceImpersonator addMapping(CommandResponseMapping mapping) {
-
-        ServiceMethodProxy proxy = ((ServiceMethodProxy) this.methodHandlers.getMethodHandler(mapping.getCommand()));
+        ServiceMethodProxy proxy = ((ServiceMethodProxy) this.methodHandlers
+                .getMethodHandler(mapping.getCommand()));
 
         if (proxy == null) {
-            throw new RuntimeException("The method " + mapping.getCommand() + " for " + this.serviceName + " could not be found");
+            throw new RuntimeException("The method " + mapping.getCommand() + " for " +
+                    this.serviceName + " could not be found");
         }
         logger.info("Adding mock response mapping for {}", mapping.getCommand());
 
@@ -121,6 +122,16 @@ public class ServiceImpersonator {
         proxy.setException(mapping.getException());
 
         return this;
+    }
+
+    public Class<? extends Message> getResponseClassForMethod(String method) {
+        ServiceMethodProxy proxy = ((ServiceMethodProxy) this.methodHandlers
+                .getMethodHandler(method));
+        if (proxy == null) {
+            throw new RuntimeException("The method " + method + " for " +
+                    this.serviceName + " could not be found");
+        }
+        return proxy.getResponseType();
     }
 
     /**
