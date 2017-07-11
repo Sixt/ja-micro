@@ -85,6 +85,7 @@ public class RpcCallException extends Exception {
 
     public RpcCallException(Category category, String message) {
         super(); //builds stacktrace
+        if (category == null) { throw new IllegalArgumentException("category is null"); }
         this.category = category;
         this.retriable = category.retriable;
         this.message = message;
@@ -200,15 +201,20 @@ public class RpcCallException extends Exception {
         return message;
     }
 
+    /**
+     * provides a {@link Category} by the given {@link JsonObject}.
+     *
+     * @param object JSON element
+     * @return Category that is provided in JSON, if the code is not known it will fall back to {@link Category#InternalServerError}.
+     */
     private static Category getCategory(JsonObject object) {
-        // if no category can be found we use internal server error
         Category category = Category.InternalServerError;
         if (object.has(CATEGORY)) {
             category = Category.fromStatus(object.get(CATEGORY).getAsInt());
         } else if (object.has(CODE)) {
             category = Category.fromStatus(object.get(CODE).getAsInt());
         }
-        return category;
+        return category != null ? category : Category.InternalServerError;
     }
 
 }
