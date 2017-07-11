@@ -13,14 +13,13 @@
 package com.sixt.service.framework.rpc;
 
 import com.google.gson.*;
+import java.util.HashMap;
+import java.util.Map;
 import net.logstash.logback.marker.Markers;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Any error state triggered by interaction with a remote service will result
@@ -209,8 +208,13 @@ public class RpcCallException extends Exception {
      */
     private static Category getCategory(JsonObject object) {
         Category category = Category.InternalServerError;
-        if (object.has(CATEGORY)) {
-            category = Category.fromStatus(object.get(CATEGORY).getAsInt());
+        if (object.has(CATEGORY) && object.get(CATEGORY).isJsonPrimitive()) { // category could be an object ...
+            JsonPrimitive primitive = object.getAsJsonPrimitive(CATEGORY);
+            try {
+                category = Category.fromStatus(primitive.getAsInt());
+            } catch (NumberFormatException nfe) {
+                category = Category.InternalServerError;
+            }
         } else if (object.has(CODE)) {
             category = Category.fromStatus(object.get(CODE).getAsInt());
         }
