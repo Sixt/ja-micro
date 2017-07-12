@@ -13,14 +13,13 @@
 package com.sixt.service.framework.rpc;
 
 import com.google.gson.*;
+import java.util.HashMap;
+import java.util.Map;
 import net.logstash.logback.marker.Markers;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Any error state triggered by interaction with a remote service will result
@@ -85,6 +84,7 @@ public class RpcCallException extends Exception {
 
     public RpcCallException(Category category, String message) {
         super(); //builds stacktrace
+        if (category == null) { throw new IllegalArgumentException("category is null"); }
         this.category = category;
         this.retriable = category.retriable;
         this.message = message;
@@ -200,15 +200,25 @@ public class RpcCallException extends Exception {
         return message;
     }
 
+    /**
+     * provides a {@link Category} by the given {@link JsonObject}.
+     *
+     * @param object JSON element
+     * @return Category that is provided in JSON, if the code is not known it will fall back to {@link Category#InternalServerError}.
+     */
     private static Category getCategory(JsonObject object) {
-        // if no category can be found we use internal server error
         Category category = Category.InternalServerError;
-        if (object.has(CATEGORY)) {
-            category = Category.fromStatus(object.get(CATEGORY).getAsInt());
+        if (object.has(CATEGORY) && object.get(CATEGORY).isJsonPrimitive()) { // category could be an object ...
+            JsonPrimitive primitive = object.getAsJsonPrimitive(CATEGORY);
+            try {
+                category = Category.fromStatus(primitive.getAsInt());
+            } catch (NumberFormatException nfe) {
+                category = Category.InternalServerError;
+            }
         } else if (object.has(CODE)) {
             category = Category.fromStatus(object.get(CODE).getAsInt());
         }
-        return category;
+        return category != null ? category : Category.InternalServerError;
     }
 
 }

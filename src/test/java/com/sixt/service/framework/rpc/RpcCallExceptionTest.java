@@ -58,4 +58,48 @@ public class RpcCallExceptionTest {
         assertThat(ex).isNull();
     }
 
+    @Test
+    public void testFromJson_mediumBadData() {
+        String error = "{\"sxerror\":\"1\",\"source\":\"go.micro.client\",\"category\":408,\"code\":\"unexpected_error\",\"message\":\"call timeout: context deadline exceeded\",\"data\":\"'*errors.Error' with error '{\\\"id\\\":\\\"go.micro.client\\\",\\\"code\\\":408,\\\"detail\\\":\\\"call timeout: context deadline exceeded\\\",\\\"status\\\":\\\"Request Timeout\\\"}' cannot be mapped to a known representation. Data: \\u0026errors.Error{Id:\\\"go.micro.client\\\", Code:408, Detail:\\\"call timeout: context deadline exceeded\\\", Status:\\\"Request Timeout\\\"}\",\"retriable\":false}";
+        RpcCallException ex = RpcCallException.fromJson(error);
+        assertThat(ex).isNotNull();
+        assertThat(ex.getCategory()).isEqualTo(RpcCallException.Category.InternalServerError); // Switch to default Category when
+        assertThat(ex.getErrorCode()).isEqualTo("unexpected_error");
+        assertThat(ex.getMessage()).isEqualTo("call timeout: context deadline exceeded");
+        assertThat(ex.getData()).isNotNull();
+        assertThat(ex.isRetriable()).isFalse();
+    }
+
+    @Test
+    public void testFromJson_CategoryNotANumber() {
+        String error = "{\"sxerror\":\"1\",\"source\":\"go.micro.client\",\"category\":\"not-a-number\"}";
+        RpcCallException ex = RpcCallException.fromJson(error);
+        assertThat(ex).isNotNull();
+        assertThat(ex.getCategory()).isEqualTo(RpcCallException.Category.InternalServerError); // Switch to default Category when
+    }
+
+    @Test
+    public void testFromJson_CategoryAsFloatingPoint() {
+        String error = "{\"sxerror\":\"1\",\"source\":\"go.micro.client\",\"category\":\1.2345}";
+        RpcCallException ex = RpcCallException.fromJson(error);
+        assertThat(ex).isNotNull();
+        assertThat(ex.getCategory()).isEqualTo(RpcCallException.Category.InternalServerError); // Switch to default Category when
+    }
+
+    @Test
+    public void testFromJson_CategoryAsNull() {
+        String error = "{\"sxerror\":\"1\",\"source\":\"go.micro.client\",\"category\":null}";
+        RpcCallException ex = RpcCallException.fromJson(error);
+        assertThat(ex).isNotNull();
+        assertThat(ex.getCategory()).isEqualTo(RpcCallException.Category.InternalServerError); // Switch to default Category when
+    }
+
+    @Test
+    public void testFromJson_CategoryAsObject() {
+        String error = "{\"sxerror\":\"1\",\"source\":\"go.micro.client\",\"category\":{}}";
+        RpcCallException ex = RpcCallException.fromJson(error);
+        assertThat(ex).isNotNull();
+        assertThat(ex.getCategory()).isEqualTo(RpcCallException.Category.InternalServerError); // Switch to default Category when
+    }
+
 }
