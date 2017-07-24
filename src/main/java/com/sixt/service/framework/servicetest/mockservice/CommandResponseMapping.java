@@ -15,16 +15,22 @@ package com.sixt.service.framework.servicetest.mockservice;
 import com.google.protobuf.Message;
 import com.sixt.service.framework.rpc.RpcCallException;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 public class CommandResponseMapping {
 
     private String command;
     private Message response;
     private RpcCallException exception;
+    private List<Map.Entry<String, String>> eventsToPublish;
 
     private CommandResponseMapping(MappingBuilder builder) {
         this.command = builder.getCommand();
         this.response = builder.getResponse();
         this.exception = builder.getException();
+        this.eventsToPublish = builder.getEventsToPublish();
     }
 
     public static MappingBuilder newBuilder() {
@@ -47,7 +53,7 @@ public class CommandResponseMapping {
         private String command;
         private Message response;
         private RpcCallException exception;
-
+        private List<Map.Entry<String, String>> eventsToPublish = new ArrayList<>();
         public MappingBuilder setCommand(String command) {
             this.command = command;
             return this;
@@ -60,6 +66,11 @@ public class CommandResponseMapping {
 
         public MappingBuilder setException(RpcCallException exception) {
             this.exception = exception;
+            return this;
+        }
+
+        public MappingBuilder addEventToPublish(Map.Entry<String, String> event) {
+            eventsToPublish.add(event);
             return this;
         }
 
@@ -77,6 +88,10 @@ public class CommandResponseMapping {
 
         public RpcCallException getException() {
             return exception;
+        }
+
+        public List<Map.Entry<String,String>> getEventsToPublish() {
+            return eventsToPublish;
         }
     }
 }

@@ -20,6 +20,7 @@ import com.sixt.service.framework.util.MockMethodHandler;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+//TODO: implement publishing kafka events
 public class ServiceMethodProxy <REQ extends Message, RES extends Message>
         implements MockMethodHandler<REQ, RES>, ServiceMethodHandler<REQ, RES> {
 
