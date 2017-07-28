@@ -72,12 +72,12 @@ public class RpcMethodScanner {
     }
 
     public List<RpcMethodDefinition> getRpcMethodDefinitions(String serviceName) {
-        // first try: search local directory for proto file
-        List<RpcMethodDefinition> rpcMethodDefinitions = searchDirectory(System.getProperty("user.dir"), serviceName);
+        // first try: search in jars of classpath
+        List<RpcMethodDefinition> rpcMethodDefinitions = searchClasspath(serviceName);
 
-        // if rpcMethodDefinitions still empty, search in jars of classpath
+        // if rpcMethodDefinitions still empty, : search local directory for proto file
         if (rpcMethodDefinitions.isEmpty()) {
-            rpcMethodDefinitions = searchClasspath(serviceName);
+            rpcMethodDefinitions = searchDirectory(System.getProperty("user.dir"), serviceName);
         }
 
         if (rpcMethodDefinitions.isEmpty()) {
