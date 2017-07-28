@@ -34,14 +34,25 @@ public class TestInjectionModule extends AbstractModule {
 	private MethodHandlerDictionary methodHandlerDictionary = new MethodHandlerDictionary();
 	private ServerSocket serverSocket;
 
-	public TestInjectionModule(String serviceName) {
-		serverSocket = getRandomPort();
-		serviceProperties.addProperty("registry", "consul");
-		serviceProperties.addProperty("registryServer", "localhost:8500");
-		serviceProperties.addProperty("kafkaServer", "localhost:9092");
-		serviceProperties.setServicePort(serverSocket.getLocalPort());
+	public TestInjectionModule(String serviceName, ServiceProperties props) {
+		this.serviceProperties = props;
+		if (props.getProperty("registry") == null) {
+            serviceProperties.addProperty("registry", "consul");
+        }
+        if (props.getProperty("registryServer") == null) {
+            serviceProperties.addProperty("registryServer", "localhost:8500");
+        }
+        if (props.getProperty("kafkaServer") == null) {
+            serviceProperties.addProperty("kafkaServer", "localhost:9092");
+        }
+        serverSocket = getRandomPort();
+        serviceProperties.setServicePort(serverSocket.getLocalPort());
 		serviceProperties.initialize(new String[0]);
-		serviceProperties.setServiceName(serviceName);
+        serviceProperties.setServiceName(serviceName);
+	}
+
+	public TestInjectionModule(String serviceName) {
+	    this(serviceName, new ServiceProperties());
 	}
 
 	@Override

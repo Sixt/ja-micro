@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@SuppressWarnings("unchecked")
 public class ServiceImpersonator {
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceImpersonator.class);
@@ -58,11 +59,11 @@ public class ServiceImpersonator {
     private Map<String, KafkaPublisher> topicToPublisher = new HashMap<>();
     private int sleepAfterPublish = SLEEP_AFTER_PUBLISH;
 
-    public ServiceImpersonator(String serviceName) throws Exception {
+    public ServiceImpersonator(String serviceName, ServiceProperties props) throws Exception {
         //ServiceImpersonator needs its own injection stack so that each mock service
         //and service under servicetest get their own ecosystem
         this.serviceName = serviceName;
-        TestInjectionModule testInjectionModule = new TestInjectionModule(serviceName);
+        TestInjectionModule testInjectionModule = new TestInjectionModule(serviceName, props);
         serviceProperties = testInjectionModule.getServiceProperties();
         serviceProperties.setServiceName(serviceName); //has to be before getting regMgr
         serviceProperties.setServiceInstanceId(UUID.randomUUID().toString());
@@ -78,6 +79,10 @@ public class ServiceImpersonator {
         messageHandler = injector.getInstance(MessageHandler.class);
         factory = injector.getInstance(KafkaPublisherFactory.class);
         initialize();
+    }
+
+    public ServiceImpersonator(String serviceName) throws Exception {
+        this(serviceName, new ServiceProperties());
     }
 
     public void setSleepAfterPublish(int sleepAfterPublish) {
