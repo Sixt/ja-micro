@@ -28,7 +28,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -88,9 +92,21 @@ public class HttpClientWrapper {
         this.loadBalancer = loadBalancer;
     }
 
-    public ContentResponse execute(HttpRequestWrapper request, RpcCallExceptionDecoder decoder,
-                                   OrangeContext orangeContext)
-            throws RpcCallException {
+    public ContentResponse execute(
+        HttpRequestWrapper request,
+        RpcCallExceptionDecoder decoder,
+        OrangeContext orangeContext
+    ) throws RpcCallException {
+        return execute(request, decoder, orangeContext, null);
+    }
+
+    public ContentResponse execute(
+        HttpRequestWrapper request,
+        RpcCallExceptionDecoder decoder,
+        OrangeContext orangeContext,
+        final Duration retryTimeoutDuration
+    ) throws RpcCallException {
+
         ContentResponse retval = null;
         Span span = null;
         List<ServiceEndpoint> triedEndpoints = new ArrayList<>();
@@ -163,6 +179,7 @@ public class HttpClientWrapper {
                     }
                 }
                 if (tryCount < client.getRetries()) {
+                    waitForRetryIfNecessary(retryTimeoutDuration);
                     request = createHttpPost(request, triedEndpoints);
                 }
             }
@@ -175,6 +192,24 @@ public class HttpClientWrapper {
         } else {
             throw lastException;
         }
+    }
+
+    private void waitForRetryIfNecessary(final Duration retryTimeoutDuration) {
+        if (retryTimeoutDurationApplicable(retryTimeoutDuration)) {
+            Long time = new Date().getTime();
+            while ((new Date().getTime() - time) <= retryTimeoutDuration.get(ChronoUnit.MILLIS)) {
+                // just wait
+                try {
+                    wait(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private boolean retryTimeoutDurationApplicable(final Duration retryTimeoutDuration) {
+        return retryTimeoutDuration != null && !retryTimeoutDuration.isNegative();
     }
 
     private boolean responseWasSuccessful(RpcCallExceptionDecoder decoder,
