@@ -12,16 +12,15 @@
 
 package com.sixt.service.framework.rpc;
 
-import com.google.inject.Inject;
+import static com.sixt.service.framework.FeatureFlags.shouldExposeErrorsToHttp;
+import static net.logstash.logback.marker.Markers.append;
+
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.metrics.GoTimer;
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMapInjectAdapter;
-import io.opentracing.tag.Tags;
+
+import com.google.inject.Inject;
+
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.slf4j.Logger;
@@ -30,15 +29,18 @@ import org.slf4j.Marker;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.sixt.service.framework.FeatureFlags.shouldExposeErrorsToHttp;
-import static net.logstash.logback.marker.Markers.append;
+import io.opentracing.Span;
+import io.opentracing.SpanContext;
+import io.opentracing.Tracer;
+import io.opentracing.propagation.Format;
+import io.opentracing.propagation.TextMapInjectAdapter;
+import io.opentracing.tag.Tags;
 
 public class HttpClientWrapper {
 
@@ -197,10 +199,10 @@ public class HttpClientWrapper {
     private void waitForRetryIfNecessary(final Duration retryTimeoutDuration) {
         if (retryTimeoutDurationApplicable(retryTimeoutDuration)) {
             Long time = new Date().getTime();
-            while ((new Date().getTime() - time) <= retryTimeoutDuration.get(ChronoUnit.MILLIS)) {
+            while ((new Date().getTime() - time) <= retryTimeoutDuration.get(ChronoUnit.NANOS)) {
                 // just wait
                 try {
-                    wait(1);
+                    Thread.currentThread().sleep(1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
