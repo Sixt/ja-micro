@@ -16,20 +16,20 @@ final class Timeout {
     }
 
     void execute() {
-        if (retryTimeoutDurationApplicable()) {
+        if (durationIsApplicable()) {
             shouldContinueWaitingFlag.set(true);
-            sleepMe();
+            waitCurrentThread();
         }
     }
 
-    private void sleepMe() {
+    private void waitCurrentThread() {
         while (!Thread.currentThread().isInterrupted() && shouldContinueWaitingFlag.get()) {
             synchronized (shouldContinueWaitingFlag) {
                 // we are in a while loop here to protect against spurious interrupts
                 while (shouldContinueWaitingFlag.get()) {
                     try {
-                        shouldContinueWaitingFlag.set(
-                            (new Date().getTime() - pauseStartedAt.get()) <= duration.toMillis());
+                        Long timeSpent = new Date().getTime() - pauseStartedAt.get();
+                        shouldContinueWaitingFlag.set(timeSpent <= duration.toMillis());
                         shouldContinueWaitingFlag.wait(1);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
@@ -41,7 +41,7 @@ final class Timeout {
         }
     }
 
-    private boolean retryTimeoutDurationApplicable() {
+    private boolean durationIsApplicable() {
         return duration != null && !duration.isNegative();
     }
 }
