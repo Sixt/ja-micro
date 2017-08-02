@@ -93,7 +93,7 @@ public class HttpClientWrapperTest {
                 httpRequestWrapper,
                 decoder,
                 orangeContext,
-                Duration.ofSeconds(3)
+                Duration.ofMillis(TIMEOUT_BETWEEN_RETRIES)
             );
         } catch (RpcCallException e) {
             exceptionsCatchTimes++;
