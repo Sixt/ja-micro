@@ -16,6 +16,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.sixt.service.framework.MethodHandlerDictionary;
 import com.sixt.service.framework.ServiceProperties;
+import com.sixt.service.framework.rpc.LoadBalancer;
+import com.sixt.service.framework.rpc.LoadBalancerImpl;
 import org.eclipse.jetty.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +61,7 @@ public class TestInjectionModule extends AbstractModule {
 	protected void configure() {
 		bind(ServiceProperties.class).toInstance(serviceProperties);
 		bind(ServerSocket.class).toInstance(serverSocket);
+        bind(LoadBalancer.class).to(LoadBalancerImpl.class);
 	}
 
 	@Provides

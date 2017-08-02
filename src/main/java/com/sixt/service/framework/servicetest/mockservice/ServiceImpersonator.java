@@ -68,7 +68,8 @@ public class ServiceImpersonator {
         serviceProperties.setServiceName(serviceName); //has to be before getting regMgr
         serviceProperties.setServiceInstanceId(UUID.randomUUID().toString());
         serviceProperties.addProperty("registry", "consul");
-        injector = Guice.createInjector(testInjectionModule, new ServiceRegistryModule(serviceProperties), new TracingModule(serviceProperties));
+        injector = Guice.createInjector(testInjectionModule, new ServiceRegistryModule(serviceProperties),
+                new TracingModule(serviceProperties));
         ServiceDiscoveryProvider provider = injector.getInstance(ServiceDiscoveryProvider.class);
         LoadBalancerFactory lbFactory = injector.getInstance(LoadBalancerFactory.class);
         lbFactory.initialize(provider);

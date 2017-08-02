@@ -20,7 +20,8 @@ import com.sixt.service.framework.FeatureFlags;
 import com.sixt.service.framework.MethodHandlerDictionary;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.configuration.ConfigurationManager;
-import com.sixt.service.framework.kafka.messaging.ConsumerFactory;
+import com.sixt.service.framework.rpc.LoadBalancer;
+import com.sixt.service.framework.rpc.LoadBalancerImpl;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
@@ -51,6 +52,7 @@ public class InjectionModule extends AbstractModule {
     protected void configure() {
         bind(ServiceProperties.class).toInstance(serviceProperties);
         bind(HttpClient.class).toInstance(httpClient);
+        bind(LoadBalancer.class).to(LoadBalancerImpl.class);
     }
 
     @Provides

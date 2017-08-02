@@ -174,7 +174,7 @@ public class RegistrationMonitorWorkerIntegrationTest {
 //                    return secondHealthy;
 //                });
 //
-//        LoadBalancer lb = mock(LoadBalancer.class);
+//        LoadBalancer lb = mock(LoadBalancerImpl.class);
 //        worker.setLoadbalancer(lb);
 //        //worker.shutdownSemaphore.release();
 //        worker.sleeper = mock(Sleeper.class);

@@ -72,7 +72,7 @@ public class RpcMethodScanner {
     }
 
     public List<RpcMethodDefinition> getRpcMethodDefinitions(String serviceName) {
-        // first try: search in jars of classpath
+        // first try: search classpath
         List<RpcMethodDefinition> rpcMethodDefinitions = searchClasspath(serviceName);
 
         // if rpcMethodDefinitions still empty, : search local directory for proto file
