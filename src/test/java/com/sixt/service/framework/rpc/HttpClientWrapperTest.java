@@ -21,7 +21,6 @@ import org.eclipse.jetty.client.api.Request;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.net.URI;
 import java.time.Duration;
@@ -83,6 +82,7 @@ public class HttpClientWrapperTest {
         RpcCallException exception = mock(RpcCallException.class);
         when(exception.isRetriable()).thenReturn(true);
         when(decoder.decodeException(any(ContentResponse.class))).thenReturn(exception);
+        when(rpcClient.getRetryTimeout()).thenReturn(Duration.ofMillis(TIMEOUT_BETWEEN_RETRIES));
 
         //When
         HttpRequestWrapper httpRequestWrapper = httpClientWrapper.createHttpPost(rpcClient);
@@ -94,8 +94,7 @@ public class HttpClientWrapperTest {
             httpClientWrapper.execute(
                 httpRequestWrapper,
                 decoder,
-                orangeContext,
-                Duration.ofMillis(TIMEOUT_BETWEEN_RETRIES)
+                orangeContext
             );
         } catch (RpcCallException e) {
             exceptionsCatchTimes++;

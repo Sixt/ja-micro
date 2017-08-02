@@ -27,6 +27,7 @@ import org.eclipse.jetty.client.util.StringContentProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.Map;
 
 import static com.sixt.service.framework.jetty.RpcServlet.TYPE_JSON;
@@ -48,16 +49,36 @@ public class RpcClient<RESPONSE extends Message> {
     private Class<RESPONSE> responseClass;
     private int retries;
     private int timeout;
+    private final Duration retryTimeout;
 
     @Inject
-    public RpcClient(LoadBalancer loadBalancer, String serviceName, String methodName,
-                     int retries, int timeout, Class<RESPONSE> responseClass) {
+    public RpcClient(
+        LoadBalancer loadBalancer,
+        String serviceName,
+        String methodName,
+        int retries,
+        int timeout,
+        Class<RESPONSE> responseClass
+    ) {
+        this(loadBalancer, serviceName, methodName, retries, timeout, null, responseClass);
+    }
+
+    public RpcClient(
+        LoadBalancer loadBalancer,
+        String serviceName,
+        String methodName,
+        int retries,
+        int timeout,
+        final Duration retryTimeoutDuration,
+        Class<RESPONSE> responseClass
+    ) {
         this.loadBalancer = loadBalancer;
         this.serviceName = serviceName;
         this.methodName = methodName;
         this.retries = retries;
         this.timeout = timeout;
         this.responseClass = responseClass;
+        retryTimeout = retryTimeoutDuration;
     }
 
     /**
@@ -159,5 +180,9 @@ public class RpcClient<RESPONSE extends Message> {
 
     public void setTimeout(int timeout) {
         this.timeout = timeout;
+    }
+
+    public Duration getRetryTimeout() {
+        return retryTimeout;
     }
 }
