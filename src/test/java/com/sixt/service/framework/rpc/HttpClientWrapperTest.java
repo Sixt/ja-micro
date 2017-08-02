@@ -5,6 +5,8 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sixt.service.framework.OrangeContext;
@@ -101,8 +103,11 @@ public class HttpClientWrapperTest {
 
         long timeSpentOnRetries = new Date().getTime() - startTime;
 
-       // Mockito.verify(rpcClient, Mockito.times(NUMBER_OF_RETRIES + 1))
-        //    .callSynchronous(any(com.google.protobuf.Message.class), Mockito.eq(orangeContext));
+        verify(rpcClient, times(NUMBER_OF_RETRIES + 1)).getTimeout();
+        //todo:: seriously? 12 times and 6. need to be refactored
+        verify(rpcClient, times(12)).getRetries();
+        verify(rpcClient, times(12)).getMethodName();
+        verify(rpcClient, times(6)).getServiceName();
         Assert.assertTrue(timeSpentOnRetries >= NUMBER_OF_RETRIES * TIMEOUT_BETWEEN_RETRIES);
         Assert.assertEquals(1, exceptionsCatchTimes);
     }
