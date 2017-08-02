@@ -16,11 +16,14 @@ import org.eclipse.jetty.client.HttpContentResponse;
 import org.eclipse.jetty.client.api.ContentProvider;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.http.HttpMethod;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.Date;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +33,9 @@ import io.opentracing.Span;
 import io.opentracing.Tracer;
 
 public class HttpClientWrapperTest {
+
+    private static final long TIMEOUT_BETWEEN_RETRIES = 1000;
+    private static final int NUMBER_OF_RETRIES = 5;
 
     private ServiceProperties serviceProperties = mock(ServiceProperties.class);
     private HttpClient httpClient = mock(HttpClient.class);
@@ -48,19 +54,15 @@ public class HttpClientWrapperTest {
     private HttpClientWrapper httpClientWrapper
         = new HttpClientWrapper(serviceProperties, httpClient, rpcClientMetrics, tracer);
 
-    @Test
-    public void it_should_wait_between_retries()
-        throws RpcCallException, InterruptedException, ExecutionException, TimeoutException {
-        // Given
-        OrangeContext orangeContext = new OrangeContext();
+    @Before
+    public void setup() throws InterruptedException, ExecutionException, TimeoutException {
         when(loadBalancer.getHealthyInstance()).thenReturn(createServiceEndpoint());
         when(loadBalancer.getHealthyInstanceExclude(anyList())).thenReturn(createServiceEndpoint());
 
-        when(rpcClient.getRetries()).thenReturn(10);
+        when(rpcClient.getRetries()).thenReturn(NUMBER_OF_RETRIES);
         when(rpcClient.getTimeout()).thenReturn(0);
         httpClientWrapper.setLoadBalancer(loadBalancer);
-        when(rpcClientMetrics.getMethodTimer(anyString(), anyString()))
-            .thenReturn(new GoTimer("timer"));
+        when(rpcClientMetrics.getMethodTimer(anyString(), anyString())).thenReturn(new GoTimer("timer"));
         when(tracer.buildSpan(anyString())).thenReturn(spanBuilder);
         when(spanBuilder.start()).thenReturn(span);
         when(httpClient.newRequest(any(URI.class))).thenReturn(request);
@@ -69,23 +71,40 @@ public class HttpClientWrapperTest {
         when(request.timeout(anyLong(), any(TimeUnit.class))).thenReturn(request);
         when(request.send()).thenReturn(httpContentResponse);
         when(httpContentResponse.getStatus()).thenReturn(100);
+    }
 
+    @Test
+    public void it_should_wait_between_retries()
+        throws RpcCallException, InterruptedException, ExecutionException, TimeoutException {
+        // Given
+        OrangeContext orangeContext = new OrangeContext();
         RpcCallException exception = mock(RpcCallException.class);
         when(exception.isRetriable()).thenReturn(true);
         when(decoder.decodeException(any(ContentResponse.class))).thenReturn(exception);
 
         //When
         HttpRequestWrapper httpRequestWrapper = httpClientWrapper.createHttpPost(rpcClient);
-        httpClientWrapper.execute(
-            httpRequestWrapper,
-            decoder,
-            orangeContext,
-            Duration.ofSeconds(1)
-        );
-    }
 
-    private HttpRequestWrapper createRequestWrapper() {
-        return new HttpRequestWrapper(HttpMethod.POST.asString(), createServiceEndpoint());
+        int exceptionsCatchTimes = 0;
+        long startTime = new Date().getTime();
+
+        try {
+            httpClientWrapper.execute(
+                httpRequestWrapper,
+                decoder,
+                orangeContext,
+                Duration.ofSeconds(3)
+            );
+        } catch (RpcCallException e) {
+            exceptionsCatchTimes++;
+        }
+
+        long timeSpentOnRetries = new Date().getTime() - startTime;
+
+       // Mockito.verify(rpcClient, Mockito.times(NUMBER_OF_RETRIES + 1))
+        //    .callSynchronous(any(com.google.protobuf.Message.class), Mockito.eq(orangeContext));
+        Assert.assertTrue(timeSpentOnRetries >= NUMBER_OF_RETRIES * TIMEOUT_BETWEEN_RETRIES);
+        Assert.assertEquals(1, exceptionsCatchTimes);
     }
 
     private ServiceEndpoint createServiceEndpoint() {
