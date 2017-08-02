@@ -53,7 +53,6 @@ public class HttpClientWrapper {
     protected RpcClientMetrics rpcClientMetrics;
     protected RpcClient client;
     protected Tracer tracer;
-    private final AtomicBoolean pauseFlag = new AtomicBoolean(false);
 
     @Inject
     public HttpClientWrapper(ServiceProperties serviceProps, HttpClient httpClient,
