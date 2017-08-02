@@ -20,6 +20,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
+
 /**
  * Builds RpcClients to interact with remote services.
  */
@@ -34,6 +36,7 @@ public class RpcClientBuilder<RESPONSE extends Message> {
     private String serviceName;
     private String methodName;
     private int retries;
+    private Duration retryTimeout;
     private int timeout;
     private Class<RESPONSE> responseClass;
 
@@ -65,6 +68,15 @@ public class RpcClientBuilder<RESPONSE extends Message> {
      */
     public RpcClientBuilder<RESPONSE> withTimeout(int timeout) {
         this.timeout = timeout;
+        return this;
+    }
+
+    /**
+     *
+     */
+    public RpcClientBuilder<RESPONSE> withRetryTimeout(final Duration retryTimeoutDuration) {
+        retryTimeout = retryTimeoutDuration;
+
         return this;
     }
 
