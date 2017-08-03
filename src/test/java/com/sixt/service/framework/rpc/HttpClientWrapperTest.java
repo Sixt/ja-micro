@@ -35,7 +35,7 @@ import io.opentracing.Tracer;
 
 public class HttpClientWrapperTest {
 
-    private static final int NUMBER_OF_RETRIES = 5;
+    private static final int NUMBER_OF_RETRIES = 3;
 
     private ServiceProperties serviceProperties = mock(ServiceProperties.class);
     private HttpClient httpClient = mock(HttpClient.class);
@@ -104,9 +104,9 @@ public class HttpClientWrapperTest {
 
         verify(rpcClient, times(NUMBER_OF_RETRIES + 1)).getTimeout();
         //todo:: seriously? 12 times and 6. need to be refactored
-        verify(rpcClient, times(12)).getRetries();
-        verify(rpcClient, times(12)).getMethodName();
-        verify(rpcClient, times(6)).getServiceName();
+        verify(rpcClient, times(8)).getRetries();
+        verify(rpcClient, times(8)).getMethodName();
+        verify(rpcClient, times(4)).getServiceName();
         Assert.assertTrue(timeSpentOnRetries >= NUMBER_OF_RETRIES * 10);
         Assert.assertEquals(1, exceptionsCatchTimes);
     }
