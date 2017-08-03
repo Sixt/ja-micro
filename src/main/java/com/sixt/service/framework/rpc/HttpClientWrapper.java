@@ -27,14 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
-import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -173,8 +169,8 @@ public class HttpClientWrapper {
                     }
                 }
                 if (tryCount < client.getRetries()) {
-                    if (client.getRetryTimeout() != null) {
-                        new Timeout(client.getRetryTimeout()).execute();
+                    if (client.getBackOffFunction() != null) {
+                        client.getBackOffFunction().execute(tryCount);
                     }
                     request = createHttpPost(request, triedEndpoints);
                 }
@@ -210,46 +206,5 @@ public class HttpClientWrapper {
 
     private Marker getRemoteMethod() {
         return append("method", client.getServiceMethodName());
-    }
-
-    private final class Timeout {
-
-        private final AtomicBoolean shouldContinueWaitingFlag = new AtomicBoolean(false);
-        private final AtomicLong pauseStartedAt = new AtomicLong(new Date().getTime());
-        private final Duration duration;
-
-        Timeout(final Duration timeoutDuration) {
-            duration = timeoutDuration;
-        }
-
-        void execute() {
-            if (durationIsApplicable()) {
-                shouldContinueWaitingFlag.set(true);
-                waitCurrentThread();
-            }
-        }
-
-        private void waitCurrentThread() {
-            while (!Thread.currentThread().isInterrupted() && shouldContinueWaitingFlag.get()) {
-                synchronized (shouldContinueWaitingFlag) {
-                    // we are in a while loop here to protect against spurious interrupts
-                    while (shouldContinueWaitingFlag.get()) {
-                        try {
-                            Long timeSpent = new Date().getTime() - pauseStartedAt.get();
-                            shouldContinueWaitingFlag.set(timeSpent <= duration.toMillis());
-                            shouldContinueWaitingFlag.wait(1);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            // we should probably quit if we are interrupted?
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-
-        private boolean durationIsApplicable() {
-            return duration != null && !duration.isNegative();
-        }
     }
 }

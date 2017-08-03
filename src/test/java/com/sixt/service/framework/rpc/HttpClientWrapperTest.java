@@ -35,7 +35,6 @@ import io.opentracing.Tracer;
 
 public class HttpClientWrapperTest {
 
-    private static final long TIMEOUT_BETWEEN_RETRIES = 1000;
     private static final int NUMBER_OF_RETRIES = 5;
 
     private ServiceProperties serviceProperties = mock(ServiceProperties.class);
@@ -82,7 +81,8 @@ public class HttpClientWrapperTest {
         RpcCallException exception = mock(RpcCallException.class);
         when(exception.isRetriable()).thenReturn(true);
         when(decoder.decodeException(any(ContentResponse.class))).thenReturn(exception);
-        when(rpcClient.getRetryTimeout()).thenReturn(Duration.ofMillis(TIMEOUT_BETWEEN_RETRIES));
+        when(rpcClient.getBackOffFunction())
+            .thenReturn(new RpcClient.BackOffFunction.ExponentialBackOff(Duration.ofMillis(10)));
 
         //When
         HttpRequestWrapper httpRequestWrapper = httpClientWrapper.createHttpPost(rpcClient);
@@ -107,7 +107,7 @@ public class HttpClientWrapperTest {
         verify(rpcClient, times(12)).getRetries();
         verify(rpcClient, times(12)).getMethodName();
         verify(rpcClient, times(6)).getServiceName();
-        Assert.assertTrue(timeSpentOnRetries >= NUMBER_OF_RETRIES * TIMEOUT_BETWEEN_RETRIES);
+        Assert.assertTrue(timeSpentOnRetries >= NUMBER_OF_RETRIES * 10);
         Assert.assertEquals(1, exceptionsCatchTimes);
     }
 

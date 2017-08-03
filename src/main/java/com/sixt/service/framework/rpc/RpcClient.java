@@ -1,12 +1,12 @@
 /**
  * Copyright 2016-2017 Sixt GmbH & Co. Autovermietung KG
- * Licensed under the Apache License, Version 2.0 (the "License"); you may 
- * not use this file except in compliance with the License. You may obtain a 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain a
  * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
  * under the License.
  */
 
@@ -28,7 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.Map;
+import java.util.Date;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.sixt.service.framework.jetty.RpcServlet.TYPE_JSON;
 import static com.sixt.service.framework.jetty.RpcServlet.TYPE_OCTET;
@@ -49,7 +51,7 @@ public class RpcClient<RESPONSE extends Message> {
     private Class<RESPONSE> responseClass;
     private int retries;
     private int timeout;
-    private final Duration retryTimeout;
+    private BackOffFunction backOffFunction;
 
     @Inject
     public RpcClient(
@@ -69,7 +71,7 @@ public class RpcClient<RESPONSE extends Message> {
         String methodName,
         int retries,
         int timeout,
-        final Duration retryTimeoutDuration,
+        final BackOffFunction backOffFunction,
         Class<RESPONSE> responseClass
     ) {
         this.loadBalancer = loadBalancer;
@@ -78,7 +80,7 @@ public class RpcClient<RESPONSE extends Message> {
         this.retries = retries;
         this.timeout = timeout;
         this.responseClass = responseClass;
-        retryTimeout = retryTimeoutDuration;
+        this.backOffFunction = backOffFunction;
     }
 
     /**
@@ -182,7 +184,71 @@ public class RpcClient<RESPONSE extends Message> {
         this.timeout = timeout;
     }
 
-    public Duration getRetryTimeout() {
-        return retryTimeout;
+    public BackOffFunction getBackOffFunction() {
+        return backOffFunction;
+    }
+
+    interface BackOffFunction {
+
+        AtomicBoolean shouldContinueWaitingFlag = new AtomicBoolean(false);
+        AtomicLong pauseStartedAt = new AtomicLong(new Date().getTime());
+
+        Duration timeout(int retryCounter);
+
+        default void execute(int retryCounter) {
+
+            Duration timeout = null;
+            try {
+                getClass().getMethod("timeout", (Class<?>[]) null);
+                timeout = timeout(retryCounter);
+            } catch (NoSuchMethodException e) {
+                timeout = new ExponentialBackOff().timeout(retryCounter);
+            }
+
+            if (timeout != null && !timeout.isNegative()) {
+                shouldContinueWaitingFlag.set(true);
+                while (!Thread.currentThread().isInterrupted() && shouldContinueWaitingFlag.get()) {
+                    synchronized (shouldContinueWaitingFlag) {
+                        // we are in a while loop here to protect against spurious interrupts
+                        while (shouldContinueWaitingFlag.get()) {
+                            try {
+                                Long timeSpent = new Date().getTime() - pauseStartedAt.get();
+                                shouldContinueWaitingFlag.set(timeSpent <= timeout.toMillis());
+                                shouldContinueWaitingFlag.wait(1);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                // we should probably quit if we are interrupted?
+                                return;
+                            }
+                        }
+                    }
+                }
+            } else {
+                throw new IllegalArgumentException("Retry timeout cant be null or negative.");
+            }
+        }
+
+        class ExponentialBackOff implements BackOffFunction {
+
+            private final Duration exponentialStep;
+
+            public ExponentialBackOff(final Duration exponentialStep) {
+                this.exponentialStep = exponentialStep;
+            }
+
+            public ExponentialBackOff() {
+                this(null);
+            }
+
+            @Override
+            public Duration timeout(final int retryCounter) {
+                if (retryCounter == 0) {
+                    return Duration.ofMillis(0);
+                } else {
+                    return Duration.ofMillis((long) Math.pow(
+                        exponentialStep == null ? 10d : exponentialStep.toMillis(), retryCounter));
+                }
+            }
+        }
     }
 }
