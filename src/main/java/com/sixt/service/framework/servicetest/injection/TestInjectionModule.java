@@ -48,8 +48,8 @@ public class TestInjectionModule extends AbstractModule {
             serviceProperties.addProperty("kafkaServer", "localhost:9092");
         }
         serverSocket = getRandomPort();
-        serviceProperties.setServicePort(serverSocket.getLocalPort());
 		serviceProperties.initialize(new String[0]);
+        serviceProperties.setServicePort(serverSocket.getLocalPort());
         serviceProperties.setServiceName(serviceName);
 	}
 

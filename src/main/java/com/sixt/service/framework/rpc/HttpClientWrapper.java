@@ -191,8 +191,12 @@ public class HttpClientWrapper {
     }
 
     private GoTimer getMethodTimer() {
-        return rpcClientMetrics.getMethodTimer(client.getServiceName(),
-                client.getMethodName());
+        if (rpcClientMetrics == null) {
+            return new GoTimer("");
+        } else {
+            return rpcClientMetrics.getMethodTimer(client.getServiceName(),
+                    client.getMethodName());
+        }
     }
 
     private Marker getRemoteMethod() {
