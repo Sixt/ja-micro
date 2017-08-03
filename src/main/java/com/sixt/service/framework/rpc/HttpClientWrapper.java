@@ -12,15 +12,16 @@
 
 package com.sixt.service.framework.rpc;
 
-import static com.sixt.service.framework.FeatureFlags.shouldExposeErrorsToHttp;
-import static net.logstash.logback.marker.Markers.append;
-
+import com.google.inject.Inject;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.metrics.GoTimer;
-
-import com.google.inject.Inject;
-
+import io.opentracing.Span;
+import io.opentracing.SpanContext;
+import io.opentracing.Tracer;
+import io.opentracing.propagation.Format;
+import io.opentracing.propagation.TextMapInjectAdapter;
+import io.opentracing.tag.Tags;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.slf4j.Logger;
@@ -32,12 +33,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMapInjectAdapter;
-import io.opentracing.tag.Tags;
+import static com.sixt.service.framework.FeatureFlags.shouldExposeErrorsToHttp;
+import static net.logstash.logback.marker.Markers.append;
 
 public class HttpClientWrapper {
 
@@ -91,12 +88,9 @@ public class HttpClientWrapper {
         this.loadBalancer = loadBalancer;
     }
 
-    public ContentResponse execute(
-        HttpRequestWrapper request,
-        RpcCallExceptionDecoder decoder,
-        OrangeContext orangeContext
-    ) throws RpcCallException {
-
+    public ContentResponse execute(HttpRequestWrapper request, RpcCallExceptionDecoder decoder,
+                                   OrangeContext orangeContext)
+            throws RpcCallException {
         ContentResponse retval = null;
         Span span = null;
         List<ServiceEndpoint> triedEndpoints = new ArrayList<>();
@@ -169,8 +163,8 @@ public class HttpClientWrapper {
                     }
                 }
                 if (tryCount < client.getRetries()) {
-                    if (client.getBackOffFunction() != null) {
-                        client.getBackOffFunction().execute(tryCount);
+                    if (client.hasRetryBackOffFunction()) {
+                        client.getRetryBackOffFunction().execute(tryCount);
                     }
                     request = createHttpPost(request, triedEndpoints);
                 }
@@ -207,4 +201,5 @@ public class HttpClientWrapper {
     private Marker getRemoteMethod() {
         return append("method", client.getServiceMethodName());
     }
+
 }
