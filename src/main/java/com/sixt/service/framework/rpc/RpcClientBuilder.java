@@ -20,11 +20,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
-import java.util.Date;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-
 /**
  * Builds RpcClients to interact with remote services.
  */
@@ -39,7 +34,7 @@ public class RpcClientBuilder<RESPONSE extends Message> {
     private String serviceName;
     private String methodName;
     private int retries;
-    private RpcClient.BackOffFunction backOffFunction;
+    private RetryBackOffFunction retryBackOffFunction;
     private int timeout;
     private Class<RESPONSE> responseClass;
 
@@ -77,10 +72,10 @@ public class RpcClientBuilder<RESPONSE extends Message> {
     /**
      * Provide back off function to time out retries
      * default exponential function is available
-     * @param backOffFunction - implementation of final RpcClient.BackOffFunction
+     * @param retryBackOffFunction - implementation of final RpcClient.RetryBackOffFunction
      */
-    public RpcClientBuilder<RESPONSE> withRetryBackOff(final RpcClient.BackOffFunction backOffFunction) {
-        this.backOffFunction = backOffFunction;
+    public RpcClientBuilder<RESPONSE> withRetryBackOff(final RetryBackOffFunction retryBackOffFunction) {
+        this.retryBackOffFunction = retryBackOffFunction;
         return this;
     }
 
@@ -93,7 +88,8 @@ public class RpcClientBuilder<RESPONSE extends Message> {
         }
         LoadBalancerFactory lbFactory = injector.getInstance(LoadBalancerFactory.class);
         LoadBalancer loadBalancer = lbFactory.getLoadBalancer(serviceName);
-        return new RpcClient<>(loadBalancer, serviceName, methodName, retries, timeout, backOffFunction, responseClass);
+        return new RpcClient<>(loadBalancer, serviceName, methodName, retries, timeout,
+                               retryBackOffFunction, responseClass);
     }
 
     public void setResponseClass(Class<RESPONSE> responseClass) {

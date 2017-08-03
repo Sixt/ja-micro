@@ -81,8 +81,10 @@ public class HttpClientWrapperTest {
         RpcCallException exception = mock(RpcCallException.class);
         when(exception.isRetriable()).thenReturn(true);
         when(decoder.decodeException(any(ContentResponse.class))).thenReturn(exception);
-        when(rpcClient.getBackOffFunction())
-            .thenReturn(new RpcClient.BackOffFunction.ExponentialBackOff(Duration.ofMillis(10)));
+        when(rpcClient.getRetryBackOffFunction())
+            .thenReturn(retryCounter -> Duration.ofMillis(10));
+        when(rpcClient.hasRetryBackOffFunction())
+            .thenReturn(true);
 
         //When
         HttpRequestWrapper httpRequestWrapper = httpClientWrapper.createHttpPost(rpcClient);
