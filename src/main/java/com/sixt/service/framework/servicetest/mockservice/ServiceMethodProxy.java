@@ -12,12 +12,12 @@
 
 package com.sixt.service.framework.servicetest.mockservice;
 
-import com.google.protobuf.GeneratedMessageV3;
-import com.google.protobuf.Message;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceMethodHandler;
 import com.sixt.service.framework.rpc.RpcCallException;
 import com.sixt.service.framework.util.MockMethodHandler;
+
+import com.google.protobuf.Message;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
