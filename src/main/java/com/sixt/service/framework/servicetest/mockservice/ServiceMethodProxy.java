@@ -12,6 +12,7 @@
 
 package com.sixt.service.framework.servicetest.mockservice;
 
+import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.Message;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceMethodHandler;
@@ -24,6 +25,7 @@ public class ServiceMethodProxy implements MockMethodHandler, ServiceMethodHandl
     protected Class<?> requestType;
     protected Class<?> responseType;
     protected Message response;
+    protected Message request;
     protected AtomicInteger methodCallCounter = new AtomicInteger(0);
 
     public ServiceMethodProxy(Class<?> requestType, Class<?> responseType) {
@@ -41,8 +43,13 @@ public class ServiceMethodProxy implements MockMethodHandler, ServiceMethodHandl
         return responseType;
     }
 
+    public Message getRequest() {
+        return request;
+    }
+
     @Override
     public Message handleRequest(Message requestMessage, OrangeContext orangeContext) {
+        request = (GeneratedMessageV3) requestMessage;
         methodCallCounter.incrementAndGet();
 
         return response;
