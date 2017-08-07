@@ -18,6 +18,7 @@ import com.sixt.service.framework.MethodHandlerDictionary;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.rpc.LoadBalancer;
 import com.sixt.service.framework.rpc.LoadBalancerImpl;
+import com.sixt.service.framework.servicetest.mockservice.MacOsLoadBalancer;
 import org.eclipse.jetty.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +36,11 @@ public class TestInjectionModule extends AbstractModule {
 	private ServiceProperties serviceProperties = new ServiceProperties();
 	private MethodHandlerDictionary methodHandlerDictionary = new MethodHandlerDictionary();
 	private ServerSocket serverSocket;
+    private final boolean isMacOs;
 
 	public TestInjectionModule(String serviceName, ServiceProperties props) {
-		this.serviceProperties = props;
+        isMacOs = System.getProperty("os.name").toLowerCase().contains("mac");
+        this.serviceProperties = props;
 		if (props.getProperty("registry") == null) {
             serviceProperties.addProperty("registry", "consul");
         }
@@ -61,7 +64,11 @@ public class TestInjectionModule extends AbstractModule {
 	protected void configure() {
 		bind(ServiceProperties.class).toInstance(serviceProperties);
 		bind(ServerSocket.class).toInstance(serverSocket);
-        bind(LoadBalancer.class).to(LoadBalancerImpl.class);
+        if (isMacOs) {
+            bind(LoadBalancer.class).to(MacOsLoadBalancer.class);
+        } else {
+            bind(LoadBalancer.class).to(LoadBalancerImpl.class);
+        }
 	}
 
 	@Provides
@@ -107,4 +114,5 @@ public class TestInjectionModule extends AbstractModule {
 	public ServiceProperties getServiceProperties() {
 		return serviceProperties;
 	}
+
 }
