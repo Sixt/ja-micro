@@ -57,17 +57,6 @@ public class RpcClient<RESPONSE extends Message> {
         String methodName,
         int retries,
         int timeout,
-        Class<RESPONSE> responseClass
-    ) {
-        this(loadBalancer, serviceName, methodName, retries, timeout, null, responseClass);
-    }
-
-    public RpcClient(
-        LoadBalancer loadBalancer,
-        String serviceName,
-        String methodName,
-        int retries,
-        int timeout,
         final RetryBackOffFunction retryBackOffFunction,
         Class<RESPONSE> responseClass
     ) {

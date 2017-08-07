@@ -70,8 +70,8 @@ public class RpcClientBuilder<RESPONSE extends Message> {
     }
 
     /**
-     * Provide back off function to time out retries
-     * default exponential function is available
+     * RPC call retry timeout function implementation
+     *
      * @param retryBackOffFunction - implementation of final RpcClient.RetryBackOffFunction
      */
     public RpcClientBuilder<RESPONSE> withRetryBackOff(final RetryBackOffFunction retryBackOffFunction) {
