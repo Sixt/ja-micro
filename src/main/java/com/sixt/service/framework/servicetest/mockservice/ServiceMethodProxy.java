@@ -12,6 +12,7 @@
 
 package com.sixt.service.framework.servicetest.mockservice;
 
+import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.Message;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceMethodHandler;
@@ -43,6 +44,10 @@ public class ServiceMethodProxy <REQ extends Message, RES extends Message>
     @Override
     public Class<RES> getResponseType() {
         return responseType;
+    }
+
+    public Message getRequest() {
+        return request;
     }
 
     @Override
