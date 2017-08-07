@@ -130,6 +130,16 @@ public class ServiceImpersonator {
         return this;
     }
 
+    public Message getActualHandledRequest(final String command){
+        ServiceMethodProxy proxy = ((ServiceMethodProxy) methodHandlers.getMethodHandler(command));
+
+        if (proxy == null) {
+            throw new RuntimeException("The method " + command + " for " + serviceName + " could not be found");
+        }
+
+        return proxy.getRequest();
+    }
+  
     public Class<? extends Message> getResponseClassForMethod(String method) {
         ServiceMethodProxy proxy = ((ServiceMethodProxy) this.methodHandlers
                 .getMethodHandler(method));
