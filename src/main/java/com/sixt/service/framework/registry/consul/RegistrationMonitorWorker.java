@@ -101,7 +101,6 @@ public class RegistrationMonitorWorker implements Runnable {
                 break;
             }
         }
-
     }
 
     protected void reportInitialServicesList(List<ConsulHealthEntry> instances) {

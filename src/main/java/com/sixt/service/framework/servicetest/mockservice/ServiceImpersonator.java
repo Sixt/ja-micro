@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@SuppressWarnings("unchecked")
 public class ServiceImpersonator {
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceImpersonator.class);
@@ -58,16 +59,17 @@ public class ServiceImpersonator {
     private Map<String, KafkaPublisher> topicToPublisher = new HashMap<>();
     private int sleepAfterPublish = SLEEP_AFTER_PUBLISH;
 
-    public ServiceImpersonator(String serviceName) throws Exception {
+    public ServiceImpersonator(String serviceName, ServiceProperties props) throws Exception {
         //ServiceImpersonator needs its own injection stack so that each mock service
         //and service under servicetest get their own ecosystem
         this.serviceName = serviceName;
-        TestInjectionModule testInjectionModule = new TestInjectionModule(serviceName);
+        TestInjectionModule testInjectionModule = new TestInjectionModule(serviceName, props);
         serviceProperties = testInjectionModule.getServiceProperties();
         serviceProperties.setServiceName(serviceName); //has to be before getting regMgr
         serviceProperties.setServiceInstanceId(UUID.randomUUID().toString());
         serviceProperties.addProperty("registry", "consul");
-        injector = Guice.createInjector(testInjectionModule, new ServiceRegistryModule(serviceProperties), new TracingModule(serviceProperties));
+        injector = Guice.createInjector(testInjectionModule, new ServiceRegistryModule(serviceProperties),
+                new TracingModule(serviceProperties));
         ServiceDiscoveryProvider provider = injector.getInstance(ServiceDiscoveryProvider.class);
         LoadBalancerFactory lbFactory = injector.getInstance(LoadBalancerFactory.class);
         lbFactory.initialize(provider);
@@ -78,6 +80,10 @@ public class ServiceImpersonator {
         messageHandler = injector.getInstance(MessageHandler.class);
         factory = injector.getInstance(KafkaPublisherFactory.class);
         initialize();
+    }
+
+    public ServiceImpersonator(String serviceName) throws Exception {
+        this(serviceName, new ServiceProperties());
     }
 
     public void setSleepAfterPublish(int sleepAfterPublish) {
@@ -109,15 +115,17 @@ public class ServiceImpersonator {
     }
 
     public ServiceImpersonator addMapping(CommandResponseMapping mapping) {
-
-        ServiceMethodProxy proxy = ((ServiceMethodProxy) this.methodHandlers.getMethodHandler(mapping.getCommand()));
+        ServiceMethodProxy proxy = ((ServiceMethodProxy) this.methodHandlers
+                .getMethodHandler(mapping.getCommand()));
 
         if (proxy == null) {
-            throw new RuntimeException("The method " + mapping.getCommand() + " for " + this.serviceName + " could not be found");
+            throw new RuntimeException("The method " + mapping.getCommand() + " for " +
+                    this.serviceName + " could not be found");
         }
         logger.info("Adding mock response mapping for {}", mapping.getCommand());
 
         proxy.setResponse(mapping.getResponse());
+        proxy.setException(mapping.getException());
 
         return this;
     }
@@ -130,6 +138,16 @@ public class ServiceImpersonator {
         }
 
         return proxy.getRequest();
+    }
+  
+    public Class<? extends Message> getResponseClassForMethod(String method) {
+        ServiceMethodProxy proxy = ((ServiceMethodProxy) this.methodHandlers
+                .getMethodHandler(method));
+        if (proxy == null) {
+            throw new RuntimeException("The method " + method + " for " +
+                    this.serviceName + " could not be found");
+        }
+        return proxy.getResponseType();
     }
 
     /**

@@ -16,6 +16,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.sixt.service.framework.MethodHandlerDictionary;
 import com.sixt.service.framework.ServiceProperties;
+import com.sixt.service.framework.rpc.LoadBalancer;
+import com.sixt.service.framework.rpc.LoadBalancerImpl;
 import org.eclipse.jetty.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,20 +36,32 @@ public class TestInjectionModule extends AbstractModule {
 	private MethodHandlerDictionary methodHandlerDictionary = new MethodHandlerDictionary();
 	private ServerSocket serverSocket;
 
-	public TestInjectionModule(String serviceName) {
-		serverSocket = getRandomPort();
-		serviceProperties.addProperty("registry", "consul");
-		serviceProperties.addProperty("registryServer", "localhost:8500");
-		serviceProperties.addProperty("kafkaServer", "localhost:9092");
-		serviceProperties.setServicePort(serverSocket.getLocalPort());
+	public TestInjectionModule(String serviceName, ServiceProperties props) {
+		this.serviceProperties = props;
+		if (props.getProperty("registry") == null) {
+            serviceProperties.addProperty("registry", "consul");
+        }
+        if (props.getProperty("registryServer") == null) {
+            serviceProperties.addProperty("registryServer", "localhost:8500");
+        }
+        if (props.getProperty("kafkaServer") == null) {
+            serviceProperties.addProperty("kafkaServer", "localhost:9092");
+        }
+        serverSocket = getRandomPort();
 		serviceProperties.initialize(new String[0]);
-		serviceProperties.setServiceName(serviceName);
+        serviceProperties.setServicePort(serverSocket.getLocalPort());
+        serviceProperties.setServiceName(serviceName);
+	}
+
+	public TestInjectionModule(String serviceName) {
+	    this(serviceName, new ServiceProperties());
 	}
 
 	@Override
 	protected void configure() {
 		bind(ServiceProperties.class).toInstance(serviceProperties);
 		bind(ServerSocket.class).toInstance(serverSocket);
+        bind(LoadBalancer.class).to(LoadBalancerImpl.class);
 	}
 
 	@Provides

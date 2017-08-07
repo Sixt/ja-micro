@@ -14,32 +14,37 @@ package com.sixt.service.framework.servicetest.mockservice;
 
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceMethodHandler;
+import com.sixt.service.framework.rpc.RpcCallException;
 import com.sixt.service.framework.util.MockMethodHandler;
 
 import com.google.protobuf.Message;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ServiceMethodProxy implements MockMethodHandler, ServiceMethodHandler<Message, Message> {
+//TODO: implement publishing kafka events
+public class ServiceMethodProxy <REQ extends Message, RES extends Message>
+        implements MockMethodHandler<REQ, RES>, ServiceMethodHandler<REQ, RES> {
 
-    protected Class<?> requestType;
-    protected Class<?> responseType;
-    protected Message response;
-    protected Message request;
+    protected Class<REQ> requestType;
+    protected Class<RES> responseType;
+    protected REQ request;
+    protected RES response;
+    protected RpcCallException exception;
+
     protected AtomicInteger methodCallCounter = new AtomicInteger(0);
 
-    public ServiceMethodProxy(Class<?> requestType, Class<?> responseType) {
+    public ServiceMethodProxy(Class<REQ> requestType, Class<RES> responseType) {
         this.requestType = requestType;
         this.responseType = responseType;
     }
 
     @Override
-    public Class<?> getRequestType() {
+    public Class<REQ> getRequestType() {
         return requestType;
     }
 
     @Override
-    public Class<?> getResponseType() {
+    public Class<RES> getResponseType() {
         return responseType;
     }
 
@@ -48,14 +53,18 @@ public class ServiceMethodProxy implements MockMethodHandler, ServiceMethodHandl
     }
 
     @Override
-    public Message handleRequest(Message requestMessage, OrangeContext orangeContext) {
+    public RES handleRequest(REQ requestMessage, OrangeContext orangeContext)
+            throws RpcCallException {
         request = requestMessage;
         methodCallCounter.incrementAndGet();
 
+        if (exception != null) {
+            throw exception;
+        }
         return response;
     }
 
-    public void setResponse(Message response) {
+    public void setResponse(RES response) {
         this.response = response;
     }
 
@@ -67,5 +76,9 @@ public class ServiceMethodProxy implements MockMethodHandler, ServiceMethodHandl
     @Override
     public int getMethodCallCounter() {
         return methodCallCounter.get();
+    }
+
+    public void setException(RpcCallException exception) {
+        this.exception = exception;
     }
 }

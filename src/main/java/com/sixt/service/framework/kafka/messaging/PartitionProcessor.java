@@ -79,6 +79,9 @@ final class PartitionProcessor {
         this.tracer = tracer;
         this.metricsBuilderFactory = metricBuilderFactory;
 
+
+
+
         undeliveredMessages = new LinkedBlockingQueue<>();
 
         // Single threaded execution per partition to preserve ordering guarantees.
@@ -133,14 +136,9 @@ final class PartitionProcessor {
         private final ConsumerRecord<String, byte[]> record;
 
         // Tracing / metrics stuff (optional, may be null)
-        private
-        @Null
-        Span span;
-        private
-        @Null
-        GoTimer handlerTimer;
+        private @Null Span span;
+        private @Null GoTimer handlerTimer;
         private long startTime;
-
 
         MessageDeliveryTask(ConsumerRecord<String, byte[]> record) {
             this.record = record;
@@ -155,7 +153,7 @@ final class PartitionProcessor {
             try {
                 Message<? extends com.google.protobuf.Message> message = parseMessage();
                 if (message == null) {
-                    return; // Could not even parse the message, so we give up.
+                    return; // Can not even parse the message, so we give up.
                 }
 
                 deliverToMessageHandler(message);
@@ -177,29 +175,26 @@ final class PartitionProcessor {
             Envelope envelope = null;
 
             try {
-
                 envelope = Envelope.parseFrom(record.value());
-
             } catch (InvalidProtocolBufferException parseError) {
-                parsingFailed(envelope);
-                logger.warn(logMarkerFromRecordAndEnvelope(envelope), "Cannot parse Envelope from raw record", parseError);
+                markAsConsumed(record.offset());
+                parsingFailed(envelope, parseError);
                 return null;
             }
 
             try {
                 MessageType type = new MessageType(envelope.getMessageType());
-                Parser<com.google.protobuf.Message> parser = typeDictionary.parserFor(type);
 
+                Parser<com.google.protobuf.Message> parser = typeDictionary.parserFor(type);
                 if (parser == null) {
                     throw new UnknownMessageTypeException(type);
                 }
 
                 com.google.protobuf.Message innerMessage = parser.parseFrom(envelope.getInnerMessage());
                 return Messages.fromKafka(innerMessage, envelope, record);
-
             } catch (InvalidProtocolBufferException | UnknownMessageTypeException unrecoverableParsingError) {
-                parsingFailed(envelope);
-                logger.warn(logMarkerFromRecordAndEnvelope(envelope), "Cannot parse inner payload message", unrecoverableParsingError);
+                markAsConsumed(record.offset());
+                parsingFailed(envelope, unrecoverableParsingError);
                 return null;
             }
         }
@@ -247,13 +242,25 @@ final class PartitionProcessor {
 
         // Helper methods to get the glue code for debug logging, tracing and metrics out of the main control flow
 
-        private void parsingFailed(Envelope envelope) {
-            String messageType = "Envelope";
+        private void parsingFailed(Envelope envelope, Exception parseException) {
+            String messageType = "NoValidEnvelope";
             String topic = record.topic();
+            String warnMsg;
 
             if (envelope != null) {
                 messageType = envelope.getMessageType();
+                warnMsg = "Cannot parse inner payload message.";
+            } else {
+                warnMsg = "Cannot parse Envelope from raw record.";
             }
+
+            logger.warn(logMarkerFromRecordAndEnvelope(envelope), warnMsg, parseException);
+            logger.debug(logMarkerFromRecordAndEnvelope(envelope), "Message {} with offset {} in {}-{} marked as consumed.",
+                    messageType,
+                    record.offset(),
+                    topic,
+                    record.partition());
+
 
             if (metricsBuilderFactory != null) {
                 GoCounter parsingFailureCounter = metricsBuilderFactory.newMetric("messaging_consumer_parse_failures")
@@ -288,11 +295,16 @@ final class PartitionProcessor {
             logger.debug(message.getMetadata().getLoggingMarker(), "Received tryDeliverMessage={} from {}.onFailedMessage({})", tryDeliverMessage, failedMessageProcessor.getClass().getTypeName(), failure.toString());
 
             if (metricsBuilderFactory != null) {
-                metricsBuilderFactory.newMetric("messaging_consumer_delivery_failures")
-                        .withTag("retryable", Boolean.toString(tryDeliverMessage))
+                GoCounter deliveryFailures = metricsBuilderFactory.newMetric("messaging_consumer_delivery_failures")
                         .withTag("messageType", message.getMetadata().getType().toString())
                         .withTag("topic", message.getMetadata().getTopic().toString())
                         .buildCounter();
+
+                if(tryDeliverMessage) {
+                    deliveryFailures.incSuccess();
+                } else {
+                    deliveryFailures.incFailure();
+                }
             }
 
         }
@@ -311,25 +323,13 @@ final class PartitionProcessor {
                 span.finish();
             }
 
-            if (metricsBuilderFactory != null) {
-                GoCounter consumedMessages = metricsBuilderFactory.newMetric("messaging_consumer_consumed_messages")
-                        .withTag("messageType", message.getMetadata().getType().toString())
-                        .withTag("topic", message.getMetadata().getTopic().toString())
-                        .buildCounter();
-
+            if (handlerTimer != null) { // may be null in case of UnknownMessageHandlerException
                 if (deliveryFailed) {
-                    if (handlerTimer != null) {  // may be null in case of UnknownMessageHandlerException
-                        handlerTimer.recordFailure(startTime);
-                    }
-                    consumedMessages.incFailure();
+                    handlerTimer.recordFailure(startTime);
                 } else {
-                    if (handlerTimer != null) {
-                        handlerTimer.recordSuccess(startTime);
-                    }
-                    consumedMessages.incSuccess();
+                    handlerTimer.recordSuccess(startTime);
                 }
             }
-
         }
 
 

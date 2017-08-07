@@ -12,33 +12,29 @@
 
 package com.sixt.service.test_service;
 
-import com.google.gson.JsonObject;
-import com.palantir.docker.compose.DockerComposeRule;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.health.HealthCheck;
 import com.sixt.service.framework.kafka.KafkaPublisher;
 import com.sixt.service.framework.kafka.KafkaPublisherFactory;
 import com.sixt.service.framework.kafka.TopicMessageCounter;
-import com.sixt.service.framework.protobuf.ProtobufUtil;
 import com.sixt.service.framework.rpc.LoadBalancer;
 import com.sixt.service.framework.rpc.RpcCallException;
 import com.sixt.service.framework.rpc.ServiceEndpoint;
-import com.sixt.service.framework.servicetest.helper.DockerComposeHelper;
-import com.sixt.service.framework.servicetest.mockservice.ServiceImpersonator;
-import com.sixt.service.framework.servicetest.service.ServiceUnderTest;
-import com.sixt.service.framework.servicetest.service.ServiceUnderTestImpl;
+import com.sixt.service.framework.servicetest.mockservice.CommandResponseMapping;
 import com.sixt.service.test_service.api.TestServiceOuterClass;
 import com.sixt.service.test_service.api.TestServiceOuterClass.GetRandomStringQuery;
 import com.sixt.service.test_service.api.TestServiceOuterClass.RandomStringResponse;
 import com.sixt.service.test_service.api.TestServiceOuterClass.SetHealthCheckStatusCommand;
 import org.eclipse.jetty.client.HttpClient;
-import org.joda.time.Duration;
-import org.junit.*;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.Timeout;
 
 import java.util.List;
 
+import static com.sixt.service.framework.rpc.RpcCallException.Category.InsufficientPermissions;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 public class RandomServiceIntegrationTest {
 
@@ -98,20 +94,37 @@ public class RandomServiceIntegrationTest {
         assertThat(messageCount).isEqualTo(3);
     }
 
-    @Ignore // Test fails when run with gradle, but works when run in IntelliJ. Why? Reason:  org.apache.kafka.common.errors.TimeoutException: Failed to update metadata after 60000 ms.
     @Test
-    public void testRandomSampleEventHandler() throws Exception {
-        ServiceIntegrationTestSuite.serviceImpersonator.publishEvent("events", TestServiceOuterClass.RandomSampleEvent.newBuilder()
-                .setId("some-id")
-                .setMessage("The message")
+    public void testKafkaEventHandlerAndPublisher() throws Exception {
+        String message = "The message";
+        String id = "some-id";
+        ServiceIntegrationTestSuite.serviceImpersonator.publishEvent("events.RandomTopic", TestServiceOuterClass.RandomSampleEvent.newBuilder()
+                .setMeta(TestServiceOuterClass.Meta.newBuilder().setName(TestServiceOuterClass.RandomSampleEvent.getDescriptor().getName()))
+                .setId(id)
+                .setMessage(message)
                 .build());
 
-        List<JsonObject> receivedEvents = ServiceIntegrationTestSuite.testService.getAllJsonEvents();
-
-        assertThat(receivedEvents.size()).isEqualTo(1);
-        TestServiceOuterClass.RandomSampleEvent event = ProtobufUtil.jsonToProtobuf(receivedEvents.get(0).toString(),
-                TestServiceOuterClass.RandomSampleEvent.class);
-        assertThat(event.getId()).isEqualTo("some-id");
-        assertThat(event.getMessage()).isEqualTo("The message");
+        List<TestServiceOuterClass.HandlerSuccessEvent> publishedEvents = ServiceIntegrationTestSuite.testService
+                .getEventsOfType(TestServiceOuterClass.HandlerSuccessEvent.class);
+        assertThat(publishedEvents.size()).isEqualTo(1);
+        assertThat(publishedEvents.get(0).getMessage()).isEqualTo(message);
+        assertThat(publishedEvents.get(0).getId()).isEqualTo(id);
     }
+
+    @Test
+    public void testImpersonatorThrowingException() {
+        ServiceIntegrationTestSuite.serviceImpersonator.addMapping(CommandResponseMapping.newBuilder()
+                .setCommand("AnotherService.ImpersonatorTest")
+                .setException(new RpcCallException(InsufficientPermissions, "go away"))
+                .build());
+        try {
+            ServiceIntegrationTestSuite.testService.sendRequest("TestService.CallsAnotherService",
+                    TestServiceOuterClass.CallAnotherServiceCommand.getDefaultInstance());
+            fail("Expected an RpcCallException");
+        } catch (RpcCallException rpcEx) {
+            assertThat(rpcEx.getCategory()).isEqualTo(InsufficientPermissions);
+            assertThat(rpcEx.getMessage()).isEqualTo("go away");
+        }
+    }
+
 }

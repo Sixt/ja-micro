@@ -56,7 +56,7 @@ public class RpcClientIntegrationTest {
     private RpcClientFactory clientFactory;
     private LoadBalancerFactory loadBalancerFactory;
     private RpcClient<FrameworkTest.Foobar> rpcClient;
-    private LoadBalancer loadBalancer;
+    private LoadBalancerImpl loadBalancer;
     private MockHttpClient httpClient;
     private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(2);
 
@@ -79,7 +79,7 @@ public class RpcClientIntegrationTest {
         clientFactory = injector.getInstance(RpcClientFactory.class);
         loadBalancerFactory = injector.getInstance(LoadBalancerFactory.class);
         rpcClient = clientFactory.newClient(serviceName, "testing", FrameworkTest.Foobar.class).build();
-        loadBalancer = loadBalancerFactory.getLoadBalancer(serviceName);
+        loadBalancer = (LoadBalancerImpl) loadBalancerFactory.getLoadBalancer(serviceName);
     }
 
     @Before
@@ -294,6 +294,7 @@ class TestInjectionModule extends AbstractModule {
     protected void configure() {
         bind(HttpClient.class).toInstance(httpClient);
         bind(ServiceProperties.class).toInstance(serviceProperties);
+        bind(LoadBalancer.class).to(LoadBalancerImpl.class);
     }
 
     @Provides

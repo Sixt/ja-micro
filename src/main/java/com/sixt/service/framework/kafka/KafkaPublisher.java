@@ -1,12 +1,12 @@
 /**
  * Copyright 2016-2017 Sixt GmbH & Co. Autovermietung KG
- * Licensed under the Apache License, Version 2.0 (the "License"); you may 
- * not use this file except in compliance with the License. You may obtain a 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain a
  * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
  * under the License.
  */
 
@@ -16,10 +16,12 @@ import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,12 +30,16 @@ public class KafkaPublisher {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaPublisher.class);
 
-    protected String topic;
-    protected KafkaProducer<String, String> realProducer;
+    private final Map<String, String> properties;
+    private final String topic;
+
+    private KafkaProducer<String, String> realProducer;
+
     protected AtomicBoolean isInitialized = new AtomicBoolean(false);
 
-    public KafkaPublisher(String topic) {
+    KafkaPublisher(String topic, Map<String, String> properties) {
         this.topic = topic;
+        this.properties = properties;
     }
 
     public void initialize(String servers) {
@@ -47,6 +53,11 @@ public class KafkaPublisher {
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         props.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, SixtPartitioner.class.getName());
+        props.put(ProducerConfig.RETRIES_CONFIG, "3");
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
+
+        properties.forEach(props::put);
+
         realProducer = new KafkaProducer<>(props);
         isInitialized.set(true);
     }
@@ -54,7 +65,7 @@ public class KafkaPublisher {
     /**
      * Synchronously publish one or more messages with a null partition key
      */
-    public boolean publishSync(String ...events) {
+    public boolean publishSync(String... events) {
         if (events != null) {
             return publishEvents(true, null, events);
         } else {
@@ -65,7 +76,7 @@ public class KafkaPublisher {
     /**
      * Synchronously publish one or more messages with the specified partition key
      */
-    public boolean publishSyncWithKey(String key, String ...events) {
+    public boolean publishSyncWithKey(String key, String... events) {
         if (events != null) {
             return publishEvents(true, key, events);
         } else {
@@ -76,7 +87,7 @@ public class KafkaPublisher {
     /**
      * Asynchronously publish one or more messages with a null partition key
      */
-    public void publishAsync(String ...events) {
+    public void publishAsync(String... events) {
         if (events != null) {
             publishEvents(false, null, events);
         }
@@ -85,20 +96,26 @@ public class KafkaPublisher {
     /**
      * Asynchronously publish one or more messages with a null partition key
      */
-    public void publishAsyncWithKey(String key, String ...events) {
+    public void publishAsyncWithKey(String key, String... events) {
         if (events != null) {
             publishEvents(false, key, events);
         }
     }
 
-    protected boolean publishEvents(boolean sync, String key, String[] events) {
+    private boolean publishEvents(boolean sync, String key, String[] events) {
         if (realProducer == null) {
-            throw new IllegalStateException("kafka was null. was the factory initialized?");
+            throw new IllegalStateException("Kafka is null. Was the factory initialized?");
         }
         for (String event : events) {
             ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, event);
             try {
-                Future future = realProducer.send(record);
+                Future<RecordMetadata> future = realProducer.send(record, (metadata, ex) -> {
+                    if (ex == null) {
+                        logger.debug("Sent message to Kafka: {}", metadata);
+                    } else {
+                        logger.warn("Send failed for record {}", record, ex);
+                    }
+                });
                 if (sync) {
                     future.get();
                 }

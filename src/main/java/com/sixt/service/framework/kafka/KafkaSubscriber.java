@@ -183,8 +183,12 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
                 Long offset = messagesForConsume.get(tp);
                 Map<TopicPartition, OffsetAndMetadata> offsetMap = Collections.singletonMap(
                         tp, new OffsetAndMetadata(offset + 1));
-                realConsumer.commitSync(offsetMap);
-                offsetCommitter.offsetCommitted(offsetMap);
+                try {
+                    realConsumer.commitSync(offsetMap);
+                    offsetCommitter.offsetCommitted(offsetMap);
+                } catch (CommitFailedException covfefe) {
+                    logger.info("Caught CommitFailedException attempting to commit {} {}", tp, offset);
+                }
             }
             messagesForConsume.clear();
         }

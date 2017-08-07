@@ -1,6 +1,7 @@
 language: java
 dist: trusty
 sudo: required
+group: edge
 jdk:
   - oraclejdk8
 script: ./travis-build.sh
@@ -15,11 +16,7 @@ before_install:
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
   - docker-compose --version
-install:
-  - rm -rf Sixt
-  - git clone https://github.com/Sixt/ja-micro.git Sixt/ja-micro
-  - cd Sixt/ja-micro
-  - git checkout master
+install: true #Skip the install step; otherwise gradle assemble is called by default.
 branches:
   except:
   - /^[0-9.]+/

@@ -20,16 +20,16 @@ import org.junit.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-public class LoadBalancerTest {
+public class LoadBalancerImplTest {
 
-    private LoadBalancer lb;
+    private LoadBalancerImpl lb;
 
     @Before
     public void setup() {
         ServiceProperties properties = new ServiceProperties();
         HttpClient httpClient = mock(HttpClient.class);
         HttpClientWrapper wrapper = new HttpClientWrapper(properties, httpClient, null, null);
-        lb = new LoadBalancer(properties, wrapper);
+        lb = new LoadBalancerImpl(properties, wrapper);
     }
 
     @Test

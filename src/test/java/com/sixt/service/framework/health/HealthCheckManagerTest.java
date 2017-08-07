@@ -16,6 +16,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.injection.InjectionModule;
+import com.sixt.service.framework.injection.TracingModule;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,8 +30,9 @@ public class HealthCheckManagerTest {
 
     @Before
     public void setup() {
-        InjectionModule module = new InjectionModule(new ServiceProperties());
-        Injector injector = Guice.createInjector(module);
+        ServiceProperties props = new ServiceProperties();
+        InjectionModule module = new InjectionModule(props);
+        Injector injector = Guice.createInjector(module, new TracingModule(props));
         manager = injector.getInstance(HealthCheckManager.class);
     }
 

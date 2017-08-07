@@ -21,10 +21,8 @@ import org.junit.runners.Suite;
 })
 public class ServiceIntegrationTestSuite {
 
-
     static ServiceImpersonator serviceImpersonator;
     static ServiceUnderTest testService;
-
 
     @ClassRule
     public static DockerComposeRule docker = DockerComposeRule.builder()
@@ -34,7 +32,6 @@ public class ServiceIntegrationTestSuite {
                     waitForConsul("build/dockerCompose/logs/consul.log"), Duration.standardMinutes(1))
             .waitingForService("com.sixt.service.test-service", Container::areAllPortsOpen, Duration.standardMinutes(1))
             .build();
-
 
     @BeforeClass
     public static void setupClass() throws Exception {

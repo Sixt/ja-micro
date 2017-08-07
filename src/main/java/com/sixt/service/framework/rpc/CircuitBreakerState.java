@@ -209,7 +209,12 @@ public class CircuitBreakerState {
                             fromState.equals(TERTIARY_TRIPPED) && toState.equals(TERTIARY_PROBE)) {
                         //do nothing, this can happen
                     } else {
-                        logger.warn("CircuitBreaker wasn't in state {}" +
+                        //multiple failures to a service can result in multiple timers being created,
+                        //and then when one of those timers fire, another timer could have changed the
+                        //fromState already.  we haven't seen any actual bugs in this code, but
+                        //it would also be possible to refactor the timers so these else cases
+                        //wouldn't happen
+                        logger.debug("CircuitBreaker wasn't in state {}" +
                                 ", so not changing it to {}. Current state = {}",
                                 fromState, toState, getState());
                     }

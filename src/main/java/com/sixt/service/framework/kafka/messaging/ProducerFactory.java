@@ -15,6 +15,7 @@ package com.sixt.service.framework.kafka.messaging;
 import com.google.inject.Inject;
 import com.sixt.service.framework.ServiceProperties;
 import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.producer.ProducerConfig;
 
 import java.util.Properties;
 
@@ -32,6 +33,7 @@ public class ProducerFactory {
 
         Properties kafkaProducerConfig = new Properties();
         kafkaProducerConfig.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        kafkaProducerConfig.put(ProducerConfig.ACKS_CONFIG, "all");  // ensure that records have been replicated to other kafka nodes
 
         return new Producer(kafkaProducerConfig);
     }
