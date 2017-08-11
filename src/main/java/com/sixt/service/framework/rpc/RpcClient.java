@@ -1,36 +1,36 @@
 /**
  * Copyright 2016-2017 Sixt GmbH & Co. Autovermietung KG
- * Licensed under the Apache License, Version 2.0 (the "License"); you may 
- * not use this file except in compliance with the License. You may obtain a 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain a
  * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
  * under the License.
  */
 
 package com.sixt.service.framework.rpc;
 
-import com.google.gson.JsonArray;
-import com.google.inject.Inject;
-import com.google.protobuf.Message;
+import static com.sixt.service.framework.jetty.RpcServlet.TYPE_JSON;
+import static com.sixt.service.framework.jetty.RpcServlet.TYPE_OCTET;
+
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.json.JsonRpcRequest;
 import com.sixt.service.framework.json.JsonRpcResponse;
 import com.sixt.service.framework.protobuf.ProtobufRpcRequest;
 import com.sixt.service.framework.protobuf.ProtobufRpcResponse;
 import com.sixt.service.framework.protobuf.ProtobufUtil;
+
+import com.google.gson.JsonArray;
+import com.google.inject.Inject;
+import com.google.protobuf.Message;
+
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.util.BytesContentProvider;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
-
-import static com.sixt.service.framework.jetty.RpcServlet.TYPE_JSON;
-import static com.sixt.service.framework.jetty.RpcServlet.TYPE_OCTET;
 
 /**
  * Interface to call a method on a remote service
@@ -48,16 +48,25 @@ public class RpcClient<RESPONSE extends Message> {
     private Class<RESPONSE> responseClass;
     private int retries;
     private int timeout;
+    private RetryBackOffFunction retryBackOffFunction;
 
     @Inject
-    public RpcClient(LoadBalancer loadBalancer, String serviceName, String methodName,
-                     int retries, int timeout, Class<RESPONSE> responseClass) {
+    public RpcClient(
+        LoadBalancer loadBalancer,
+        String serviceName,
+        String methodName,
+        int retries,
+        int timeout,
+        final RetryBackOffFunction retryBackOffFunction,
+        Class<RESPONSE> responseClass
+    ) {
         this.loadBalancer = loadBalancer;
         this.serviceName = serviceName;
         this.methodName = methodName;
         this.retries = retries;
         this.timeout = timeout;
         this.responseClass = responseClass;
+        this.retryBackOffFunction = retryBackOffFunction;
     }
 
     /**
@@ -159,5 +168,13 @@ public class RpcClient<RESPONSE extends Message> {
 
     public void setTimeout(int timeout) {
         this.timeout = timeout;
+    }
+
+    public boolean hasRetryBackOffFunction() {
+        return retryBackOffFunction != null;
+    }
+
+    public RetryBackOffFunction getRetryBackOffFunction() {
+        return retryBackOffFunction;
     }
 }

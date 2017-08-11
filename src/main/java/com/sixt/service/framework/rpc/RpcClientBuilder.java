@@ -34,6 +34,7 @@ public class RpcClientBuilder<RESPONSE extends Message> {
     private String serviceName;
     private String methodName;
     private int retries;
+    private RetryBackOffFunction retryBackOffFunction;
     private int timeout;
     private Class<RESPONSE> responseClass;
 
@@ -68,6 +69,16 @@ public class RpcClientBuilder<RESPONSE extends Message> {
         return this;
     }
 
+    /**
+     * RPC call retry timeout function implementation
+     *
+     * @param retryBackOffFunction - implementation of final RpcClient.RetryBackOffFunction
+     */
+    public RpcClientBuilder<RESPONSE> withRetryBackOff(final RetryBackOffFunction retryBackOffFunction) {
+        this.retryBackOffFunction = retryBackOffFunction;
+        return this;
+    }
+
     public RpcClient<RESPONSE> build() {
         if (StringUtils.isBlank(serviceName)) {
             throw new IllegalStateException("RpcClientBuilder: Service name was not set");
@@ -77,7 +88,8 @@ public class RpcClientBuilder<RESPONSE extends Message> {
         }
         LoadBalancerFactory lbFactory = injector.getInstance(LoadBalancerFactory.class);
         LoadBalancer loadBalancer = lbFactory.getLoadBalancer(serviceName);
-        return new RpcClient<>(loadBalancer, serviceName, methodName, retries, timeout, responseClass);
+        return new RpcClient<>(loadBalancer, serviceName, methodName, retries, timeout,
+                               retryBackOffFunction, responseClass);
     }
 
     public void setResponseClass(Class<RESPONSE> responseClass) {
@@ -105,6 +117,5 @@ public class RpcClientBuilder<RESPONSE extends Message> {
         }
         return defaultValue;
     }
-
 
 }
