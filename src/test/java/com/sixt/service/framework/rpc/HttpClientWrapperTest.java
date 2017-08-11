@@ -1,7 +1,7 @@
 package com.sixt.service.framework.rpc;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -57,7 +57,8 @@ public class HttpClientWrapperTest {
     @Before
     public void setup() throws InterruptedException, ExecutionException, TimeoutException {
         when(loadBalancer.getHealthyInstance()).thenReturn(createServiceEndpoint());
-        when(loadBalancer.getHealthyInstanceExclude(anyList())).thenReturn(createServiceEndpoint());
+        when(loadBalancer.getHealthyInstanceExclude(anyListOf(ServiceEndpoint.class)))
+            .thenReturn(createServiceEndpoint());
 
         when(rpcClient.getRetries()).thenReturn(NUMBER_OF_RETRIES);
         when(rpcClient.getTimeout()).thenReturn(0);
