@@ -12,6 +12,7 @@
 
 package com.sixt.service.framework.protobuf;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.protobuf.Message;
@@ -110,6 +111,56 @@ public class ProtobufUtilTest {
     }
 
     @Test
+    public void protobufToJson_EnumField_YieldsSuccess() throws Exception {
+        // given
+        FrameworkTest.MessageWithEnum message = FrameworkTest.MessageWithEnum.newBuilder()
+                .setError(FrameworkTest.Error.INVALID_VEHICLE_ID)
+                .build();
+
+        // when
+        JsonObject result = ProtobufUtil.protobufToJson(message);
+
+        // then
+        assertThat(result.getAsJsonPrimitive("error").getAsString()).isEqualTo(FrameworkTest.Error.INVALID_VEHICLE_ID.toString());
+    }
+
+    @Test
+    public void jsonToProtobuf_EnumField_YieldsSuccess() throws Exception {
+        // given
+        String json = "{\"error\":\"INVALID_VEHICLE_ID\"}";
+
+        // when
+        FrameworkTest.MessageWithEnum message = ProtobufUtil.jsonToProtobuf(json, FrameworkTest.MessageWithEnum.class);
+
+        // then
+        assertThat(message.getError()).isEqualTo(FrameworkTest.Error.INVALID_VEHICLE_ID);
+    }
+
+    @Test
+    public void jsonToProtobuf_NullInput_ReturnNull() throws Exception {
+        // given
+        String nullString = null;
+
+        // when
+        FrameworkTest.SerializationTest message = ProtobufUtil.jsonToProtobuf(nullString, FrameworkTest.SerializationTest.class);
+
+        // then
+        assertThat(message).isNull();
+    }
+
+    @Test
+    public void jsonToProtobuf_EmptyJsonObject_YieldDefaultInstance() throws Exception {
+        // given
+        String json = "{}";
+
+        // when
+        FrameworkTest.SerializationTest message = ProtobufUtil.jsonToProtobuf(json, FrameworkTest.SerializationTest.class);
+
+        // then
+        assertThat(message).isEqualTo(FrameworkTest.SerializationTest.getDefaultInstance());
+    }
+
+    @Test
     public void jsonToProtobuf_SimpleJsonToProtobufGeneralMessage_YieldsSuccess() {
         // given
         final String json = "{\"id\":\"theId\"}";
@@ -135,6 +186,26 @@ public class ProtobufUtilTest {
     }
 
     @Test
+    public void protobufToJson_MessageWithMap_Success() throws Exception {
+        // given
+        FrameworkTest.MessageWithMap messageWithMap = FrameworkTest.MessageWithMap.newBuilder()
+                .putErrorMap("first-error", FrameworkTest.Error.INVALID_VEHICLE_ID)
+                .putErrorMap("second-error", FrameworkTest.Error.NO_ERROR)
+                .build();
+
+        // when
+        JsonObject jsonObject = ProtobufUtil.protobufToJson(messageWithMap);
+
+        // then
+        JsonObject error_map = jsonObject.getAsJsonObject("error_map");
+        assertThat(error_map.size()).isEqualTo(2);
+        assertThat(error_map.getAsJsonPrimitive("first-error").getAsString())
+                .isEqualTo(FrameworkTest.Error.INVALID_VEHICLE_ID.toString());
+        assertThat(error_map.getAsJsonPrimitive("second-error").getAsString())
+                .isEqualTo(FrameworkTest.Error.NO_ERROR.toString());
+    }
+
+    @Test
     public void jsonToProtobuf_SimpleJsonWithUnknownField_MessageEmpty() {
         // given
         final String json = "{\"fahrzeug\":\"auto\"}"; // key 'fahrzeug' does not exist in protobuf message FrameworkTest.SerializationTest.
@@ -156,5 +227,59 @@ public class ProtobufUtilTest {
 
         // then
         assertThat(message.getId()).isEmpty();
+    }
+
+    @Test
+    public void jsonToProtobuf_MessageWithMap_Success() throws Exception {
+        // given
+        String jsonString = "{\"error_map\":{\"first-error\":\"INVALID_VEHICLE_ID\",\"second-error\":\"NO_ERROR\"}}";
+
+        // when
+        FrameworkTest.MessageWithMap message = ProtobufUtil.jsonToProtobuf(jsonString, FrameworkTest.MessageWithMap.class);
+
+        // then
+        assertThat(message.getErrorMapCount()).isEqualTo(2);
+        assertThat(message.getErrorMapMap().get("first-error")).isEqualTo(FrameworkTest.Error.INVALID_VEHICLE_ID);
+        assertThat(message.getErrorMapMap().get("second-error")).isEqualTo(FrameworkTest.Error.NO_ERROR);
+    }
+
+    @Test
+    public void jsonToProtobuf_JsonArrayWithTwoElements_ParseFirstOne() throws Exception {
+        // given
+        JsonArray jsonArray = new JsonArray();
+        jsonArray.add(new JsonParser().parse("{\"id\":\"1\"}"));
+        jsonArray.add(new JsonParser().parse("{\"id\":\"2\"}"));
+
+        // when
+        FrameworkTest.SerializationTest message = ProtobufUtil.jsonToProtobuf(jsonArray, FrameworkTest.SerializationTest.class);
+
+        // then
+        assertThat(message.getId()).isEqualTo("1");
+    }
+
+    @Test
+    public void byteArrayToProtobuf_Success() throws Exception {
+        // given
+        byte[] byteArray = FrameworkTest.SerializationTest.newBuilder()
+                .setId("id")
+                .setId2("id2")
+                .build()
+                .toByteArray();
+
+        // when
+        FrameworkTest.SerializationTest message = ProtobufUtil.byteArrayToProtobuf(byteArray, FrameworkTest.SerializationTest.class);
+
+        // then
+        assertThat(message.getId()).isEqualTo("id");
+        assertThat(message.getId2()).isEqualTo("id2");
+    }
+
+    @Test
+    public void newEmptyMessage_Success() throws Exception {
+        // given, when
+        FrameworkTest.SerializationTest message = ProtobufUtil.newEmptyMessage(FrameworkTest.SerializationTest.class);
+
+        // then
+        assertThat(message).isEqualTo(FrameworkTest.SerializationTest.getDefaultInstance());
     }
 }
