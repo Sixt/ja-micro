@@ -146,4 +146,15 @@ public class ProtobufUtilTest {
         assertThat(message.getId()).isEmpty();
     }
 
+    @Test
+    public void jsonToProtobuf_SimpleJsonWithEmptyUnknownField_MessageEmpty() {
+        // given
+        final String json = "{\"fahrzeug\": {}}"; // key 'fahrzeug' does not exist in protobuf message FrameworkTest.SerializationTest.
+
+        // when
+        FrameworkTest.SerializationTest message = ProtobufUtil.jsonToProtobuf(json, FrameworkTest.SerializationTest.class);
+
+        // then
+        assertThat(message.getId()).isEmpty();
+    }
 }
