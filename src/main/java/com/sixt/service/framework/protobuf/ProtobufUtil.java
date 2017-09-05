@@ -43,7 +43,7 @@ public class ProtobufUtil {
     /**
      * NOTE: this is only using the first element of the JsonArray
      */
-    public static Message jsonToProtobuf(JsonArray request, Class<? extends Message> messageClass) {
+    public static <TYPE extends Message> TYPE jsonToProtobuf(JsonArray request, Class<TYPE> messageClass) {
         return jsonToProtobuf(request.get(0).toString(), messageClass);
     }
 
