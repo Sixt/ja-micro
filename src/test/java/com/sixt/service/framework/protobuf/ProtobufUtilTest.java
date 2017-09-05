@@ -1,12 +1,12 @@
 /**
  * Copyright 2016-2017 Sixt GmbH & Co. Autovermietung KG
- * Licensed under the Apache License, Version 2.0 (the "License"); you may 
- * not use this file except in compliance with the License. You may obtain a 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain a
  * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
  * under the License.
  */
 
@@ -42,13 +42,14 @@ public class ProtobufUtilTest {
         assertThat(blahArray).containsOnly("a", "b", "c");
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testNullSubmessage() throws Exception {
+    @Test
+    public void testNullSubmessage_YieldsDefaultInstance() throws Exception {
         FrameworkTest.SerializationTest.Builder builder = FrameworkTest.SerializationTest.newBuilder();
         String jsonInput = "{\"id\":\"a\",\"id2\":\"b\",\"id4\":\"c\",\"sub_message\":null}";
         JsonObject json = (JsonObject) new JsonParser().parse(jsonInput);
-        FrameworkTest.SerializationTest message = (FrameworkTest.SerializationTest)ProtobufUtil.fromJson(builder, json);
-        boolean brk = true;
+        FrameworkTest.SerializationTest message = (FrameworkTest.SerializationTest) ProtobufUtil.fromJson(builder, json);
+
+        assertThat(message.getSubMessage()).isEqualTo(FrameworkTest.SerializationSubMessage.getDefaultInstance());
     }
 
     @Test
@@ -94,8 +95,8 @@ public class ProtobufUtilTest {
         FrameworkTest.SerializationTest message = FrameworkTest.SerializationTest.newBuilder()
                 .setSubMessage(
                         FrameworkTest.SerializationSubMessage.newBuilder()
-                        .setId("TheId")
-                        .build()
+                                .setId("TheId")
+                                .build()
                 ).setId4("The fourth id")
                 .build();
 
@@ -118,7 +119,7 @@ public class ProtobufUtilTest {
 
         // then
         assertThat(message).isInstanceOf(FrameworkTest.SerializationTest.class);
-        assertThat(((FrameworkTest.SerializationTest)message).getId()).isEqualTo("theId");
+        assertThat(((FrameworkTest.SerializationTest) message).getId()).isEqualTo("theId");
     }
 
     @Test
@@ -144,5 +145,5 @@ public class ProtobufUtilTest {
         // then
         assertThat(message.getId()).isEmpty();
     }
-    
+
 }
