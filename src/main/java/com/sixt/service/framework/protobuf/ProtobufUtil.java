@@ -49,6 +49,8 @@ public class ProtobufUtil {
 
     /**
      * Converts a JSON String to a protobuf message
+     * <p>
+     * Note: Ignores unknown fields
      *
      * @param input        the input String to convert
      * @param messageClass the protobuf message class to convert into
