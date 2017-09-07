@@ -14,10 +14,12 @@ package com.sixt.service.framework.protobuf;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
 import com.sixt.service.framework.rpc.RpcCallException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,10 +61,11 @@ public class ProtobufUtil {
     public static <TYPE extends Message> TYPE jsonToProtobuf(String input, Class<TYPE> messageClass) {
         if (input == null) {
             return null;
-        } else if ("{}".equals(input)) {
+        }
+
+        if (!isValidJSON(input)) {
             try {
-                TYPE.Builder builder = getBuilder(messageClass);
-                return (TYPE) builder.getDefaultInstanceForType();
+                return (TYPE) getBuilder(messageClass).getDefaultInstanceForType();
             } catch (Exception e) {
                 logger.warn("Error building protobuf object of type {} from json: {}",
                         messageClass.getName(), input);
@@ -76,6 +79,28 @@ public class ProtobufUtil {
         } catch (Exception e) {
             throw new RuntimeException("Error deserializing json to protobuf", e);
         }
+    }
+
+    private static boolean isValidJSON(String input) {
+        if (StringUtils.isBlank(input)) {
+            logger.warn("Parsing empty json string to protobuf is deprecated and will be removed in " +
+                    "the next major release");
+            return false;
+        }
+
+        if (!input.startsWith("{")) {
+            logger.warn("Parsing json string that does not start with { is deprecated and will be " +
+                    "removed in the next major release");
+            return false;
+        }
+
+        try {
+            new JsonParser().parse(input);
+        } catch (JsonParseException ex) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

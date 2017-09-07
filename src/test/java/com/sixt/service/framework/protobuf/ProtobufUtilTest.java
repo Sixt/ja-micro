@@ -160,6 +160,30 @@ public class ProtobufUtilTest {
         assertThat(message).isEqualTo(FrameworkTest.SerializationTest.getDefaultInstance());
     }
 
+    @Test // this behaviour is deprecated and will be removed in the next major release
+    public void jsonToProtobuf_EmptyString_YieldDefaultInstance() throws Exception {
+        // given
+        String json = "";
+
+        // when
+        FrameworkTest.SerializationTest message = ProtobufUtil.jsonToProtobuf(json, FrameworkTest.SerializationTest.class);
+
+        // then
+        assertThat(message).isEqualTo(FrameworkTest.SerializationTest.getDefaultInstance());
+    }
+
+    @Test // this behaviour is deprecated and will be removed in the next major release
+    public void jsonToProtobuf_InvalidJson_YieldDefaultInstance() throws Exception {
+        // given
+        String json = "invalidJson";
+
+        // when
+        FrameworkTest.SerializationTest message = ProtobufUtil.jsonToProtobuf(json, FrameworkTest.SerializationTest.class);
+
+        // then
+        assertThat(message).isEqualTo(FrameworkTest.SerializationTest.getDefaultInstance());
+    }
+
     @Test
     public void jsonToProtobuf_SimpleJsonToProtobufGeneralMessage_YieldsSuccess() {
         // given
