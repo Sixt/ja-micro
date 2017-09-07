@@ -59,7 +59,13 @@ public class ProtobufUtil {
     public static <TYPE extends Message> TYPE jsonToProtobuf(String input, Class<TYPE> messageClass) {
         if (input == null) {
             return null;
-        } else if ("{}".equals(input)) {
+        }
+
+        if ("{}".equals(input) || "".equals(input)) {
+            if ("".equals(input)) {
+                logger.warn("Converting empty String to protobuf message: " +
+                        "This behaviour is deprecated and will be removed in the next major release.");
+            }
             try {
                 TYPE.Builder builder = getBuilder(messageClass);
                 return (TYPE) builder.getDefaultInstanceForType();
