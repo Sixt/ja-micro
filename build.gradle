@@ -125,7 +125,7 @@ dependencies { //achtung: order does matter!
 
     //Protobuf
     compile "com.google.protobuf:protobuf-java:$versions.protobuf"
-    compile 'com.googlecode.protobuf-java-format:protobuf-java-format:1.4'
+    compile "com.google.protobuf:protobuf-java-util:$versions.protobuf"
 
     //http client
     compile 'com.fasterxml.jackson.core:jackson-core:2.8.5'
