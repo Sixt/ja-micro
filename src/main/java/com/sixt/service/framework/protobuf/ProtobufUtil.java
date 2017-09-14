@@ -161,6 +161,33 @@ public class ProtobufUtil {
     }
 
     /**
+     * Converts a protobuf message to a JSON object
+     * <p>
+     * Note: Preserves the field names as defined in the *.proto definition
+     * Note:
+     *
+     * @param input the protobuf message to convert
+     * @return the converted JSON object
+     */
+    public static JsonObject protobufToJsonIncludeDefaultValue(Message input) {
+        JsonObject object = new JsonObject();
+        if (input == null) {
+            logger.warn("Protobuf message was null");
+        } else {
+            try {
+                String jsonString = JsonFormat.printer()
+                    .preservingProtoFieldNames()
+                    .includingDefaultValueFields()
+                    .print(input);
+                object = new JsonParser().parse(jsonString).getAsJsonObject();
+            } catch (Exception e) {
+                throw new RuntimeException("Error deserializing protobuf to json", e);
+            }
+        }
+        return object;
+    }
+
+    /**
      * Converts a JSON object to a protobuf message.
      * <p>
      * Note: Ignores unknown fields

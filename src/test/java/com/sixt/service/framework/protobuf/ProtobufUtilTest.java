@@ -306,4 +306,41 @@ public class ProtobufUtilTest {
         // then
         assertThat(message).isEqualTo(FrameworkTest.SerializationTest.getDefaultInstance());
     }
+
+    @Test
+    public void protobufToJson_with_includingDefaultValueFields() {
+        // given
+        FrameworkTest.SerializationTest message = FrameworkTest.SerializationTest.newBuilder().build();
+
+        // when
+        JsonObject result = ProtobufUtil.protobufToJsonIncludeDefaultValue(message);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.get("id").getAsString()).isEqualTo("");
+        assertThat(result.get("id2").getAsString()).isEqualTo("");
+        assertThat(result.get("id4").getAsString()).isEqualTo("");
+        assertThat(result.get("sub_message")).isNull();
+    }
+
+    @Test
+    public void protobufToJson_with_sub_object() {
+        // given
+        FrameworkTest.SerializationTest message = FrameworkTest.SerializationTest.newBuilder()
+            .setSubMessage(
+                FrameworkTest.SerializationSubMessage.newBuilder().build()
+            )
+            .build();
+
+        // when
+        JsonObject result = ProtobufUtil.protobufToJsonIncludeDefaultValue(message);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.get("id").getAsString()).isEqualTo("");
+        assertThat(result.get("id2").getAsString()).isEqualTo("");
+        assertThat(result.get("id4").getAsString()).isEqualTo("");
+        assertThat(result.get("sub_message")).isNotNull();
+        assertThat(result.getAsJsonObject("sub_message").get("id").getAsString()).isEqualTo("");
+    }
 }
