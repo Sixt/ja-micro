@@ -169,7 +169,7 @@ public class ProtobufUtil {
      * @param input the protobuf message to convert
      * @return the converted JSON object
      */
-    public static JsonObject protobufToJsonIncludeDefaultValue(Message input) {
+    public static JsonObject protobufToJsonWithDefaultValues(Message input) {
         JsonObject object = new JsonObject();
         if (input == null) {
             logger.warn("Protobuf message was null");
