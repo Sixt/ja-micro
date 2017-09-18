@@ -313,7 +313,7 @@ public class ProtobufUtilTest {
         FrameworkTest.SerializationTest message = FrameworkTest.SerializationTest.newBuilder().build();
 
         // when
-        JsonObject result = ProtobufUtil.protobufToJsonIncludeDefaultValue(message);
+        JsonObject result = ProtobufUtil.protobufToJsonWithDefaultValues(message);
 
         // then
         assertThat(result).isNotNull();
@@ -333,7 +333,7 @@ public class ProtobufUtilTest {
             .build();
 
         // when
-        JsonObject result = ProtobufUtil.protobufToJsonIncludeDefaultValue(message);
+        JsonObject result = ProtobufUtil.protobufToJsonWithDefaultValues(message);
 
         // then
         assertThat(result).isNotNull();
