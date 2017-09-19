@@ -17,16 +17,14 @@ import com.google.inject.Provides;
 import com.sixt.service.framework.MethodHandlerDictionary;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.rpc.LoadBalancer;
-import com.sixt.service.framework.rpc.LoadBalancerImpl;
+import com.sixt.service.framework.servicetest.mockservice.DockerLoadBalancer;
 import com.sixt.service.framework.servicetest.mockservice.ImpersonatedPortDictionary;
-import com.sixt.service.framework.servicetest.mockservice.MacOsLoadBalancer;
 import org.eclipse.jetty.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,11 +36,9 @@ public class TestInjectionModule extends AbstractModule {
 	private MethodHandlerDictionary methodHandlerDictionary = new MethodHandlerDictionary();
 	private ServerSocket serverSocket;
 	private final ImpersonatedPortDictionary portDictionary = ImpersonatedPortDictionary.getInstance();
-    private final boolean isMacOs;
 
 	public TestInjectionModule(String serviceName, ServiceProperties props) {
-        isMacOs = System.getProperty("os.name").toLowerCase().contains("mac");
-        this.serviceProperties = props;
+		this.serviceProperties = props;
         serviceProperties.setServiceName(serviceName);
 		if (props.getProperty("registry") == null) {
             serviceProperties.addProperty("registry", "consul");
@@ -66,11 +62,7 @@ public class TestInjectionModule extends AbstractModule {
 	protected void configure() {
 		bind(ServiceProperties.class).toInstance(serviceProperties);
 		bind(ServerSocket.class).toInstance(serverSocket);
-        if (isMacOs) {
-            bind(LoadBalancer.class).to(MacOsLoadBalancer.class);
-        } else {
-            bind(LoadBalancer.class).to(LoadBalancerImpl.class);
-        }
+		bind(LoadBalancer.class).to(DockerLoadBalancer.class);
 	}
 
 	@Provides
@@ -102,11 +94,7 @@ public class TestInjectionModule extends AbstractModule {
 	}
 
 	private ServerSocket buildServerSocket() {
-        if (isMacOs) {
-            return nextServerSocket();
-        } else {
-            return nextRandomSocket();
-        }
+		return nextServerSocket();
     }
 
     private ServerSocket nextServerSocket() {
@@ -118,18 +106,6 @@ public class TestInjectionModule extends AbstractModule {
             return null;
         }
     }
-
-    private ServerSocket nextRandomSocket() {
-		Random rng = new Random();
-		while (true) {
-			int port = rng.nextInt(1000) + 42000;
-			try {
-				return new ServerSocket(port);
-			} catch (IOException ex) {
-				continue;
-			}
-		}
-	}
 
 	public ServiceProperties getServiceProperties() {
 		return serviceProperties;

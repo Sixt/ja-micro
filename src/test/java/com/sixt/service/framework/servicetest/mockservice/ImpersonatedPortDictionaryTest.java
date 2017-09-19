@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ImpersonatedPortDictionaryTest {
 
-    private ImpersonatedPortDictionary dictionary = new ImpersonatedPortDictionary();
+    private ImpersonatedPortDictionary dictionary = ImpersonatedPortDictionary.getInstance();
 
     @Test
     public void testDictionary() {
