@@ -54,6 +54,7 @@ public class LoadBalancerFactory {
 
     private LoadBalancer buildLoadBalancer(String svc) {
         LoadBalancer retval = injector.getInstance(LoadBalancer.class);
+        logger.debug("Returning instance of {} for the LoadBalancer instance", retval.getClass().getSimpleName());
         retval.setServiceName(svc);
         loadBalancers.put(svc, retval);
         if (provider == null) {
