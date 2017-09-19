@@ -73,7 +73,7 @@ public class MacOsLoadBalancer implements LoadBalancer {
     }
 
     private void locateImpersonator() {
-        int port = getPortFromDocker(40000);
+        int port = getPortFromDocker(ImpersonatedPortDictionary.getInstance().internalPortForImpersonated(serviceName));
         impersonatorEndpoint = new ServiceEndpoint(new ScheduledThreadPoolExecutor(1),
                 "localhost:" + port, "");
     }

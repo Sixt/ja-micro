@@ -18,6 +18,7 @@ import com.sixt.service.framework.MethodHandlerDictionary;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.rpc.LoadBalancer;
 import com.sixt.service.framework.rpc.LoadBalancerImpl;
+import com.sixt.service.framework.servicetest.mockservice.ImpersonatedPortDictionary;
 import com.sixt.service.framework.servicetest.mockservice.MacOsLoadBalancer;
 import org.eclipse.jetty.client.HttpClient;
 import org.slf4j.Logger;
@@ -36,11 +37,13 @@ public class TestInjectionModule extends AbstractModule {
 	private ServiceProperties serviceProperties = new ServiceProperties();
 	private MethodHandlerDictionary methodHandlerDictionary = new MethodHandlerDictionary();
 	private ServerSocket serverSocket;
+	private final ImpersonatedPortDictionary portDictionary = ImpersonatedPortDictionary.getInstance();
     private final boolean isMacOs;
 
 	public TestInjectionModule(String serviceName, ServiceProperties props) {
         isMacOs = System.getProperty("os.name").toLowerCase().contains("mac");
         this.serviceProperties = props;
+        serviceProperties.setServiceName(serviceName);
 		if (props.getProperty("registry") == null) {
             serviceProperties.addProperty("registry", "consul");
         }
@@ -50,10 +53,9 @@ public class TestInjectionModule extends AbstractModule {
         if (props.getProperty("kafkaServer") == null) {
             serviceProperties.addProperty("kafkaServer", "localhost:9092");
         }
-        serverSocket = getRandomPort();
+        serverSocket = buildServerSocket();
 		serviceProperties.initialize(new String[0]);
         serviceProperties.setServicePort(serverSocket.getLocalPort());
-        serviceProperties.setServiceName(serviceName);
 	}
 
 	public TestInjectionModule(String serviceName) {
@@ -99,7 +101,25 @@ public class TestInjectionModule extends AbstractModule {
 		return Executors.newCachedThreadPool();
 	}
 
-	private ServerSocket getRandomPort() {
+	private ServerSocket buildServerSocket() {
+        if (isMacOs) {
+            return nextServerSocket();
+        } else {
+            return nextRandomSocket();
+        }
+    }
+
+    private ServerSocket nextServerSocket() {
+        int port = portDictionary.internalPortForImpersonated(serviceProperties.getServiceName());
+        try {
+            return new ServerSocket(port);
+        } catch (IOException e) {
+            logger.error("Could not create ServerSocket on port {}", port);
+            return null;
+        }
+    }
+
+    private ServerSocket nextRandomSocket() {
 		Random rng = new Random();
 		while (true) {
 			int port = rng.nextInt(1000) + 42000;
