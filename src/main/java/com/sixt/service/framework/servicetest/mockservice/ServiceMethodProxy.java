@@ -27,6 +27,7 @@ public class ServiceMethodProxy <REQ extends Message, RES extends Message>
 
     protected Class<REQ> requestType;
     protected Class<RES> responseType;
+    protected REQ request;
     protected RES response;
     protected RpcCallException exception;
     protected AtomicInteger methodCallCounter = new AtomicInteger(0);
@@ -53,6 +54,7 @@ public class ServiceMethodProxy <REQ extends Message, RES extends Message>
     @Override
     public RES handleRequest(REQ requestMessage, OrangeContext orangeContext)
             throws RpcCallException {
+        request = requestMessage;
         methodCallCounter.incrementAndGet();
 
         if (exception != null) {
