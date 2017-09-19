@@ -40,16 +40,16 @@ import static com.google.common.collect.ImmutableList.of;
 *
 * SIT setup requires the serviceUnderTest to run on port 40000 and be exposed
 **/
-public class MacOsLoadBalancer implements LoadBalancer {
+public class DockerLoadBalancer implements LoadBalancer {
 
-    private static final Logger logger = LoggerFactory.getLogger(MacOsLoadBalancer.class);
+    private static final Logger logger = LoggerFactory.getLogger(DockerLoadBalancer.class);
 
     private final ProcessUtil processUtil;
     private String serviceName;
     private ServiceEndpoint impersonatorEndpoint;
 
     @Inject
-    public MacOsLoadBalancer(ProcessUtil processUtil) {
+    public DockerLoadBalancer(ProcessUtil processUtil) {
         this.processUtil = processUtil;
     }
 

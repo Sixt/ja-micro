@@ -18,9 +18,9 @@ import org.junit.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-public class MacOsLoadBalancerTest {
+public class DockerLoadBalancerTest {
 
-    private MacOsLoadBalancer loadBalancer = new MacOsLoadBalancer(mock(ProcessUtil.class));
+    private DockerLoadBalancer loadBalancer = new DockerLoadBalancer(mock(ProcessUtil.class));
 
     @Test
     public void parseExposedPortTest() {
