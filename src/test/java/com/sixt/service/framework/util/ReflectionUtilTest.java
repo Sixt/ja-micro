@@ -21,8 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ReflectionUtilTest {
 
-    private ReflectionUtil util = new ReflectionUtil();
-
     @Test
     public void verifyReflection() throws ClassNotFoundException {
         TestServiceMethodHandler handler = new TestServiceMethodHandler();
@@ -33,8 +31,27 @@ public class ReflectionUtilTest {
         assertThat(ReflectionUtil.findSubClassParameterType(handler, 2)).isNull();
     }
 
+    @Test
+    public void verifyReflectionWorksWithAChild() throws ClassNotFoundException {
+        ChildTestServiceMethodHandler handler = new ChildTestServiceMethodHandler();
+        assertThat(ReflectionUtil.findSubClassParameterType(handler, 0)).
+            isEqualTo(RpcEnvelope.Request.class);
+        assertThat(ReflectionUtil.findSubClassParameterType(handler, 1)).
+            isEqualTo(RpcEnvelope.Response.class);
+        assertThat(ReflectionUtil.findSubClassParameterType(handler, 2)).isNull();
+    }
+
     private class TestServiceMethodHandler implements
             ServiceMethodHandler<RpcEnvelope.Request, RpcEnvelope.Response> {
+
+        @Override
+        public RpcEnvelope.Response handleRequest(RpcEnvelope.Request request, OrangeContext ctx) {
+            return null;
+        }
+    }
+
+    private class ChildTestServiceMethodHandler
+        extends TestServiceMethodHandler {
 
         @Override
         public RpcEnvelope.Response handleRequest(RpcEnvelope.Request request, OrangeContext ctx) {

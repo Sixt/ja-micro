@@ -29,10 +29,26 @@ public class ReflectionUtil {
             }
         }
 
-        int count = 0;
         Class<?> clazz = instance.getClass();
         Type[] genericInterfaces = clazz.getGenericInterfaces();
 
+        if (genericInterfaces.length > 0) {
+            return retrieveGenericParameterTypes(genericInterfaces, parameterIndex);
+        } else if (clazz.getSuperclass() != null) {
+            return retrieveGenericParameterTypes(
+                clazz.getSuperclass().getGenericInterfaces(),
+                parameterIndex
+            );
+        } else {
+            return null;
+        }
+    }
+
+    private static Class<?> retrieveGenericParameterTypes(
+        final Type[] genericInterfaces,
+        final Integer parameterIndex
+    ) throws ClassNotFoundException {
+        int count = 0;
         for (Type genericInterface : genericInterfaces) {
             if (genericInterface instanceof ParameterizedType) {
                 Type[] genericTypes = ((ParameterizedType) genericInterface).getActualTypeArguments();
