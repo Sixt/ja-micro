@@ -46,6 +46,9 @@ public class ProtobufUtil {
      * NOTE: this is only using the first element of the JsonArray
      */
     public static <TYPE extends Message> TYPE jsonToProtobuf(JsonArray request, Class<TYPE> messageClass) {
+        if (request == null || request.size() < 1 || request.get(0).isJsonNull()) {
+            return null;
+        }
         return jsonToProtobuf(request.get(0).toString(), messageClass);
     }
 
