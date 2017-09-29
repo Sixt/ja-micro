@@ -115,6 +115,10 @@ public class ServiceImpersonator {
         messageHandler.shutdown();
     }
 
+    public int getInternalPort() {
+        return serviceProperties.getServicePort();
+    }
+
     public ServiceImpersonator addMapping(CommandResponseMapping mapping) {
         ServiceMethodProxy proxy = ((ServiceMethodProxy) this.methodHandlers
                 .getMethodHandler(mapping.getCommand()));

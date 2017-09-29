@@ -13,6 +13,7 @@
 package com.sixt.service.framework.protobuf;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.protobuf.Message;
@@ -343,4 +344,15 @@ public class ProtobufUtilTest {
         assertThat(result.get("sub_message")).isNotNull();
         assertThat(result.getAsJsonObject("sub_message").get("id").getAsString()).isEqualTo("");
     }
+
+    @Test
+    public void jsonToProtobuf_nullRequest() {
+        JsonArray array = null;
+        assertThat(ProtobufUtil.jsonToProtobuf(array, FrameworkTest.SerializationTest.class)).isNull();
+        array = new JsonArray();
+        assertThat(ProtobufUtil.jsonToProtobuf(array, FrameworkTest.SerializationTest.class)).isNull();
+        array.add(JsonNull.INSTANCE);
+        assertThat(ProtobufUtil.jsonToProtobuf(array, FrameworkTest.SerializationTest.class)).isNull();
+    }
+
 }
