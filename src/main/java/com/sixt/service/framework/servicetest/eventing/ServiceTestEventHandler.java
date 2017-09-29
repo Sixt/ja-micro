@@ -39,10 +39,10 @@ public class ServiceTestEventHandler implements EventReceivedCallback<String> {
 
     private static final String GROUP_ID = "service-integration-test";
     private static final int TIMEOUT = 30;
-    private final static int POLL_TIME = 200;
-    private final static int CORE_POOL_SIZE = 1;
-    private final static int MAX_POOL_SIZE = 1;
-    private final static int KEEP_ALIVE_TIME = 15;
+    private static final int POLL_TIME = 200;
+    private static final int CORE_POOL_SIZE = 1;
+    private static final int MAX_POOL_SIZE = 1;
+    private static final int KEEP_ALIVE_TIME = 15;
 
     private final KafkaSubscriberFactory<String> subscriberFactory;
     @VisibleForTesting
@@ -160,9 +160,6 @@ public class ServiceTestEventHandler implements EventReceivedCallback<String> {
         }
 
         executor.shutdownNow();
-
-        // We clear the expected events to be ready for the next testcase
-        expectedEvents.clear();
 
         return foundEvents;
     }
