@@ -16,28 +16,23 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.sixt.service.framework.MethodHandlerDictionary;
 import com.sixt.service.framework.ServiceProperties;
-import com.sixt.service.framework.rpc.LoadBalancer;
-import com.sixt.service.framework.servicetest.mockservice.DockerLoadBalancer;
 import com.sixt.service.framework.servicetest.mockservice.ImpersonatedPortDictionary;
 import org.eclipse.jetty.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class TestInjectionModule extends AbstractModule {
+public abstract class TestInjectionModule extends AbstractModule {
 
 	private static final Logger logger = LoggerFactory.getLogger(TestInjectionModule.class);
 
-	private ServiceProperties serviceProperties = new ServiceProperties();
-	private MethodHandlerDictionary methodHandlerDictionary = new MethodHandlerDictionary();
-	private ServerSocket serverSocket;
-	private final ImpersonatedPortDictionary portDictionary = ImpersonatedPortDictionary.getInstance();
+	protected final ServiceProperties serviceProperties;
+	protected final MethodHandlerDictionary methodHandlerDictionary = new MethodHandlerDictionary();
+	protected final ImpersonatedPortDictionary portDictionary = ImpersonatedPortDictionary.getInstance();
 
-	public TestInjectionModule(String serviceName, ServiceProperties props) {
+    public TestInjectionModule(String serviceName, ServiceProperties props) {
 		this.serviceProperties = props;
         serviceProperties.setServiceName(serviceName);
 		if (props.getProperty("registry") == null) {
@@ -49,20 +44,6 @@ public class TestInjectionModule extends AbstractModule {
         if (props.getProperty("kafkaServer") == null) {
             serviceProperties.addProperty("kafkaServer", "localhost:9092");
         }
-        serverSocket = buildServerSocket();
-		serviceProperties.initialize(new String[0]);
-        serviceProperties.setServicePort(serverSocket.getLocalPort());
-	}
-
-	public TestInjectionModule(String serviceName) {
-	    this(serviceName, new ServiceProperties());
-	}
-
-	@Override
-	protected void configure() {
-		bind(ServiceProperties.class).toInstance(serviceProperties);
-		bind(ServerSocket.class).toInstance(serverSocket);
-		bind(LoadBalancer.class).to(DockerLoadBalancer.class);
 	}
 
 	@Provides
@@ -92,20 +73,6 @@ public class TestInjectionModule extends AbstractModule {
 	public ExecutorService getExecutorService() {
 		return Executors.newCachedThreadPool();
 	}
-
-	private ServerSocket buildServerSocket() {
-		return nextServerSocket();
-    }
-
-    private ServerSocket nextServerSocket() {
-        int port = portDictionary.internalPortForImpersonated(serviceProperties.getServiceName());
-        try {
-            return new ServerSocket(port);
-        } catch (IOException e) {
-            logger.error("Could not create ServerSocket on port {}", port);
-            return null;
-        }
-    }
 
 	public ServiceProperties getServiceProperties() {
 		return serviceProperties;

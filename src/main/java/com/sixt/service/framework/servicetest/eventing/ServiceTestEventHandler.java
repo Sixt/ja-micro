@@ -44,10 +44,10 @@ public class ServiceTestEventHandler implements EventReceivedCallback<String> {
     private final static int MAX_POOL_SIZE = 1;
     private final static int KEEP_ALIVE_TIME = 15;
 
-    private final KafkaSubscriberFactory<String> subscriberFactory;
     @VisibleForTesting
     protected KafkaSubscriber kafkaSubscriber;
-    private ConcurrentLinkedQueue<JsonObject> readEvents = new ConcurrentLinkedQueue<>();
+    private final KafkaSubscriberFactory<String> subscriberFactory;
+    private final ConcurrentLinkedQueue<JsonObject> readEvents = new ConcurrentLinkedQueue<>();
 
     @Inject
     public ServiceTestEventHandler(KafkaSubscriberFactory<String> kafkaFactory) {

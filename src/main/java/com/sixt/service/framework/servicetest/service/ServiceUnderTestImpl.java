@@ -26,6 +26,7 @@ import com.sixt.service.framework.rpc.LoadBalancerFactory;
 import com.sixt.service.framework.rpc.RpcCallException;
 import com.sixt.service.framework.rpc.RpcClientFactory;
 import com.sixt.service.framework.servicetest.eventing.ServiceTestEventHandler;
+import com.sixt.service.framework.servicetest.injection.ServiceUnderTestModule;
 import com.sixt.service.framework.servicetest.injection.TestInjectionModule;
 import com.squareup.wire.schema.internal.parser.RpcMethodScanner;
 import org.slf4j.Logger;
@@ -59,8 +60,9 @@ public class ServiceUnderTestImpl implements ServiceUnderTest {
     }
 
     private ServiceUnderTestImpl(String serviceName, boolean useEventHandler, String kafkaTopic) {
-        TestInjectionModule baseModule = new TestInjectionModule(serviceName);
-        ServiceProperties serviceProperties = baseModule.getServiceProperties();
+        ServiceProperties serviceProperties = new ServiceProperties();
+        serviceProperties.initialize(new String[0]);
+        TestInjectionModule baseModule = new ServiceUnderTestModule(serviceName, serviceProperties);
         Injector injector = Guice.createInjector(baseModule, new ServiceRegistryModule(serviceProperties),
                 new TracingModule(serviceProperties));
 
