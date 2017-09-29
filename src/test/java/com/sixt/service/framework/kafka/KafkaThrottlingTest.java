@@ -61,7 +61,7 @@ public class KafkaThrottlingTest {
         KafkaPublisherFactory publisherFactory = new KafkaPublisherFactory(props);
         KafkaPublisher publisher = publisherFactory.newBuilder(topic).build();
 
-        KafkaSubscriberFactory subscriberFactory = new KafkaSubscriberFactory<String>(props);
+        KafkaSubscriberFactory<String> subscriberFactory = new KafkaSubscriberFactory<>(props);
         EventReceivedCallback<String> callback = (message, topicInfo) -> {
             latch.countDown();
             try {
@@ -70,7 +70,6 @@ public class KafkaThrottlingTest {
                 e.printStackTrace();
             }
         };
-        //noinspection unchecked
         subscriberFactory.newBuilder(topic, callback).withPollTime(50).withAutoCommit(true).build();
 
         for (int i = 0; i < messageCount; i++) {

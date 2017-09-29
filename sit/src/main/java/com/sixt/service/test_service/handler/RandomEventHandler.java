@@ -19,27 +19,27 @@ import com.sixt.service.framework.kafka.KafkaSubscriber;
 import com.sixt.service.framework.kafka.KafkaSubscriberFactory;
 import com.sixt.service.framework.kafka.KafkaTopicInfo;
 import com.sixt.service.test_service.api.TestServiceOuterClass;
+import com.sixt.service.test_service.api.TestServiceOuterClass.RandomSampleEvent;
 import com.sixt.service.test_service.infrastructure.RandomEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class RandomEventHandler implements EventReceivedCallback<TestServiceOuterClass.RandomSampleEvent> {
+public class RandomEventHandler implements EventReceivedCallback<RandomSampleEvent> {
 
     private static Logger logger = LoggerFactory.getLogger(RandomEventHandler.class);
 
     private final KafkaSubscriber subscriber;
     private final RandomEventPublisher publisher;
 
-    @SuppressWarnings("unchecked")
     @Inject
-    public RandomEventHandler(KafkaSubscriberFactory factory, RandomEventPublisher publisher) {
+    public RandomEventHandler(KafkaSubscriberFactory<RandomSampleEvent> factory, RandomEventPublisher publisher) {
         this.subscriber = factory.newBuilder("events.RandomTopic", this).build();
         this.publisher = publisher;
     }
 
     @Override
-    public void eventReceived(TestServiceOuterClass.RandomSampleEvent message, KafkaTopicInfo topicInfo) {
+    public void eventReceived(RandomSampleEvent message, KafkaTopicInfo topicInfo) {
         try {
             logger.info("Handling RandomSampleEvent event: {}", message);
             // do some handling
