@@ -13,7 +13,7 @@ plugins {
     id 'project-report'
 
     id 'net.researchgate.release' version '2.6.0'
-    id 'com.github.ben-manes.versions' version '0.14.0'
+    id 'com.github.ben-manes.versions' version '0.15.0'
     id 'com.jfrog.bintray' version '1.7.3'
     id 'com.google.protobuf' version '0.8.1'
 }
@@ -227,3 +227,17 @@ compileJava {
 }
 
 build.dependsOn dependencyUpdates
+
+dependencyUpdates.resolutionStrategy = {
+  componentSelection { rules ->
+    rules.all { ComponentSelection selection ->
+      boolean rejected = ['alpha', 'beta', 'rc', 'cr', 'm'].any { qualifier ->
+        selection.candidate.version ==~ /(?i).*[.-]${qualifier}[.\d-]*/
+      }
+      if (rejected) {
+        selection.reject('Release candidate')
+      }
+    }
+  }
+}
+
