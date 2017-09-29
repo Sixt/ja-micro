@@ -27,6 +27,7 @@ import com.sixt.service.framework.registry.ServiceDiscoveryProvider;
 import com.sixt.service.framework.registry.consul.RegistrationManager;
 import com.sixt.service.framework.rpc.LoadBalancerFactory;
 import com.sixt.service.framework.rpc.RpcClientFactory;
+import com.sixt.service.framework.servicetest.injection.ServiceImpersonatorModule;
 import com.sixt.service.framework.servicetest.injection.TestInjectionModule;
 import com.sixt.service.framework.util.Sleeper;
 import com.squareup.wire.schema.internal.parser.RpcMethodDefinition;
@@ -61,9 +62,9 @@ public class ServiceImpersonator {
 
     public ServiceImpersonator(String serviceName, ServiceProperties props) throws Exception {
         //ServiceImpersonator needs its own injection stack so that each mock service
-        //and service under servicetest get their own ecosystem
+        //  and the service under test get their own ecosystem
         this.serviceName = serviceName;
-        TestInjectionModule testInjectionModule = new TestInjectionModule(serviceName, props);
+        TestInjectionModule testInjectionModule = new ServiceImpersonatorModule(serviceName, props);
         serviceProperties = testInjectionModule.getServiceProperties();
         serviceProperties.setServiceName(serviceName); //has to be before getting regMgr
         serviceProperties.setServiceInstanceId(UUID.randomUUID().toString());

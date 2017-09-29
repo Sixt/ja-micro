@@ -13,14 +13,12 @@
 package com.sixt.service.framework.kafka.messaging;
 
 import com.palantir.docker.compose.DockerComposeRule;
-import com.palantir.docker.compose.configuration.ProjectName;
 import com.sixt.service.framework.IntegrationTest;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.servicetest.helper.DockerComposeHelper;
 import com.sixt.service.framework.util.Sleeper;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.joda.time.Duration;
 import org.junit.*;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.Timeout;
@@ -236,6 +234,7 @@ public class KafkaIntegrationTest {
         for (Thread t : threads) {
             if (t.getName().equals(victimName)) {
                 logger.error("BOOM: Killing consumer thread {}", victimName);
+                //noinspection deprecation
                 t.stop(); // used by intention despite deprecation
             }
         }

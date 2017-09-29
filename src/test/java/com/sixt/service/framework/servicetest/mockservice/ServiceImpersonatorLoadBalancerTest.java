@@ -18,16 +18,8 @@ import org.junit.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-public class DockerLoadBalancerTest {
+public class ServiceImpersonatorLoadBalancerTest {
 
-    private DockerLoadBalancer loadBalancer = new DockerLoadBalancer(mock(ProcessUtil.class));
 
-    @Test
-    public void parseExposedPortTest() {
-        String json = "[{\"NetworkSettings\": {\"Ports\": {\"5005/tcp\": " +
-                "[{\"HostIp\": \"0.0.0.0\",\"HostPort\": \"33240\"}]}}}]";
-        int result = loadBalancer.parseExposedPort(json, 5005);
-        assertThat(result).isEqualTo(33240);
-    }
 
 }

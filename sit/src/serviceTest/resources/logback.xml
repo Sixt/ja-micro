@@ -1,0 +1,14 @@
+<configuration>
+    <jmxConfigurator />
+
+    <include resource="logback-base.xml" />
+
+    <!-- Default for Sixt code is 'info', can be overridden with env var SIXT_LOGGING -->
+    <logger name="com.sixt" level="${SIXT_LOGGING:-debug}" additivity="false">
+        <appender-ref ref="stdout" />
+    </logger>
+
+    <root level="info">
+        <appender-ref ref="stdout"/>
+    </root>
+</configuration>

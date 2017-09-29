@@ -15,6 +15,7 @@ services:
     ports:
       - "5005"
       - "40000"
+      - "42000-42001"
     depends_on:
       zookeeper:
         condition: service_started
