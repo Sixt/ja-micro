@@ -77,7 +77,7 @@ public class ProtobufUtil {
             JsonFormat.parser().ignoringUnknownFields().merge(input, builder);
             return (TYPE) builder.build();
         } catch (Exception e) {
-            throw new RuntimeException("Error deserializing json to protobuf", e);
+            throw new RuntimeException("Error deserializing json to protobuf. Input = " + input, e);
         }
     }
 
