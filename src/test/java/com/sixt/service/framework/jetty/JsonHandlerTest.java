@@ -63,7 +63,7 @@ public class JsonHandlerTest {
         when(metricRegistry.timer(anyString())).thenReturn(mock(Timer.class));
 
         handlerMetrics = mock(RpcHandlerMetrics.class);
-        when(handlerMetrics.getMethodTimer(anyString(), anyString(), anyString())).thenReturn(mock(GoTimer.class));
+        when(handlerMetrics.getMethodTimer(any(), any(), any())).thenReturn(mock(GoTimer.class));
 
         servlet = new JsonHandler(handlerDictionary, metricRegistry, handlerMetrics, new ServiceProperties(), null);
     }

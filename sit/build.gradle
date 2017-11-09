@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.bmuschko:gradle-docker-plugin:3.0.6'
+        classpath 'com.bmuschko:gradle-docker-plugin:3.2.0'
         classpath 'org.ajoberstar:grgit:1.9.1'
     }
     configurations.classpath {
@@ -14,7 +14,7 @@ buildscript {
 }
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '1.2.4'  //build shadow jars
+    id 'com.github.johnrengelman.shadow' version '2.0.1'  //build shadow jars
 }
 
 apply plugin: 'java'
@@ -146,9 +146,9 @@ dependencies {
     compile project(":")
 
     // https://github.com/palantir/docker-compose-rule
-    compile 'com.palantir.docker.compose:docker-compose-rule-junit4:0.31.1'
+    compile 'com.palantir.docker.compose:docker-compose-rule-junit4:0.32.1'
 
-    serviceIntegrationTestCompile 'org.assertj:assertj-core:3.6.2'
+    serviceIntegrationTestCompile 'org.assertj:assertj-core:3.8.0'
 }
 
 jar {
@@ -180,7 +180,7 @@ task serviceIntegrationTest(type: Test, dependsOn: prepareServiceTestEnvironment
     description "Run service integration tests."
     group "verification"
     include '**/ServiceIntegrationTestSuite.class'
-    testClassesDir = sourceSets.serviceIntegrationTest.output.classesDir
+    testClassesDirs = sourceSets.serviceIntegrationTest.output.classesDirs
     classpath = sourceSets.serviceIntegrationTest.runtimeClasspath
 
     outputs.upToDateWhen { false }

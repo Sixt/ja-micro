@@ -25,7 +25,6 @@ import java.util.Map;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class KafkaSubscriberTest {
 
@@ -44,11 +43,10 @@ public class KafkaSubscriberTest {
         subscriber.consume(message3);
         subscriber.consume(message4);
         KafkaConsumer realConsumer = mock(KafkaConsumer.class);
-        class ArgMatcher extends ArgumentMatcher<Map<TopicPartition, OffsetAndMetadata>> {
+        class ArgMatcher implements ArgumentMatcher<Map<TopicPartition, OffsetAndMetadata>> {
             @Override
-            public boolean matches(Object arg) {
-                Map<TopicPartition, OffsetAndMetadata> data = (Map<TopicPartition, OffsetAndMetadata>) arg;
-                OffsetAndMetadata oam = data.values().iterator().next();
+            public boolean matches(Map<TopicPartition, OffsetAndMetadata> arg) {
+                OffsetAndMetadata oam = arg.values().iterator().next();
                 return oam.offset() == 3;
             }
         }

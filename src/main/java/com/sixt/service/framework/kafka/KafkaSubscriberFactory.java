@@ -38,7 +38,7 @@ public class KafkaSubscriberFactory<TYPE> {
         }
     }
 
-    public KafkaSubscriberBuilder newBuilder(String topic, EventReceivedCallback<TYPE> callback) {
+    public KafkaSubscriberBuilder<TYPE> newBuilder(String topic, EventReceivedCallback<TYPE> callback) {
         return new KafkaSubscriberBuilder<>(this, topic, callback);
     }
 
