@@ -1,7 +1,7 @@
 buildscript {
     dependencies {
         classpath 'org.apache.ant:ant:1.10.1'
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.1'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.3'
     }
 }
 
@@ -13,9 +13,9 @@ plugins {
     id 'project-report'
 
     id 'net.researchgate.release' version '2.6.0'
-    id 'com.github.ben-manes.versions' version '0.15.0'
-    id 'com.jfrog.bintray' version '1.7.3'
-    id 'com.google.protobuf' version '0.8.1'
+    id 'com.github.ben-manes.versions' version '0.17.0'
+    id 'com.jfrog.bintray' version '1.8.0'
+    id 'com.google.protobuf' version '0.8.3'
 }
 
 group = 'com.sixt.service'
@@ -95,52 +95,52 @@ release {
 afterReleaseBuild.dependsOn bintrayUpload
 
 ext.versions = [
-        'jetty'    : '9.4.3.v20170317',
-        'protobuf' : '3.2.0',
-        'guice'    : '4.1.0',
-        'kafka'    : '0.10.2.1',
-        'guava'    : '21.0',
-        'logback'  : '1.2.3',
-        'slf4j'    : '1.7.25',
-        'tracing'  : '0.21.0',
-        'powermock': '1.6.6'
+    'jetty'    : '9.4.7.v20170914',
+    'protobuf' : '3.4.0',
+    'guice'    : '4.1.0',
+    'kafka'    : '1.0.0',
+    'guava'    : '23.3-jre',
+    'logback'  : '1.2.3',
+    'slf4j'    : '1.7.25',
+    'tracing'  : '0.21.0',
+    'powermock': '1.7.3'
 ]
 
 dependencies { //achtung: order does matter!
 
     //Commons utilities
-    compile 'org.apache.commons:commons-lang3:3.5'
-    compile 'commons-io:commons-io:2.5'
+    compile 'org.apache.commons:commons-lang3:3.7'
+    compile 'commons-io:commons-io:2.6'
     compile "com.google.guava:guava:$versions.guava"
 
     //JSON
-    compile 'com.google.code.gson:gson:2.8.0'
+    compile 'com.google.code.gson:gson:2.8.2'
 
     //Guice dependency injection
     compile "com.google.inject:guice:$versions.guice"
     compile "com.google.inject.extensions:guice-servlet:$versions.guice"
 
     // Kubernetes
-    runtime 'io.fabric8:kubernetes-client:1.4.31'
+    runtime 'io.fabric8:kubernetes-client:3.0.3'
 
     //Protobuf
     compile "com.google.protobuf:protobuf-java:$versions.protobuf"
     compile "com.google.protobuf:protobuf-java-util:$versions.protobuf"
 
     //http client
-    compile 'com.fasterxml.jackson.core:jackson-core:2.8.5'
-    compile 'javax.servlet:javax.servlet-api:3.1.0'
-    compile 'javax.validation:validation-api:1.1.0.Final'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.9.2'
+    compile 'javax.servlet:javax.servlet-api:4.0.0'
+    compile 'javax.validation:validation-api:2.0.0.Final'
 
     //metrics
-    compile 'io.dropwizard.metrics:metrics-core:3.2.2'
+    compile 'io.dropwizard.metrics:metrics-core:3.2.5'
 
     //tracing
     compile "io.opentracing:opentracing-api:$versions.tracing"
     compile "io.opentracing:opentracing-noop:$versions.tracing"
 
     //Classpath scanner
-    compile 'io.github.lukehutch:fast-classpath-scanner:2.0.18'
+    compile 'io.github.lukehutch:fast-classpath-scanner:2.8.2'
 
     //Jetty
     compile "org.eclipse.jetty:jetty-client:$versions.jetty"
@@ -153,14 +153,14 @@ dependencies { //achtung: order does matter!
     //logging
     compile "ch.qos.logback:logback-core:$versions.logback"
     compile "ch.qos.logback:logback-classic:$versions.logback"
-    compile 'net.logstash.logback:logstash-logback-encoder:4.9'
+    compile 'net.logstash.logback:logstash-logback-encoder:4.11'
     compile "org.slf4j:slf4j-api:$versions.slf4j"
 
     //read manifests
     compile 'com.jcabi:jcabi-manifests:1.1'
 
     //migrate database schemas
-    compile 'org.flywaydb:flyway-core:4.1.2'
+    compile 'org.flywaydb:flyway-core:4.2.0'
 
     //kafka
     compile "org.apache.kafka:kafka-clients:$versions.kafka"
@@ -170,23 +170,22 @@ dependencies { //achtung: order does matter!
     compile 'com.squareup.wire:wire-schema:2.2.0'
 
     // https://github.com/palantir/docker-compose-rule
-    compile 'com.palantir.docker.compose:docker-compose-rule-junit4:0.32.0'
+    compile 'com.palantir.docker.compose:docker-compose-rule-junit4:0.32.1'
 
     compile 'org.nanohttpd:nanohttpd:2.3.1'
 
     //Testing
     testCompile 'junit:junit:4.12'
-    testCompile 'org.mockito:mockito-core:1.10.19'
     testCompile "org.powermock:powermock-module-junit4:$versions.powermock"
-    testCompile "org.powermock:powermock-api-mockito:$versions.powermock"
-    testCompile "org.powermock:powermock-core:$versions.powermock"
-    testCompile 'org.assertj:assertj-core:3.6.2'
+    testCompile "org.powermock:powermock-api-mockito2:$versions.powermock"
+    testCompile 'org.mockito:mockito-core:2.8.+'
+    testCompile 'org.assertj:assertj-core:3.8.0'
     testCompile 'joda-time:joda-time:2.9.9'
 }
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:$versions.protobuf"
+        artifact = 'com.google.protobuf:protoc:3.2.0' //carefully controlled to keep compat with go code
     }
 }
 

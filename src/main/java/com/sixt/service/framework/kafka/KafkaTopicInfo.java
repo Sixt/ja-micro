@@ -48,4 +48,26 @@ public class KafkaTopicInfo {
         return key;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        KafkaTopicInfo topicInfo = (KafkaTopicInfo) o;
+
+        if (getPartition() != topicInfo.getPartition()) return false;
+        if (getOffset() != topicInfo.getOffset()) return false;
+        if (getTopic() != null ? !getTopic().equals(topicInfo.getTopic()) : topicInfo.getTopic() != null) return false;
+        return getKey() != null ? getKey().equals(topicInfo.getKey()) : topicInfo.getKey() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getTopic() != null ? getTopic().hashCode() : 0;
+        result = 31 * result + getPartition();
+        result = 31 * result + (int) (getOffset() ^ (getOffset() >>> 32));
+        result = 31 * result + (getKey() != null ? getKey().hashCode() : 0);
+        return result;
+    }
+
 }

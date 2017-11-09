@@ -38,7 +38,7 @@ public class KafkaSubscriberBuilder<TYPE> {
     /**
      * Unless called, will initialize with test_service UUID group-id
      */
-    public KafkaSubscriberBuilder withGroupId(String groupId) {
+    public KafkaSubscriberBuilder<TYPE> withGroupId(String groupId) {
         this.groupId = groupId;
         return this;
     }
@@ -46,7 +46,7 @@ public class KafkaSubscriberBuilder<TYPE> {
     /**
      * Unless called, will initialize without auto-commit
      */
-    public KafkaSubscriberBuilder withAutoCommit(boolean value) {
+    public KafkaSubscriberBuilder<TYPE> withAutoCommit(boolean value) {
         this.enableAutoCommit = value;
         return this;
     }
@@ -54,7 +54,7 @@ public class KafkaSubscriberBuilder<TYPE> {
     /**
      * Unless called, will initialize by starting at the earliest offset
      */
-    public KafkaSubscriberBuilder withOffsetReset(KafkaSubscriber.OffsetReset value) {
+    public KafkaSubscriberBuilder<TYPE> withOffsetReset(KafkaSubscriber.OffsetReset value) {
         this.offsetReset = value;
         return this;
     }
@@ -62,14 +62,14 @@ public class KafkaSubscriberBuilder<TYPE> {
     /**
      * Unless called, will initialize with single-threaded reader
      */
-    public KafkaSubscriberBuilder withThreadPool(int minThreads, int maxThreads, int idleTimeoutSeconds) {
+    public KafkaSubscriberBuilder<TYPE> withThreadPool(int minThreads, int maxThreads, int idleTimeoutSeconds) {
         this.minThreads = minThreads;
         this.maxThreads = maxThreads;
         this.idleTimeoutSeconds = idleTimeoutSeconds;
         return this;
     }
 
-    public KafkaSubscriberBuilder withPollTime(int pollTimeMillis) {
+    public KafkaSubscriberBuilder<TYPE> withPollTime(int pollTimeMillis) {
         this.pollTime = pollTimeMillis;
         return this;
     }
@@ -79,7 +79,7 @@ public class KafkaSubscriberBuilder<TYPE> {
      * kafka until the actual consumer can catch up.  Setting to -1 disables throttling
      * (which can cause unexpected memory bloat).
      */
-    public KafkaSubscriberBuilder withThrottlingLimit(int throttleLimit) {
+    public KafkaSubscriberBuilder<TYPE> withThrottlingLimit(int throttleLimit) {
         this.throttleLimit = throttleLimit;
         return this;
     }

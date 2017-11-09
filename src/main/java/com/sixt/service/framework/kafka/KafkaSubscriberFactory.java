@@ -38,9 +38,8 @@ public class KafkaSubscriberFactory<TYPE> {
         }
     }
 
-    @SuppressWarnings(value = "unchecked")
-    public KafkaSubscriberBuilder newBuilder(String topic, EventReceivedCallback<TYPE> callback) {
-        return new KafkaSubscriberBuilder(this, topic, callback);
+    public KafkaSubscriberBuilder<TYPE> newBuilder(String topic, EventReceivedCallback<TYPE> callback) {
+        return new KafkaSubscriberBuilder<>(this, topic, callback);
     }
 
     public void builtSubscriber(KafkaSubscriber<TYPE> subscriber) {
