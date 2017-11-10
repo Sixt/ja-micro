@@ -18,18 +18,16 @@ public interface RetryBackOffFunction {
         AtomicBoolean notOverYet = new AtomicBoolean(true);
         Long startedAt = new Date().getTime();
 
-        while (!Thread.currentThread().isInterrupted() && notOverYet.get()) {
-            synchronized (notOverYet) {
-                // we are in a while loop here to protect against spurious interrupts
-                while (notOverYet.get()) {
-                    try {
-                        notOverYet.set((new Date().getTime() - startedAt) <= timeout.toMillis());
-                        notOverYet.wait(1);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        // we should probably quit if we are interrupted?
-                        return;
-                    }
+        synchronized (notOverYet) {
+            // we are in a while loop here to protect against spurious interrupts
+            while (!Thread.currentThread().isInterrupted() && notOverYet.get()) {
+                try {
+                    notOverYet.set((new Date().getTime() - startedAt) <= timeout.toMillis());
+                    notOverYet.wait(1);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    // we should probably quit if we are interrupted?
+                    return;
                 }
             }
         }
