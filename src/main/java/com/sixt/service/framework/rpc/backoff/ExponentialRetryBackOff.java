@@ -2,17 +2,18 @@ package com.sixt.service.framework.rpc.backoff;
 
 import java.time.Duration;
 
-public class ExponentialRetryBackOff
+public final class ExponentialRetryBackOff
     implements RetryBackOffFunction {
 
-    private final Duration exponentialStep;
+    private final Duration base;
 
-    ExponentialRetryBackOff(final Duration exponentialStep) {
-        this.exponentialStep = exponentialStep;
-    }
+    public ExponentialRetryBackOff(final Duration exponentialBase) {
+        if (exponentialBase == null) {
+            throw new IllegalArgumentException(
+                "Exponential step should not be null, otherwise use " + DefaultExponentialBackOff.class.getName());
+        }
 
-    ExponentialRetryBackOff() {
-        this(null);
+        base = exponentialBase;
     }
 
     @Override
@@ -20,8 +21,7 @@ public class ExponentialRetryBackOff
         if (retryCounter == 0) {
             return Duration.ofMillis(0);
         } else {
-            return Duration.ofMillis((long) Math.pow(
-                exponentialStep == null ? 10d : exponentialStep.toMillis(), retryCounter));
+            return Duration.ofMillis((long) Math.pow(base.toMillis(), retryCounter));
         }
     }
 }
