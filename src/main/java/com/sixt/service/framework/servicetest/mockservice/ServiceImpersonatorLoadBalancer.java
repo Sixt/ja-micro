@@ -35,6 +35,7 @@ public class ServiceImpersonatorLoadBalancer implements LoadBalancer {
     protected String serviceName;
     protected ServiceEndpoint serviceEndpoint;
     protected final DockerPortResolver dockerPortResolver;
+    protected HttpClientWrapper httpClientWrapper;
 
     @Inject
     public ServiceImpersonatorLoadBalancer(DockerPortResolver dockerPortResolver) {
@@ -52,7 +53,15 @@ public class ServiceImpersonatorLoadBalancer implements LoadBalancer {
     }
 
     @Override
-    public HttpClientWrapper getHttpClientWrapper() {
+    public synchronized HttpClientWrapper getHttpClientWrapper() {
+        //we have to do lazy initialization because the service name needs to be correctly set
+        if (httpClientWrapper == null) {
+            httpClientWrapper = createHttpClientWrapper();
+        }
+        return httpClientWrapper;
+    }
+
+    protected HttpClientWrapper createHttpClientWrapper() {
         int port = locateTargetServicePort();
         serviceEndpoint = new ServiceEndpoint(new ScheduledThreadPoolExecutor(1),
                 "localhost:" + port, "");
