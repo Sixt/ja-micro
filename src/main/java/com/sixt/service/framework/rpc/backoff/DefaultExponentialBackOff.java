@@ -2,16 +2,16 @@ package com.sixt.service.framework.rpc.backoff;
 
 import java.time.Duration;
 
-public final class DefaultExponentialBackOff implements RetryBackOffFunction {
+/**
+ *  Default implementation of Exponential wait on retry function
+ *  that produces a timeout for (10000 ^ call_counter) milliseconds
+ */
+public final class DefaultExponentialBackOff
+    extends ExponentialRetryBackOff {
 
-    private static final double DEFAULT_BASE = 10d;
+    private static final Duration DEFAULT_BASE = Duration.ofSeconds(10);
 
-    @Override
-    public Duration timeout(final int retryCounter) {
-        if (retryCounter == 0) {
-            return Duration.ofMillis(0);
-        } else {
-            return Duration.ofMillis((long) Math.pow(DEFAULT_BASE, retryCounter));
-        }
+    public DefaultExponentialBackOff() {
+        super(DEFAULT_BASE);
     }
 }
