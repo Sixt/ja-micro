@@ -4,6 +4,7 @@ import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.kafka.messaging.EmptyMessage;
 import com.sixt.service.framework.metrics.GoTimer;
+import com.sixt.service.framework.protobuf.ProtobufRpcRequest;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import org.eclipse.jetty.client.HttpClient;
