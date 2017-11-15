@@ -182,6 +182,7 @@ dependencies { //achtung: order does matter!
     testCompile "org.powermock:powermock-core:$versions.powermock"
     testCompile 'org.assertj:assertj-core:3.6.2'
     testCompile 'joda-time:joda-time:2.9.9'
+    testCompile 'pl.pragmatists:JUnitParams:1.0.5'
 }
 
 protobuf {

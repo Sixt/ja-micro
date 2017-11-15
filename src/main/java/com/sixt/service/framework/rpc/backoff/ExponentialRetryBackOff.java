@@ -3,29 +3,22 @@ package com.sixt.service.framework.rpc.backoff;
 import java.time.Duration;
 
 /**
- * Exponential implementation or retry timeout function that takes a settled exponential base and produces
- * a (BASE_IN_MILLISECONDS ^ call_counter) milliseconds timeouts
+ * This causes a sleep for (exponentialBase ^ retryCounter) seconds between retries
  */
-public class ExponentialRetryBackOff
-    implements RetryBackOffFunction {
+public class ExponentialRetryBackOff implements RetryBackOffFunction {
 
-    private final Duration exponentialBase;
+    private final float exponentialBase;
 
-    public ExponentialRetryBackOff(final Duration base) {
-        if (base == null) {
-            throw new IllegalArgumentException(
-                "Exponential step should not be null, otherwise use " + DefaultExponentialBackOff.class.getName());
+    public ExponentialRetryBackOff(final float base) {
+        if (base <= 1) {
+            throw new IllegalArgumentException("Base cannot be <= 1");
         }
-
         exponentialBase = base;
     }
 
     @Override
     public final Duration timeout(final int retryCounter) {
-        if (retryCounter == 0) {
-            return Duration.ofMillis(0);
-        } else {
-            return Duration.ofMillis((long) Math.pow(exponentialBase.toMillis(), retryCounter));
-        }
+        return Duration.ofSeconds((long) Math.pow(exponentialBase, retryCounter));
     }
+
 }
