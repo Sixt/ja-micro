@@ -121,7 +121,7 @@ dependencies { //achtung: order does matter!
     compile "com.google.inject.extensions:guice-servlet:$versions.guice"
 
     // Kubernetes
-    runtime 'io.fabric8:kubernetes-client:3.0.3'
+    runtime 'io.fabric8:kubernetes-client:1.4.35'
 
     //Protobuf
     compile "com.google.protobuf:protobuf-java:$versions.protobuf"
