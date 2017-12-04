@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.bmuschko:gradle-docker-plugin:3.2.0'
+        classpath 'com.bmuschko:gradle-docker-plugin:3.2.1'
         classpath 'org.ajoberstar:grgit:1.9.1'
     }
     configurations.classpath {
@@ -146,7 +146,7 @@ dependencies {
     compile project(":")
 
     // https://github.com/palantir/docker-compose-rule
-    compile 'com.palantir.docker.compose:docker-compose-rule-junit4:0.32.1'
+    compile 'com.palantir.docker.compose:docker-compose-rule-junit4:0.33.0'
 
     serviceIntegrationTestCompile 'org.assertj:assertj-core:3.8.0'
 }

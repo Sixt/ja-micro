@@ -12,6 +12,7 @@
 
 package com.sixt.service.framework.kafka;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -32,9 +33,8 @@ public class KafkaPublisher {
 
     private final Map<String, String> properties;
     private final String topic;
-
-    private KafkaProducer<String, String> realProducer;
-
+    @VisibleForTesting
+    protected KafkaProducer<String, String> realProducer;
     protected AtomicBoolean isInitialized = new AtomicBoolean(false);
 
     KafkaPublisher(String topic, Map<String, String> properties) {
@@ -102,7 +102,7 @@ public class KafkaPublisher {
         }
     }
 
-    private boolean publishEvents(boolean sync, String key, String[] events) {
+    protected boolean publishEvents(boolean sync, String key, String[] events) {
         if (realProducer == null) {
             throw new IllegalStateException("Kafka is null. Was the factory initialized?");
         }
@@ -113,14 +113,14 @@ public class KafkaPublisher {
                     if (ex == null) {
                         logger.debug("Sent message to Kafka: {}", metadata);
                     } else {
-                        logger.warn("Send failed for record {}", record, ex);
+                        throw new RuntimeException("Send failed for record " + record);
                     }
                 });
                 if (sync) {
                     future.get();
                 }
             } catch (Exception ex) {
-                logger.warn("Publishing event message to Kafka failed", ex);
+                logger.warn("Publishing message to Kafka failed", ex);
                 return false;
             }
         }
