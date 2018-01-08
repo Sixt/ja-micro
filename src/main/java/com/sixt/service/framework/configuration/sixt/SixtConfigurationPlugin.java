@@ -123,7 +123,7 @@ public class SixtConfigurationPlugin implements ConfigurationProvider, Runnable 
     private void processValues(List<ConfigurationOuterClass.ValueResponse> valuesList) {
         Map<String, String> newValues = new HashMap<>(valuesList.size());
         for (ConfigurationOuterClass.ValueResponse cv : valuesList) {
-            logger.debug("Got configuration, entry = {}, value = {}", cv.getName(), cv.getBaseValue());
+            logger.debug("Got configuration, entry = {}", cv.getName());
             newValues.put(cv.getName(), cv.getBaseValue());
         }
         configManager.processValues(newValues);
