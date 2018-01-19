@@ -39,9 +39,9 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
 
     protected EventReceivedCallback<TYPE> callback;
     protected String topic;
-    protected String groupId = UUID.randomUUID().toString();
-    protected boolean enableAutoCommit = false;
-    protected KafkaSubscriber.OffsetReset offsetReset = KafkaSubscriber.OffsetReset.Earliest;
+    protected String groupId;
+    protected boolean enableAutoCommit;
+    protected KafkaSubscriber.OffsetReset offsetReset;
     protected int minThreads;
     protected int maxThreads;
     protected int idleTimeoutSeconds;

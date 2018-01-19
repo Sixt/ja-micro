@@ -25,9 +25,9 @@ import com.sixt.service.framework.database.SchemaMigrator;
 import com.sixt.service.framework.health.HealthCheck;
 import com.sixt.service.framework.health.HealthCheckContributor;
 import com.sixt.service.framework.health.HealthCheckManager;
+import com.sixt.service.framework.health.ReadinessCheckServer;
 import com.sixt.service.framework.injection.*;
 import com.sixt.service.framework.jetty.JettyComposer;
-import com.sixt.service.framework.health.ReadinessCheckServer;
 import com.sixt.service.framework.jetty.RpcServlet;
 import com.sixt.service.framework.logging.SixtLogbackContext;
 import com.sixt.service.framework.metrics.MetricsReporterProvider;
@@ -37,6 +37,7 @@ import com.sixt.service.framework.rpc.LoadBalancerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,6 +146,14 @@ public abstract class AbstractService {
 
     public void startJettyContainer() throws Exception {
         jettyServer = new Server(serviceProperties.getServicePort());
+        org.eclipse.jetty.util.thread.ThreadPool threadPool = jettyServer.getThreadPool();
+        if (threadPool instanceof QueuedThreadPool) {
+            ((QueuedThreadPool) threadPool).setMaxThreads(32);
+            ((QueuedThreadPool) threadPool).setMinThreads(2);
+        } else {
+            logger.warn("Expected ThreadPool to be instance of QueuedThreadPool, but was {}",
+                    jettyServer.getThreadPool().getClass().getName());
+        }
         JettyComposer.compose(jettyServer);
         jettyServer.start();
         int port = ((ServerConnector) jettyServer.getConnectors()[0]).getLocalPort();
