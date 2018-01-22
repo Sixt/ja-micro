@@ -44,7 +44,7 @@ public class ServiceTestEventHandlerTest {
     public void setUp() throws Exception {
         ServiceProperties properties = new ServiceProperties();
         properties.addProperty("kafkaServer", "localhost:9092");
-        KafkaSubscriberFactory<String> kafkaFactory = new KafkaSubscriberFactory<>(properties);
+        KafkaSubscriberFactory<String> kafkaFactory = new KafkaSubscriberFactory<>(properties, null);
         eventHandler = new ServiceTestEventHandler(kafkaFactory);
         eventHandler.initialize("events");
     }

@@ -88,7 +88,7 @@ public class RandomServiceIntegrationTest {
         ServiceProperties serviceProperties = new ServiceProperties();
         serviceProperties.addProperty(ServiceProperties.KAFKA_SERVER_KEY,
                 System.getenv(ServiceProperties.KAFKA_SERVER_KEY));
-        KafkaPublisher publisher = new KafkaPublisherFactory(serviceProperties).newBuilder(topic).build();
+        KafkaPublisher publisher = new KafkaPublisherFactory(serviceProperties,null).newBuilder(topic).build();
         publisher.publishSync("test", "test", "test");
         TopicMessageCounter messageCounter = new TopicMessageCounter();
         long messageCount = messageCounter.getCount(System.getenv(ServiceProperties.KAFKA_SERVER_KEY), topic);

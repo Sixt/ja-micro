@@ -24,7 +24,7 @@ public class KafkaSubscriberProtobufFactoryTest implements EventReceivedCallback
     @Test
     public void buildSubscriber() throws Exception {
         ServiceProperties properties = new ServiceProperties();
-        KafkaSubscriberFactory factory = new KafkaSubscriberFactory(properties);
+        KafkaSubscriberFactory factory = new KafkaSubscriberFactory(properties, null);
         subscriber = factory.newBuilder("test", this).build();
     }
 

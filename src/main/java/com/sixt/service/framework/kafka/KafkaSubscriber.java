@@ -13,6 +13,9 @@
 package com.sixt.service.framework.kafka;
 
 import com.google.protobuf.Message;
+import com.sixt.service.framework.metrics.GoCounter;
+import com.sixt.service.framework.metrics.GoGauge;
+import com.sixt.service.framework.metrics.MetricBuilderFactory;
 import com.sixt.service.framework.protobuf.ProtobufUtil;
 import com.sixt.service.framework.util.ReflectionUtil;
 import org.apache.kafka.clients.consumer.*;
@@ -32,6 +35,7 @@ import static net.logstash.logback.marker.Markers.append;
 public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListener {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaSubscriber.class);
+    private MetricBuilderFactory metricBuilderFactory;
 
     public enum OffsetReset {
         Earliest, Latest;
@@ -59,6 +63,8 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
     protected AtomicInteger messageBacklog = new AtomicInteger(0);
     protected AtomicBoolean isReadingPaused = new AtomicBoolean(false);
     protected AtomicBoolean isInitialized = new AtomicBoolean(false);
+    private GoCounter messagesReadMetric = new GoCounter("");
+    private GoGauge messageBacklogMetric = new GoGauge("");
 
     KafkaSubscriber(EventReceivedCallback<TYPE> callback, String topic,
                     String groupId, boolean enableAutoCommit, OffsetReset offsetReset,
@@ -93,12 +99,17 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
                 TimeUnit.SECONDS, workQueue);
     }
 
+    public void setMetricBuilderFactory(MetricBuilderFactory metricBuilderFactory) {
+        this.metricBuilderFactory = metricBuilderFactory;
+    }
+
     synchronized void initialize(String servers) {
         if (isInitialized.get()) {
             logger.warn("Already initialized");
             return;
         }
 
+        buildMetrics();
         try {
             Properties props = new Properties();
             props.put("bootstrap.servers", servers);
@@ -122,6 +133,18 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
         } catch (Exception ex) {
             logger.error("Error building Kafka consumer", ex);
         }
+    }
+
+    private void buildMetrics() {
+        if (metricBuilderFactory == null) {
+            logger.warn("metricBuilderFactory was null");
+            return;
+        }
+        messagesReadMetric = metricBuilderFactory.newMetric("kafka_reads")
+                .withTag("topic", topic).withTag("group_id", groupId).buildCounter();
+        messageBacklogMetric = metricBuilderFactory.newMetric("kafka_read_backlog")
+                .withTag("topic", topic).withTag("group_id", groupId).buildGauge();
+        messageBacklogMetric.register("count", messageBacklog::get);
     }
 
     public void consume(KafkaTopicInfo message) {

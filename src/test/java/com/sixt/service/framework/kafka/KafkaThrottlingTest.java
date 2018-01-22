@@ -58,10 +58,10 @@ public class KafkaThrottlingTest {
         props.addProperty(KAFKA_SERVER_KEY, kafka.inFormat("$HOST:$EXTERNAL_PORT"));
 
         String topic = "throttle-test";
-        KafkaPublisherFactory publisherFactory = new KafkaPublisherFactory(props);
+        KafkaPublisherFactory publisherFactory = new KafkaPublisherFactory(props, null);
         KafkaPublisher publisher = publisherFactory.newBuilder(topic).build();
 
-        KafkaSubscriberFactory<String> subscriberFactory = new KafkaSubscriberFactory<>(props);
+        KafkaSubscriberFactory<String> subscriberFactory = new KafkaSubscriberFactory<>(props, null);
         EventReceivedCallback<String> callback = (message, topicInfo) -> {
             latch.countDown();
             try {

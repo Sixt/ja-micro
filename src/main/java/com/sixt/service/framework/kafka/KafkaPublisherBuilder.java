@@ -12,15 +12,16 @@
 
 package com.sixt.service.framework.kafka;
 
+import com.sixt.service.framework.metrics.MetricBuilderFactory;
+
 import java.util.Map;
 
 public class KafkaPublisherBuilder {
 
     private final Map<String, String> properties;
-
-    private KafkaPublisherFactory parentFactory;
-
-    protected String topic;
+    private final KafkaPublisherFactory parentFactory;
+    protected final String topic;
+    protected MetricBuilderFactory metricBuilderFactory;
 
     KafkaPublisherBuilder(KafkaPublisherFactory factory, String topic, Map<String, String> properties) {
         this.parentFactory = factory;
@@ -30,8 +31,13 @@ public class KafkaPublisherBuilder {
 
     public KafkaPublisher build() {
         KafkaPublisher retval = new KafkaPublisher(topic, properties);
+        retval.setMetricBuilderFactory(metricBuilderFactory);
         parentFactory.builtPublisher(retval);
         return retval;
+    }
+
+    public void setMetricBuilderFactory(MetricBuilderFactory metricBuilderFactory) {
+        this.metricBuilderFactory = metricBuilderFactory;
     }
 
 }

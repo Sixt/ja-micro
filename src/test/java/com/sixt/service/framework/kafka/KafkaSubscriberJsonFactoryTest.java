@@ -23,7 +23,7 @@ public class KafkaSubscriberJsonFactoryTest implements EventReceivedCallback<Str
     @Test
     public void buildSubscriber() throws Exception {
         ServiceProperties properties = new ServiceProperties();
-        KafkaSubscriberFactory<String> factory = new KafkaSubscriberFactory<>(properties);
+        KafkaSubscriberFactory<String> factory = new KafkaSubscriberFactory<>(properties, null);
         subscriber = factory.newBuilder("test", this).build();
     }
 

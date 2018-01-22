@@ -12,6 +12,8 @@
 
 package com.sixt.service.framework.kafka;
 
+import com.sixt.service.framework.metrics.MetricBuilderFactory;
+
 import java.util.UUID;
 
 public class KafkaSubscriberBuilder<TYPE> {
@@ -27,6 +29,7 @@ public class KafkaSubscriberBuilder<TYPE> {
     protected int idleTimeoutSeconds = 15;
     protected int pollTime = 1000;
     protected int throttleLimit = 100;
+    private MetricBuilderFactory metricBuilderFactory;
 
     KafkaSubscriberBuilder(KafkaSubscriberFactory<TYPE> factory, String topic,
                            EventReceivedCallback<TYPE> callback) {
@@ -88,8 +91,12 @@ public class KafkaSubscriberBuilder<TYPE> {
         KafkaSubscriber<TYPE> retval = new KafkaSubscriber<>(callback, topic, groupId,
                 enableAutoCommit, offsetReset, minThreads, maxThreads, idleTimeoutSeconds,
                 pollTime, throttleLimit);
+        retval.setMetricBuilderFactory(metricBuilderFactory);
         parentFactory.builtSubscriber(retval);
         return retval;
     }
 
+    public void setMetricBuilderFactory(MetricBuilderFactory metricBuilderFactory) {
+        this.metricBuilderFactory = metricBuilderFactory;
+    }
 }

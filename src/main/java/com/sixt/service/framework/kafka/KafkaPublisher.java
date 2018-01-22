@@ -13,6 +13,8 @@
 package com.sixt.service.framework.kafka;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.sixt.service.framework.metrics.GoTimer;
+import com.sixt.service.framework.metrics.MetricBuilderFactory;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -36,10 +38,16 @@ public class KafkaPublisher {
     @VisibleForTesting
     protected KafkaProducer<String, String> realProducer;
     protected AtomicBoolean isInitialized = new AtomicBoolean(false);
+    private MetricBuilderFactory metricBuilderFactory;
+    private GoTimer publishTimer = new GoTimer("");
 
     KafkaPublisher(String topic, Map<String, String> properties) {
         this.topic = topic;
         this.properties = properties;
+    }
+
+    public void setMetricBuilderFactory(MetricBuilderFactory metricBuilderFactory) {
+        this.metricBuilderFactory = metricBuilderFactory;
     }
 
     public void initialize(String servers) {
@@ -57,9 +65,18 @@ public class KafkaPublisher {
         props.put(ProducerConfig.ACKS_CONFIG, "all");
 
         properties.forEach(props::put);
-
+        buildMetrics();
         realProducer = new KafkaProducer<>(props);
         isInitialized.set(true);
+    }
+
+    private void buildMetrics() {
+        if (metricBuilderFactory == null) {
+            logger.warn("metricBuilderFactory was null");
+            return;
+        }
+        publishTimer = metricBuilderFactory.newMetric("kafka_writes")
+                .withTag("topic", topic).buildTimer();
     }
 
     /**
@@ -107,6 +124,7 @@ public class KafkaPublisher {
             throw new IllegalStateException("Kafka is null. Was the factory initialized?");
         }
         for (String event : events) {
+            long timestamp = publishTimer.start();
             ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, event);
             try {
                 Future<RecordMetadata> future = realProducer.send(record, (metadata, ex) -> {
@@ -119,8 +137,10 @@ public class KafkaPublisher {
                 if (sync) {
                     future.get();
                 }
+                publishTimer.recordSuccess(timestamp);
             } catch (Exception ex) {
                 logger.warn("Publishing message to Kafka failed", ex);
+                publishTimer.recordFailure(timestamp);
                 return false;
             }
         }
@@ -131,4 +151,5 @@ public class KafkaPublisher {
         realProducer.close();
         realProducer = null;
     }
+
 }

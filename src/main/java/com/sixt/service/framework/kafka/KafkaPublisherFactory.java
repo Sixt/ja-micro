@@ -15,6 +15,7 @@ package com.sixt.service.framework.kafka;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.sixt.service.framework.ServiceProperties;
+import com.sixt.service.framework.metrics.MetricBuilderFactory;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -27,10 +28,12 @@ public class KafkaPublisherFactory {
     protected ServiceProperties serviceProperties;
 
     private Collection<KafkaPublisher> kafkaPublishers = new ConcurrentLinkedQueue<>();
+    private final MetricBuilderFactory metricBuilderFactory;
 
     @Inject
-    public KafkaPublisherFactory(ServiceProperties serviceProperties) {
+    public KafkaPublisherFactory(ServiceProperties serviceProperties, MetricBuilderFactory metricBuilderFactory) {
         this.serviceProperties = serviceProperties;
+        this.metricBuilderFactory = metricBuilderFactory;
     }
 
     @Deprecated //no longer needed now that we get populated serviceProperties at guice bootstrap-time
@@ -42,11 +45,13 @@ public class KafkaPublisherFactory {
     }
 
     public KafkaPublisherBuilder newBuilder(String topic) {
-        return new KafkaPublisherBuilder(this, topic, Collections.emptyMap());
+        return newBuilder(topic, Collections.emptyMap());
     }
 
     public KafkaPublisherBuilder newBuilder(String topic, Map<String, String> properties) {
-        return new KafkaPublisherBuilder(this, topic, properties);
+        KafkaPublisherBuilder builder = new KafkaPublisherBuilder(this, topic, properties);
+        builder.setMetricBuilderFactory(metricBuilderFactory);
+        return builder;
     }
 
     void builtPublisher(KafkaPublisher publisher) {

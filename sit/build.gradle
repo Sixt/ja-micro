@@ -148,6 +148,9 @@ dependencies {
     // https://github.com/palantir/docker-compose-rule
     compile 'com.palantir.docker.compose:docker-compose-rule-junit4:0.33.0'
 
+    testCompile 'org.mockito:mockito-core:2.8.+'
+    testCompile 'org.assertj:assertj-core:3.8.0'
+
     serviceIntegrationTestCompile 'org.assertj:assertj-core:3.8.0'
 }
 
