@@ -33,6 +33,14 @@ public class KafkaSubscriberFactory<TYPE> {
         this.metricBuilderFactory = metricBuilderFactory;
     }
 
+    /**
+     * ONLY use this variant for unit tests!
+     */
+    @Deprecated
+    public KafkaSubscriberFactory(ServiceProperties serviceProperties) {
+        this(serviceProperties, null);
+    }
+
     @Deprecated //no longer needed now that we get populated serviceProperties at guice bootstrap-time
     public void initialize() {
         String servers = serviceProperties.getKafkaServer();
