@@ -65,6 +65,7 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
     protected AtomicBoolean isInitialized = new AtomicBoolean(false);
     private GoCounter messagesReadMetric = new GoCounter("");
     private GoGauge messageBacklogMetric = new GoGauge("");
+    private GoCounter rebalaceMetric = new GoCounter("");
 
     KafkaSubscriber(EventReceivedCallback<TYPE> callback, String topic,
                     String groupId, boolean enableAutoCommit, OffsetReset offsetReset,
@@ -145,6 +146,8 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
         messageBacklogMetric = metricBuilderFactory.newMetric("kafka_read_backlog")
                 .withTag("topic", topic).withTag("group_id", groupId).buildGauge();
         messageBacklogMetric.register("count", messageBacklog::get);
+        rebalaceMetric = metricBuilderFactory.newMetric("kafka_rebalance")
+                .withTag("topic", topic).withTag("group_id", groupId).buildCounter();
     }
 
     public void consume(KafkaTopicInfo message) {
@@ -181,6 +184,7 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
 
         ConsumerRecords<String, String> records = realConsumer.poll(pollTime);
         if (records != null) {
+            messagesReadMetric.incSuccess(records.count());
             for (ConsumerRecord<String, String> record : records) {
                 String rawMessage = record.value();
                 logger.debug(append("rawMessage", rawMessage), "Read Kafka message ({})", record.offset());
@@ -254,6 +258,7 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
 
     @Override
     public synchronized void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+        rebalaceMetric.incSuccess();
         offsetCommitter.partitionsAssigned(partitions);
     }
 
