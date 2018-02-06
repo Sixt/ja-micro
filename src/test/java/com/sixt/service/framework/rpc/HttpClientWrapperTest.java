@@ -49,6 +49,7 @@ public class HttpClientWrapperTest {
 
     private HttpContentResponse httpContentResponse = mock(HttpContentResponse.class);
     private JsonRpcCallExceptionDecoder decoder = mock(JsonRpcCallExceptionDecoder.class);
+    private ServiceDependencyHealthCheck dependencyHealthCheck;
 
     private HttpClientWrapper httpClientWrapper
         = new HttpClientWrapper(serviceProperties, httpClient, rpcClientMetrics, tracer);
@@ -72,6 +73,7 @@ public class HttpClientWrapperTest {
         when(request.timeout(anyLong(), any(TimeUnit.class))).thenReturn(request);
         when(request.send()).thenReturn(httpContentResponse);
         when(httpContentResponse.getStatus()).thenReturn(100);
+        dependencyHealthCheck = mock(ServiceDependencyHealthCheck.class);
     }
 
     @Ignore //TODO: Alex Borlis, please fix up this test.
@@ -121,6 +123,6 @@ public class HttpClientWrapperTest {
     }
 
     private ServiceEndpoint createServiceEndpoint() {
-        return new ServiceEndpoint(new ScheduledThreadPoolExecutor(2), "localhost:20001", "dc1");
+        return new ServiceEndpoint(new ScheduledThreadPoolExecutor(2), "localhost:20001", "dc1", dependencyHealthCheck);
     }
 }

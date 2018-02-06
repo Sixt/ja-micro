@@ -14,10 +14,7 @@ package com.sixt.service.framework.registry.consul;
 
 import com.google.inject.Inject;
 import com.sixt.service.framework.ServiceProperties;
-import com.sixt.service.framework.rpc.CircuitBreakerState;
-import com.sixt.service.framework.rpc.LoadBalancer;
-import com.sixt.service.framework.rpc.LoadBalancerUpdate;
-import com.sixt.service.framework.rpc.ServiceEndpoint;
+import com.sixt.service.framework.rpc.*;
 import com.sixt.service.framework.util.Sleeper;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.client.HttpClient;
@@ -55,13 +52,16 @@ public class RegistrationMonitorWorker implements Runnable {
     protected ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(2);
     protected AtomicBoolean healthEndpointCalled = new AtomicBoolean(false);
     protected AtomicBoolean isShutdown = new AtomicBoolean(false);
+    protected ServiceDependencyHealthCheck dependencyHealthCheck;
 
     @Inject
     public RegistrationMonitorWorker(HttpClient httpClient,
-                                     ServiceProperties serviceProps) {
+                                     ServiceProperties serviceProps,
+                                     ServiceDependencyHealthCheck dependencyHealthCheck) {
         this.httpClient = httpClient;
         this.serviceProps = serviceProps;
         this.discoveredServices = new LinkedHashMap<>();
+        this.dependencyHealthCheck = dependencyHealthCheck;
     }
 
     public void setServiceName(String serviceName) {
@@ -232,7 +232,8 @@ public class RegistrationMonitorWorker implements Runnable {
 
     protected ServiceEndpoint newServiceEndpoint(ConsulHealthEntry entry) {
         ServiceEndpoint retval = new ServiceEndpoint(executor,
-                entry.getAddressAndPort(), entry.getAvailZone());
+                entry.getAddressAndPort(), entry.getAvailZone(), dependencyHealthCheck);
+        retval.setServiceName(serviceName);
         if (ConsulHealthEntry.Status.Passing.equals(entry.getStatus())) {
             //TODO: this might need some more work.  a flapping service in consul should
             //not bypass normal circuit breaker logic.

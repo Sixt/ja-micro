@@ -21,19 +21,18 @@ public class ServiceEndpoint {
     protected String hostAndPort;
     protected CircuitBreakerState circuitBreaker;
     protected AtomicInteger servingRequests = new AtomicInteger(0); //intended only for probe logic
+    protected String serviceName;
 
     public ServiceEndpoint(ScheduledThreadPoolExecutor executor,
-                           String hostAndPort, String availZone) {
+                           String hostAndPort, String availZone, ServiceDependencyHealthCheck dependencyHealthCheck) {
         this(hostAndPort, availZone, new CircuitBreakerState(executor));
+        dependencyHealthCheck.monitorServiceEndpoint(this);
     }
 
     public ServiceEndpoint(String hostAndPort, String availZone, CircuitBreakerState cb) {
         this.hostAndPort = hostAndPort;
-        this.availZone = availZone;
+        this.availZone = availZone == null ? "" : availZone;
         this.circuitBreaker = cb;
-        if (this.availZone == null) {
-            this.availZone = "";
-        }
     }
 
     public String getHostAndPort() {
@@ -65,6 +64,14 @@ public class ServiceEndpoint {
         circuitBreaker.requestComplete(success);
     }
 
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -74,7 +81,6 @@ public class ServiceEndpoint {
 
         if (availZone != null ? !availZone.equals(that.availZone) : that.availZone != null) return false;
         return hostAndPort != null ? hostAndPort.equals(that.hostAndPort) : that.hostAndPort == null;
-
     }
 
     @Override

@@ -15,6 +15,7 @@ package com.sixt.service.framework.registry.consul;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.rpc.LoadBalancer;
 import com.sixt.service.framework.rpc.LoadBalancerUpdate;
+import com.sixt.service.framework.rpc.ServiceDependencyHealthCheck;
 import com.sixt.service.framework.util.Sleeper;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -56,7 +57,7 @@ public class RegistrationMonitorWorkerIntegrationTest {
         when(request.send()).thenReturn(response);
         props = new ServiceProperties();
         props.addProperty(ServiceProperties.REGISTRY_SERVER_KEY, "localhost:1234");
-        worker = new RegistrationMonitorWorker(httpClient, props);
+        worker = new RegistrationMonitorWorker(httpClient, props, mock(ServiceDependencyHealthCheck.class));
         worker.setServiceName("foobar");
     }
 

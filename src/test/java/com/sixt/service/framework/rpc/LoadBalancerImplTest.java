@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 public class LoadBalancerImplTest {
 
     private LoadBalancerImpl lb;
+    private ServiceDependencyHealthCheck dependencyHealthCheck;
 
     @Before
     public void setup() {
@@ -30,13 +31,14 @@ public class LoadBalancerImplTest {
         HttpClient httpClient = mock(HttpClient.class);
         HttpClientWrapper wrapper = new HttpClientWrapper(properties, httpClient, null, null);
         lb = new LoadBalancerImpl(properties, wrapper);
+        dependencyHealthCheck = mock(ServiceDependencyHealthCheck.class);
     }
 
     @Test
     public void multipleAvailZones() {
-        ServiceEndpoint ep1 = new ServiceEndpoint(null, "1.1.1.1:80", "dc1");
-        ServiceEndpoint ep2 = new ServiceEndpoint(null, "1.1.1.2:80", "dc2");
-        ServiceEndpoint ep3 = new ServiceEndpoint(null, "1.1.1.3:80", "dc3");
+        ServiceEndpoint ep1 = new ServiceEndpoint(null, "1.1.1.1:80", "dc1", dependencyHealthCheck);
+        ServiceEndpoint ep2 = new ServiceEndpoint(null, "1.1.1.2:80", "dc2", dependencyHealthCheck);
+        ServiceEndpoint ep3 = new ServiceEndpoint(null, "1.1.1.3:80", "dc3", dependencyHealthCheck);
         lb.addServiceEndpoint(ep1);
         lb.addServiceEndpoint(ep2);
         lb.addServiceEndpoint(ep3);
@@ -45,29 +47,29 @@ public class LoadBalancerImplTest {
 
     @Test
     public void mostlyUnhealthySingleAz() {
-        ServiceEndpoint ep1 = new ServiceEndpoint(null, "1.1.1.1:80", "dc1");
+        ServiceEndpoint ep1 = new ServiceEndpoint(null, "1.1.1.1:80", "dc1", dependencyHealthCheck);
         ep1.setCircuitBreakerState(CircuitBreakerState.State.PRIMARY_TRIPPED);
-        ServiceEndpoint ep2 = new ServiceEndpoint(null, "1.1.1.2:80", "dc1");
+        ServiceEndpoint ep2 = new ServiceEndpoint(null, "1.1.1.2:80", "dc1", dependencyHealthCheck);
         ep2.setCircuitBreakerState(CircuitBreakerState.State.PRIMARY_TRIPPED);
-        ServiceEndpoint ep3 = new ServiceEndpoint(null, "1.1.1.3:80", "dc1");
+        ServiceEndpoint ep3 = new ServiceEndpoint(null, "1.1.1.3:80", "dc1", dependencyHealthCheck);
         ep3.setCircuitBreakerState(CircuitBreakerState.State.PRIMARY_TRIPPED);
-        ServiceEndpoint ep4 = new ServiceEndpoint(null, "1.1.1.4:80", "dc1");
+        ServiceEndpoint ep4 = new ServiceEndpoint(null, "1.1.1.4:80", "dc1", dependencyHealthCheck);
         ep4.setCircuitBreakerState(CircuitBreakerState.State.PRIMARY_TRIPPED);
         lb.addServiceEndpoint(ep1);
         lb.addServiceEndpoint(ep2);
         lb.addServiceEndpoint(ep3);
         lb.addServiceEndpoint(ep4);
         assertThat(lb.getHealthyInstance()).isNull();
-        ServiceEndpoint ep5 = new ServiceEndpoint(null, "1.1.1.5:80", "dc1");
+        ServiceEndpoint ep5 = new ServiceEndpoint(null, "1.1.1.5:80", "dc1", dependencyHealthCheck);
         lb.addServiceEndpoint(ep5);
         assertThat(lb.getHealthyInstance()).isEqualTo(ep5);
     }
 
     @Test
     public void probesOnlyGetOneRequest() {
-        ServiceEndpoint ep1 = new ServiceEndpoint(null, "1.1.1.1:80", "dc1");
+        ServiceEndpoint ep1 = new ServiceEndpoint(null, "1.1.1.1:80", "dc1", dependencyHealthCheck);
         ep1.setCircuitBreakerState(CircuitBreakerState.State.PRIMARY_TRIPPED);
-        ServiceEndpoint ep2 = new ServiceEndpoint(null, "1.1.1.2:80", "dc1");
+        ServiceEndpoint ep2 = new ServiceEndpoint(null, "1.1.1.2:80", "dc1", dependencyHealthCheck);
         ep2.setCircuitBreakerState(CircuitBreakerState.State.PRIMARY_PROBE);
         lb.addServiceEndpoint(ep1);
         lb.addServiceEndpoint(ep2);

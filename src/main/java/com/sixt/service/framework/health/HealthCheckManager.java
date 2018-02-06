@@ -23,7 +23,6 @@ import org.eclipse.jetty.client.api.ContentResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
@@ -116,7 +115,7 @@ public class HealthCheckManager implements Runnable {
         }
     }
 
-    private String getHealthCheckUri(HealthCheck.Status status) throws UnsupportedEncodingException {
+    private String getHealthCheckUri(HealthCheck.Status status) {
         StringBuilder sb = new StringBuilder("http://").append(serviceProps.getRegistryServer()).
                 append("/v1/agent/check/").append(status.getConsulStatus()).append("/service:").
                 append(serviceId);

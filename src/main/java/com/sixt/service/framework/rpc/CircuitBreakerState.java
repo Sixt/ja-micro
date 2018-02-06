@@ -162,6 +162,11 @@ public class CircuitBreakerState {
         }
     }
 
+    public static boolean isTripped(State state) {
+        return state.equals(SECONDARY_TRIPPED) || state.equals(TERTIARY_TRIPPED) ||
+                state.equals(UNHEALTHY);
+    }
+
     private boolean hasFailed() {
         int size = responseHistory.size();
         if (size < HISTORY_SIZE) {
@@ -227,11 +232,6 @@ public class CircuitBreakerState {
         private boolean isHealthy(State state) {
             return state.equals(SECONDARY_HEALTHY) ||
                     state.equals(TERTIARY_HEALTHY);
-        }
-
-        private boolean isTripped(State state) {
-            return state.equals(SECONDARY_TRIPPED) || state.equals(TERTIARY_TRIPPED) ||
-                    state.equals(UNHEALTHY);
         }
     }
 

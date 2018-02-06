@@ -67,7 +67,8 @@ public class HealthServlet extends HttpServlet {
         JsonObject retval = new JsonObject();
         retval.add("name", new JsonPrimitive(check.getName()));
         retval.add("status", new JsonPrimitive(translateStatus(check.getStatus())));
-        retval.add("reason", new JsonPrimitive(check.getMessage()));
+        String message = check.getMessage();
+        retval.add("reason", new JsonPrimitive(message == null ? "" : message));
         return retval;
     }
 

@@ -13,14 +13,16 @@
 package com.sixt.service.framework.servicetest.service;
 
 import com.google.inject.Inject;
+import com.sixt.service.framework.rpc.ServiceDependencyHealthCheck;
 import com.sixt.service.framework.servicetest.helper.DockerPortResolver;
 import com.sixt.service.framework.servicetest.mockservice.ServiceImpersonatorLoadBalancer;
 
 public class ServiceUnderTestLoadBalancer extends ServiceImpersonatorLoadBalancer {
 
     @Inject
-    public ServiceUnderTestLoadBalancer(DockerPortResolver dockerPortResolver) {
-        super(dockerPortResolver);
+    public ServiceUnderTestLoadBalancer(DockerPortResolver dockerPortResolver,
+                                        ServiceDependencyHealthCheck dependencyHealthCheck) {
+        super(dockerPortResolver, dependencyHealthCheck);
     }
 
     @Override

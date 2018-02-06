@@ -14,10 +14,7 @@ package com.sixt.service.framework.servicetest.mockservice;
 
 import com.google.inject.Inject;
 import com.sixt.service.framework.ServiceProperties;
-import com.sixt.service.framework.rpc.HttpClientWrapper;
-import com.sixt.service.framework.rpc.LoadBalancer;
-import com.sixt.service.framework.rpc.LoadBalancerUpdate;
-import com.sixt.service.framework.rpc.ServiceEndpoint;
+import com.sixt.service.framework.rpc.*;
 import com.sixt.service.framework.servicetest.helper.DockerPortResolver;
 import io.opentracing.NoopTracerFactory;
 import org.eclipse.jetty.client.HttpClient;
@@ -35,11 +32,14 @@ public class ServiceImpersonatorLoadBalancer implements LoadBalancer {
     protected String serviceName;
     protected ServiceEndpoint serviceEndpoint;
     protected final DockerPortResolver dockerPortResolver;
+    protected final ServiceDependencyHealthCheck dependencyHealthCheck;
     protected HttpClientWrapper httpClientWrapper;
 
     @Inject
-    public ServiceImpersonatorLoadBalancer(DockerPortResolver dockerPortResolver) {
+    public ServiceImpersonatorLoadBalancer(DockerPortResolver dockerPortResolver,
+                                           ServiceDependencyHealthCheck dependencyHealthCheck) {
         this.dockerPortResolver = dockerPortResolver;
+        this.dependencyHealthCheck = dependencyHealthCheck;
     }
 
     @Override
@@ -64,7 +64,7 @@ public class ServiceImpersonatorLoadBalancer implements LoadBalancer {
     protected HttpClientWrapper createHttpClientWrapper() {
         int port = locateTargetServicePort();
         serviceEndpoint = new ServiceEndpoint(new ScheduledThreadPoolExecutor(1),
-                "localhost:" + port, "");
+                "localhost:" + port, "", dependencyHealthCheck);
         HttpClientWrapper retval = new HttpClientWrapper(new ServiceProperties(), createHttpClient(),
                 null, NoopTracerFactory.create());
         retval.setLoadBalancer(this);

@@ -58,6 +58,7 @@ public class RpcClientIntegrationTest {
     private RpcClient<FrameworkTest.Foobar> rpcClient;
     private LoadBalancerImpl loadBalancer;
     private MockHttpClient httpClient;
+    private ServiceDependencyHealthCheck dependencyHealthCheck;
     private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(2);
 
     @Parameterized.Parameters
@@ -80,6 +81,7 @@ public class RpcClientIntegrationTest {
         loadBalancerFactory = injector.getInstance(LoadBalancerFactory.class);
         rpcClient = clientFactory.newClient(serviceName, "testing", FrameworkTest.Foobar.class).build();
         loadBalancer = (LoadBalancerImpl) loadBalancerFactory.getLoadBalancer(serviceName);
+        dependencyHealthCheck = mock(ServiceDependencyHealthCheck.class);
     }
 
     @Before
@@ -91,8 +93,8 @@ public class RpcClientIntegrationTest {
     public void basicHappyPath() throws Exception {
         //Create 2 healthy endpoints and send 4 requests.
         //Each endpoint should have processed 2 requests each.
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1"));
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1"));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1", dependencyHealthCheck));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1", dependencyHealthCheck));
 
         for (int i = 0; i < 4; i++) {
             rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
@@ -120,13 +122,13 @@ public class RpcClientIntegrationTest {
         //Create 2 servers and send 4 requests.  Each should have processed 2 requests each.
         //Add a new server.  Send 3 more requests.  Two servers should have processed 3
         //and the third one just 1.
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1"));
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1"));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1", dependencyHealthCheck));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1", dependencyHealthCheck));
         for (int i = 0; i < 4; i++) {
             rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
         }
 
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20003", "dc1"));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20003", "dc1", dependencyHealthCheck));
         for (int i = 0; i < 3; i++) {
             rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
         }
@@ -140,7 +142,7 @@ public class RpcClientIntegrationTest {
     public void singleServiceZeroRetries() throws Exception {
         //Verify retry behavior.  Create 1 server and have it always fail.
         //Set retries to 0.  Send a request, and verify server got issued one request.
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1"));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1", dependencyHealthCheck));
         rpcClient = clientFactory.newClient(serviceName, "testing", FrameworkTest.Foobar.class).
                 withRetries(0).build();
         rpcClient.callSynchronous(FrameworkTest.Foobar.newBuilder().build(), new OrangeContext());
@@ -152,8 +154,8 @@ public class RpcClientIntegrationTest {
     public void multipleServicesSingleRetry() {
         //Create 2 servers and have them always fail.  Set retries to 1.  Send request.
         //Verify each server got issued one request.
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1"));
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1"));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1", dependencyHealthCheck));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1", dependencyHealthCheck));
         httpClient.makeFailing();
 
         int failureCount = 0;
@@ -171,9 +173,9 @@ public class RpcClientIntegrationTest {
     public void allFailingNoInstanceAvailable() {
         //Create 3 servers and have them always fail.  Set retries to 4.  Send request.
         //Each server should be tried once, then the request should fail.
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1"));
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1"));
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20003", "dc1"));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1", dependencyHealthCheck));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1", dependencyHealthCheck));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20003", "dc1", dependencyHealthCheck));
         rpcClient = clientFactory.newClient(serviceName, "testing", FrameworkTest.Foobar.class).
                 withRetries(4).build();
         httpClient.makeFailing();
@@ -195,8 +197,8 @@ public class RpcClientIntegrationTest {
     public void singleInstanceTimesOut() {
         //Create 2 servers and have one timeout.  Set retries to 1.  Send request.
         //The response from the 2nd should be returned.
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1"));
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1"));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1", dependencyHealthCheck));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1", dependencyHealthCheck));
         rpcClient = clientFactory.newClient(serviceName, "testing", FrameworkTest.Foobar.class).
                 withRetries(1).build();
         httpClient.makeFirstRequestTimeout();
@@ -214,8 +216,8 @@ public class RpcClientIntegrationTest {
     public void allInstancesTimeOut() {
         //Create 2 servers and have both timeout.  Set retries to 1.  Send request.
         //The response from the 2nd should be returned.
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1"));
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1"));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1", dependencyHealthCheck));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1", dependencyHealthCheck));
         rpcClient = clientFactory.newClient(serviceName, "testing", FrameworkTest.Foobar.class).
                 withRetries(1).build();
         httpClient.makeRequestsTimeout();
@@ -236,8 +238,8 @@ public class RpcClientIntegrationTest {
     public void nonRetriableError() {
         //Create 2 servers and have the first throw an exception that is not retriable.
         //The exception should be thrown and not retried with the other node
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1"));
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1"));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1", dependencyHealthCheck));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1", dependencyHealthCheck));
         rpcClient = clientFactory.newClient(serviceName, "testing", FrameworkTest.Foobar.class).
                 withRetries(1).build();
         httpClient.setResponseException(new RpcCallException(RpcCallException.Category.
@@ -259,8 +261,8 @@ public class RpcClientIntegrationTest {
     public void retriableError() {
         //Create 2 servers and have both throw an exception that is retriable.
         //The exception should be thrown locally
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1"));
-        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1"));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20001", "dc1", dependencyHealthCheck));
+        loadBalancer.addServiceEndpoint(new ServiceEndpoint(executor, "localhost:20002", "dc1", dependencyHealthCheck));
         rpcClient = clientFactory.newClient(serviceName, "testing", FrameworkTest.Foobar.class).
                 withRetries(1).build();
         httpClient.setResponseException(new RpcCallException(RpcCallException.Category.

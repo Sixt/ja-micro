@@ -78,6 +78,7 @@ public class RandomServiceIntegrationTest {
         String response = httpClient.GET(url).getContentAsString();
         assertThat(response).isEqualTo("{\"summary\":\"CRITICAL\",\"details\":[" +
                 "{\"name\":\"database_migration\",\"status\":\"OK\",\"reason\":\"\"}," +
+                "{\"name\":\"not_set\",\"status\":\"OK\",\"reason\":\"\"}," +
                 "{\"name\":\"test_servlet\",\"status\":\"CRITICAL\",\"reason\":\"" + failureMessage + "\"}]}");
     }
 

@@ -12,19 +12,27 @@
 
 package com.sixt.service.framework.rpc;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class ServiceEndpointListTest {
 
     private ServiceEndpointList list = new ServiceEndpointList();
+    private ServiceDependencyHealthCheck dependencyHealthCheck;
+
+    @Before
+    public void testSetup() {
+        dependencyHealthCheck = mock(ServiceDependencyHealthCheck.class);
+    }
 
     @Test
     public void addNode() {
-        ServiceEndpoint sep1 = new ServiceEndpoint(null, "1.1.1.1:80", "dc1");
-        ServiceEndpoint sep2 = new ServiceEndpoint(null, "1.1.1.2:80", "dc1");
-        ServiceEndpoint sep3 = new ServiceEndpoint(null, "1.1.1.3:80", "dc1");
+        ServiceEndpoint sep1 = new ServiceEndpoint(null, "1.1.1.1:80", "dc1", dependencyHealthCheck);
+        ServiceEndpoint sep2 = new ServiceEndpoint(null, "1.1.1.2:80", "dc1", dependencyHealthCheck);
+        ServiceEndpoint sep3 = new ServiceEndpoint(null, "1.1.1.3:80", "dc1", dependencyHealthCheck);
         list.add(sep1);
         list.add(sep2);
         list.add(sep3);
@@ -33,15 +41,15 @@ public class ServiceEndpointListTest {
         assertThat(list.nextAvailable()).isEqualTo(sep1);
         assertThat(list.nextAvailable()).isEqualTo(sep2);
         assertThat(list.nextAvailable()).isEqualTo(sep3);
-        list.updateEndpointHealth(new ServiceEndpoint(null, "1.1.1.2:80", "dc1"),
+        list.updateEndpointHealth(new ServiceEndpoint(null, "1.1.1.2:80", "dc1", dependencyHealthCheck),
                 CircuitBreakerState.State.UNHEALTHY);
-        list.updateEndpointHealth(new ServiceEndpoint(null, "11.11.11.12:80", "dc1"),
+        list.updateEndpointHealth(new ServiceEndpoint(null, "11.11.11.12:80", "dc1", dependencyHealthCheck),
                 CircuitBreakerState.State.UNHEALTHY);
     }
 
     @Test
     public void verifyToString() {
-        ServiceEndpoint sep1 = new ServiceEndpoint(null, "1.1.1.1:80", "dc1");
+        ServiceEndpoint sep1 = new ServiceEndpoint(null, "1.1.1.1:80", "dc1", dependencyHealthCheck);
         ServiceEndpointNode node = new ServiceEndpointNode(sep1);
         assertThat(node.toString()).isEqualTo(sep1.toString());
     }
