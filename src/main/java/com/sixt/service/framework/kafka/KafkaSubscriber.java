@@ -187,10 +187,11 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
             messagesReadMetric.incSuccess(records.count());
             for (ConsumerRecord<String, String> record : records) {
                 String rawMessage = record.value();
-                logger.debug(append("rawMessage", rawMessage), "Read Kafka message ({})", record.offset());
+                logger.trace(append("rawMessage", rawMessage), "Read Kafka message ({}/{})",
+                        record.partition(), record.offset());
                 KafkaTopicInfo topicInfo = new KafkaTopicInfo(topic, record.partition(),
                         record.offset(), record.key());
-                KafkaSubscriberWorker worker = null;
+                KafkaSubscriberWorker worker;
                 if (useProtobuf) {
                     Message proto = ProtobufUtil.jsonToProtobuf(rawMessage,
                             (Class<? extends Message>) messageType);

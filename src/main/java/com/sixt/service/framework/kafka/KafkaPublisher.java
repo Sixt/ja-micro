@@ -129,9 +129,10 @@ public class KafkaPublisher {
             try {
                 Future<RecordMetadata> future = realProducer.send(record, (metadata, ex) -> {
                     if (ex == null) {
-                        logger.debug("Sent message to Kafka: {}", metadata);
+                        logger.trace("Sent message to Kafka: {}", metadata);
                     } else {
-                        throw new RuntimeException("Send failed for record " + record);
+                        throw new RuntimeException("Sending message to kafka failed. topic: " +
+                                topic + ", key: " + key);
                     }
                 });
                 if (sync) {
