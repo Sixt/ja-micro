@@ -101,6 +101,7 @@ public class InjectionModule extends AbstractModule {
         HttpClient client = new HttpClient(sslContextFactory);
         client.setFollowRedirects(false);
         client.setMaxConnectionsPerDestination(16);
+        client.setRequestBufferSize(65536);
         client.setConnectTimeout(FeatureFlags.getHttpConnectTimeout(serviceProperties));
         client.setAddressResolutionTimeout(FeatureFlags.getHttpAddressResolutionTimeout(serviceProperties));
         //You can set more restrictive timeouts per request, but not less, so
