@@ -114,7 +114,7 @@ public class RpcMethodScanner {
     public Class<? extends Message> findProtobufClass(List<String> protoClasses, String requestType)
             throws ClassNotFoundException {
         for (String pbClass : protoClasses) {
-            if (pbClass.contains(requestType)) {
+            if (pbClass.endsWith("." + requestType) || pbClass.endsWith("$" + requestType)) {
                 Class<? extends Message> retval = (Class<? extends Message>) Class.forName(pbClass);
                 return retval;
             }

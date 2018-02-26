@@ -157,7 +157,9 @@ public class ServiceUnderTestImpl implements ServiceUnderTest {
 
     @Override
     public void clearReadEvents() {
-        eventHandler.clearReadEvents();
+        if (eventHandler != null) {
+            eventHandler.clearReadEvents();
+        }
     }
 
     @Override
