@@ -13,9 +13,13 @@
 package com.sixt.service.framework.servicetest.service;
 
 import com.google.inject.Inject;
+import com.sixt.service.framework.rpc.CircuitBreakerState;
 import com.sixt.service.framework.rpc.ServiceDependencyHealthCheck;
+import com.sixt.service.framework.rpc.ServiceEndpoint;
 import com.sixt.service.framework.servicetest.helper.DockerPortResolver;
 import com.sixt.service.framework.servicetest.mockservice.ServiceImpersonatorLoadBalancer;
+
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class ServiceUnderTestLoadBalancer extends ServiceImpersonatorLoadBalancer {
 
@@ -28,6 +32,19 @@ public class ServiceUnderTestLoadBalancer extends ServiceImpersonatorLoadBalance
     @Override
     protected int locateTargetServicePort() {
         return dockerPortResolver.getExposedPortFromDocker(serviceName, 40000);
+    }
+
+    @Override
+    public ServiceEndpoint getHealthyInstance() {
+        return new ServiceEndpoint("localhost:" + locateTargetServicePort(), "",
+                new CircuitBreakerState(new MockScheduledThreadPoolExecutor(0)));
+    }
+
+    private static class MockScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
+
+        public MockScheduledThreadPoolExecutor(int corePoolSize) {
+            super(0);
+        }
     }
 
 }
