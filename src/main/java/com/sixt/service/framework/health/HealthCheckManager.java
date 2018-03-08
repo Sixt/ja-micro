@@ -20,6 +20,7 @@ import com.sixt.service.framework.metrics.MetricBuilderFactory;
 import com.sixt.service.framework.registry.consul.RegistrationManager;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,7 +110,7 @@ public class HealthCheckManager implements Runnable {
     //TODO: specific to consul; need to refactor
     public void updateHealthStatus(HealthCheck.Status status) throws Exception {
         logger.trace("Updating health of {}", serviceProps.getServiceName());
-        ContentResponse httpResponse = httpClient.newRequest(getHealthCheckUri(status)).send();
+        ContentResponse httpResponse = httpClient.newRequest(getHealthCheckUri(status)).method(HttpMethod.PUT).send();
         if (httpResponse.getStatus() != 200) {
             logger.warn("Received {} trying to update health", httpResponse.getStatus());
         }
