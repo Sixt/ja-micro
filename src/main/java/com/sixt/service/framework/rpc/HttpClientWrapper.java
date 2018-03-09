@@ -137,7 +137,8 @@ public class HttpClientWrapper {
                 logger.debug(getRemoteMethod(), "Caught exception executing request", ex);
             }
 
-            //content.length must always be > 0, because we have an envelope
+            logger.debug("Response status code = {}", lastStatusCode);
+
             if (responseWasSuccessful(decoder, retval, lastStatusCode)) {
                 if (span != null) {
                     Tags.HTTP_STATUS.set(span, lastStatusCode);
