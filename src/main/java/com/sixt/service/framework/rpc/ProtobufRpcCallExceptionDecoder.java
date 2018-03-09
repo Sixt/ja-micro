@@ -13,6 +13,7 @@
 package com.sixt.service.framework.rpc;
 
 import com.sixt.service.framework.protobuf.ProtobufRpcResponse;
+import org.apache.commons.lang3.ArrayUtils;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,11 @@ public class ProtobufRpcCallExceptionDecoder implements RpcCallExceptionDecoder 
         try {
             if (response != null) {
                 byte[] data = response.getContent();
+                if (ArrayUtils.isEmpty(data)) {
+                    logger.warn("Unable to decode: empty response received");
+                    return new RpcCallException(RpcCallException.Category.InternalServerError,
+                            "Empty response received");
+                }
                 ProtobufRpcResponse pbResponse = new ProtobufRpcResponse(data);
                 String error = pbResponse.getErrorMessage();
                 if (error != null) {
