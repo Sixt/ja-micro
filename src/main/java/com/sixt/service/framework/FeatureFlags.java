@@ -22,7 +22,6 @@ public class FeatureFlags {
 
     // Set to "true" to allow an RpcResponse to set the http response code, otherwise: always return 200.
     public final static String FLAG_EXPOSE_ERRORS_HTTP = "exposeErrorsHttp";
-
     public static boolean shouldExposeErrorsToHttp(ServiceProperties serviceProps) {
         String value = serviceProps.getProperty(FLAG_EXPOSE_ERRORS_HTTP);
         if (StringUtils.isNotEmpty(value) && Boolean.valueOf(value)) {
@@ -66,5 +65,19 @@ public class FeatureFlags {
     public static int getReadinessCheckPort(ServiceProperties serviceProps) {
         return serviceProps.getIntegerProperty(READINESS_CHECK_PORT,
                 DEFAULT_READINESS_CHECK_PORT);
+    }
+
+    public final static String MIN_JETTY_THREADS = "minJettyThreads";
+    public final static int DEFAULT_MIN_JETTY_THREADS = 2;
+    public static int getMinJettyThreads(ServiceProperties serviceProps) {
+        return serviceProps.getIntegerProperty(MIN_JETTY_THREADS,
+                DEFAULT_MIN_JETTY_THREADS);
+    }
+
+    public final static String MAX_JETTY_THREADS = "maxJettyThreads";
+    public final static int DEFAULT_MAX_JETTY_THREADS = 64;
+    public static int getMaxJettyThreads(ServiceProperties serviceProps) {
+        return serviceProps.getIntegerProperty(MAX_JETTY_THREADS,
+                DEFAULT_MAX_JETTY_THREADS);
     }
 }

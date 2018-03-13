@@ -148,8 +148,8 @@ public abstract class AbstractService {
         jettyServer = new Server(serviceProperties.getServicePort());
         org.eclipse.jetty.util.thread.ThreadPool threadPool = jettyServer.getThreadPool();
         if (threadPool instanceof QueuedThreadPool) {
-            ((QueuedThreadPool) threadPool).setMaxThreads(32);
-            ((QueuedThreadPool) threadPool).setMinThreads(2);
+            ((QueuedThreadPool) threadPool).setMaxThreads(FeatureFlags.getMaxJettyThreads(serviceProperties));
+            ((QueuedThreadPool) threadPool).setMinThreads(FeatureFlags.getMinJettyThreads(serviceProperties));
         } else {
             logger.warn("Expected ThreadPool to be instance of QueuedThreadPool, but was {}",
                     jettyServer.getThreadPool().getClass().getName());
