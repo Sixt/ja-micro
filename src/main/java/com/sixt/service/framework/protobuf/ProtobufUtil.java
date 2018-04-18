@@ -12,10 +12,7 @@
 
 package com.sixt.service.framework.protobuf;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
 import com.sixt.service.framework.rpc.RpcCallException;
@@ -24,6 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings({"StatementWithEmptyBody", "unchecked"})
 public class ProtobufUtil {
@@ -59,7 +59,7 @@ public class ProtobufUtil {
      *
      * @param input        the input String to convert
      * @param messageClass the protobuf message class to convert into
-     * @return the converted protobuf message
+     * @return the converted protobuf message (null in case of null input)
      */
     public static <TYPE extends Message> TYPE jsonToProtobuf(String input, Class<TYPE> messageClass) {
         if (input == null) {
@@ -77,10 +77,47 @@ public class ProtobufUtil {
 
         try {
             TYPE.Builder builder = getBuilder(messageClass);
-            JsonFormat.parser().ignoringUnknownFields().merge(input, builder);
+            JsonElement element = new JsonParser().parse(input);
+            cleanJsonElement(element);
+            JsonFormat.parser().ignoringUnknownFields().merge(element.toString(), builder);
             return (TYPE) builder.build();
         } catch (Exception e) {
             throw new RuntimeException("Error deserializing json to protobuf. Input = " + input, e);
+        }
+    }
+
+    private static void cleanJsonElement(JsonElement element) {
+        if (element.isJsonNull() || element.isJsonPrimitive()) {
+            return;
+        }
+        if (element.isJsonArray()) {
+            cleanJsonArray(element.getAsJsonArray());
+        }
+        if (element.isJsonObject()) {
+            cleanJsonObject(element.getAsJsonObject());
+        }
+    }
+
+    private static void cleanJsonArray(JsonArray array) {
+        Iterator<JsonElement> iter = array.iterator();
+        while (iter.hasNext()) {
+            JsonElement ele = iter.next();
+            if (ele.isJsonNull()) {
+                iter.remove();
+                continue;
+            } else {
+                cleanJsonElement(ele);
+            }
+        }
+    }
+
+    private static void cleanJsonObject(JsonObject element) {
+        Set<Map.Entry<String, JsonElement>> members = element.entrySet();
+        Iterator<Map.Entry<String, JsonElement>> iter = members.iterator();
+        while (iter.hasNext()) {
+            Map.Entry<String, JsonElement> member = iter.next();
+            JsonElement value = member.getValue();
+            cleanJsonElement(value);
         }
     }
 

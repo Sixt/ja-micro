@@ -17,6 +17,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.protobuf.Message;
+import com.sixt.service.configuration.api.ConfigurationOuterClass;
 import org.junit.Test;
 
 import java.util.List;
@@ -353,6 +354,16 @@ public class ProtobufUtilTest {
         assertThat(ProtobufUtil.jsonToProtobuf(array, FrameworkTest.SerializationTest.class)).isNull();
         array.add(JsonNull.INSTANCE);
         assertThat(ProtobufUtil.jsonToProtobuf(array, FrameworkTest.SerializationTest.class)).isNull();
+    }
+
+    /**
+     * There is a limitation in gson that does not allow nulls in arrays when converting to proto
+     * com.google.protobuf.InvalidProtocolBufferException: Repeated field elements cannot be null
+     */
+    @Test
+    public void nullsInArrayAreRemoved() {
+        String input = "{\"instances\":[null]}";
+        ProtobufUtil.jsonToProtobuf(input, ConfigurationOuterClass.VariantDetail.class);
     }
 
 }
