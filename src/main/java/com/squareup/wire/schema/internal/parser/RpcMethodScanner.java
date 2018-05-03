@@ -160,9 +160,6 @@ public class RpcMethodScanner {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if (!rpcMethodDefinitions.isEmpty()) {
-                return rpcMethodDefinitions;
-            }
         }
 
         return rpcMethodDefinitions;
