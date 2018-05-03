@@ -131,12 +131,9 @@ public class RpcMethodScanner {
         String jars[] = classpath.split(":");
         for (String jar : jars) {
             try {
-                rpcMethodDefinitions = searchJar(jar, serviceName);
+                rpcMethodDefinitions.addAll(searchJar(jar, serviceName));
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-            if (!rpcMethodDefinitions.isEmpty()) {
-                break;
             }
         }
         return rpcMethodDefinitions;
@@ -163,9 +160,6 @@ public class RpcMethodScanner {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if (!rpcMethodDefinitions.isEmpty()) {
-                return rpcMethodDefinitions;
-            }
         }
 
         return rpcMethodDefinitions;
@@ -189,10 +183,6 @@ public class RpcMethodScanner {
                 ZipFile zipFile = new ZipFile(jarFile);
                 try (InputStream in = zipFile.getInputStream(ze)) {
                     defs.addAll(inspectProtoFile(in, serviceName));
-                    if (!defs.isEmpty()) {
-                        zipFile.close();
-                        break;
-                    }
                 }
                 zipFile.close();
             }
