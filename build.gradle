@@ -98,7 +98,7 @@ ext.versions = [
     'jetty'    : '9.4.8.v20171121',
     'protobuf' : '3.4.0',
     'guice'    : '4.1.0',
-    'kafka'    : '1.0.0',
+    'kafka'    : '1.1.0',
     'guava'    : '23.3-jre',
     'logback'  : '1.2.3',
     'slf4j'    : '1.7.25',
