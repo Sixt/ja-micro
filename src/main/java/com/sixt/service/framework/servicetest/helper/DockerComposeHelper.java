@@ -98,8 +98,7 @@ public class DockerComposeHelper {
      * @return SuccessOrFailure
      */
     public static SuccessOrFailure waitForKafka(String logFile) {
-        // Since we don't know which partition is placed on which replica, do now wait for any particular partition.
-        return waitFor(logFile, "Completed load of log events", "Kafka not ready yet");
+        return waitFor(logFile, "Created topic \"events\".", "Kafka not ready yet");
     }
 
     /**
@@ -166,7 +165,7 @@ public class DockerComposeHelper {
         return waitFor(logFile, "CorsParams:", "Dynamo DB not ready yet");
     }
 
-    private static SuccessOrFailure waitFor(String logFile, String expected, String timeoutMsg) {
+    public static SuccessOrFailure waitFor(String logFile, String expected, String timeoutMsg) {
         try {
             String log = FileUtils.readFileToString(new File(logFile), Charset.defaultCharset());
             if (log.contains(expected)) {
