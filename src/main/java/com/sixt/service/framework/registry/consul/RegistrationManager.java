@@ -12,9 +12,7 @@
 
 package com.sixt.service.framework.registry.consul;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.*;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.Descriptors;
@@ -39,12 +37,9 @@ import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
+import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.Deflater;
@@ -71,7 +66,7 @@ public class RegistrationManager implements Runnable {
     private String ipAddress;
     private String unregisterString;
     private JsonObject registrationJsonObject = null;
-    private ExecutorService executorService;
+    private ScheduledExecutorService executorService;
     private Sleeper sleeper = new Sleeper();
 
     @Inject
@@ -89,17 +84,21 @@ public class RegistrationManager implements Runnable {
     }
 
     public void register() {
-        executorService = Executors.newSingleThreadExecutor();
-        executorService.submit(this);
+        executorService = Executors.newScheduledThreadPool(1);
+        executorService.scheduleAtFixedRate(this, 0, DEFAULT_HEALTH_CHECK_POLL_INTERVAL, TimeUnit.SECONDS);
     }
 
     public boolean isRegistered() {
-        //TODO: verify actual registration with consul
+        isRegistered.set(verifyRegistrationInConsul());
         return isRegistered.get();
     }
 
     @Override
     public void run() {
+        if (isRegistered()) {
+            return;
+        }
+
         long sleepDuration = 1000;
         while (! isRegistered.get()) {
             try {
@@ -151,6 +150,30 @@ public class RegistrationManager implements Runnable {
             Runtime.getRuntime().addShutdownHook(new Thread(this::unregisterService));
         }
         isShutdownHookRegistered.set(true);
+    }
+
+    private boolean verifyRegistrationInConsul() {
+        String url = "http://" + serviceProps.getRegistryServer() + "/v1/catalog/service/" +
+                serviceProps.getServiceName();
+        try {
+            ContentResponse httpResponse = httpClient.newRequest(url).
+                    method(HttpMethod.GET).header(HttpHeader.CONTENT_TYPE, "application/json").send();
+            if (httpResponse.getStatus() != 200) {
+                return false;
+            }
+            JsonArray pods = new JsonParser().parse(httpResponse.getContentAsString()).getAsJsonArray();
+            Iterator<JsonElement> iter = pods.iterator();
+            while (iter.hasNext()) {
+                JsonElement pod = iter.next();
+                String serviceId = pod.getAsJsonObject().get("ServiceID").getAsString();
+                if (serviceProps.getServiceInstanceId().equals(serviceId)) {
+                    return true;
+                }
+            }
+        } catch (Exception ex) {
+            logger.warn("Caught exception verifying registration", ex);
+        }
+        return false;
     }
 
     protected void unregisterService() {
@@ -251,19 +274,24 @@ public class RegistrationManager implements Runnable {
         return retval;
     }
 
-    private String binaryEncode(String tag) throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        Deflater deflater = new Deflater();
-        deflater.setInput(tag.getBytes());
-        deflater.finish();
-        byte[] buffer = new byte[1024];
-        while (!deflater.finished()) {
-            int count = deflater.deflate(buffer);
-            outputStream.write(buffer, 0, count);
+    private String binaryEncode(String tag) {
+        try {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            Deflater deflater = new Deflater();
+            deflater.setInput(tag.getBytes());
+            deflater.finish();
+            byte[] buffer = new byte[1024];
+            while (!deflater.finished()) {
+                int count = deflater.deflate(buffer);
+                outputStream.write(buffer, 0, count);
+            }
+            outputStream.close();
+            byte compressed[] = outputStream.toByteArray();
+            return bytesToHex(compressed);
+        } catch (Exception ex) {
+            logger.warn("Caught exception", ex);
+            return "";
         }
-        outputStream.close();
-        byte compressed[] = outputStream.toByteArray();
-        return bytesToHex(compressed);
     }
 
     final protected static char[] hexArray = "0123456789abcdef".toCharArray();
@@ -282,7 +310,8 @@ public class RegistrationManager implements Runnable {
         if (registeredHandlers == null || registeredHandlers.isEmpty()) {
             return;
         }
-        for (String key : registeredHandlers.keySet()) {
+        TreeSet<String> handlerNamesSorted = new TreeSet<>(registeredHandlers.keySet());
+        handlerNamesSorted.forEach(key -> {
             StringBuilder sb = new StringBuilder();
             sb.append("{\"name\":\"");
             sb.append(key);
@@ -311,7 +340,7 @@ public class RegistrationManager implements Runnable {
             }
             String tag = sb.toString();
             tagsArray.add(new JsonPrimitive("e-" + binaryEncode(tag)));
-        }
+        });
     }
 
     protected String getProtobufClassFieldDescriptions(Class<? extends Message> messageClass)

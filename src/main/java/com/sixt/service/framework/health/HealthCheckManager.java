@@ -51,7 +51,6 @@ public class HealthCheckManager implements Runnable {
     protected Deque<HealthCheckContributor> oneShotContributors = new ConcurrentLinkedDeque<>();
     protected int failingChecksGauge;
 
-
     @Inject
     public HealthCheckManager(MetricBuilderFactory metricBuilderFactory,
                               RegistrationManager registrationManager,
