@@ -3,6 +3,7 @@ package com.sixt.service.framework.kafka;
 import org.apache.kafka.common.Cluster;
 import org.apache.kafka.common.PartitionInfo;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
@@ -45,6 +46,9 @@ public class SixtPartitionerTest {
         assertThat(results).isEqualTo(shouldBe);
     }
 
+    @Ignore // By incorporating available partitions instead of overall partition count,
+            // we were getting non-deterministic partitions for known keys.  This is not
+            // what we want for some applications, so this was changed.
     @Test
     public void nullKeyRoundRobinThreeAvailablePartitionsTest() {
         List<PartitionInfo> partitions = new ArrayList<>();

@@ -33,14 +33,7 @@ public class SixtPartitioner implements Partitioner {
         int numPartitions = partitions.size();
         if (keyBytes == null) {
             int nextValue = roundRobin.getAndIncrement();
-            List<PartitionInfo> availablePartitions = cluster.availablePartitionsForTopic(topic);
-            if (availablePartitions.size() > 0) {
-                int part = Utils.toPositive(nextValue) % availablePartitions.size();
-                return availablePartitions.get(part).partition();
-            } else {
-                // no partitions are available, give a non-available partition
-                return Utils.toPositive(nextValue) % numPartitions;
-            }
+            return Utils.toPositive(nextValue) % numPartitions;
         } else {
             // hash the keyBytes to choose a partition
             return Utils.toPositive(xxHasher.hash(keyBytes, 0, keyBytes.length, SEED)) % numPartitions;
