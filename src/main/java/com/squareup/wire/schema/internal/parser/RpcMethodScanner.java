@@ -58,6 +58,10 @@ public class RpcMethodScanner {
         Map<String, ServiceMethod<Message>> serviceMethods = new HashMap<>();
         for (RpcMethodDefinition def : rpcMethodDefinitions) {
             try {
+                if (serviceMethods.containsKey(def.getMethodName())) {
+                    continue;
+                }
+
                 logger.info("Adding endpoint {} for {}", def.getMethodName(), serviceName);
 
                 Class<? extends Message> protobufClass = findProtobufClass(protoClasses, def.getResponseType());
