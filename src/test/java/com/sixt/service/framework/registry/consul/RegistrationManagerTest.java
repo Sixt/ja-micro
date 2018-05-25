@@ -20,6 +20,7 @@ import com.sixt.service.configuration.api.ConfigurationOuterClass;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceMethodHandler;
 import com.sixt.service.framework.ServiceProperties;
+import com.sixt.service.framework.kafka.messaging.TreeNode;
 import com.sixt.service.framework.protobuf.FrameworkTest.MessageWithMap;
 import com.sixt.service.framework.protobuf.RpcEnvelope;
 import org.junit.Before;
@@ -28,6 +29,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.zip.Inflater;
 
@@ -82,7 +84,7 @@ public class RegistrationManagerTest {
 
     @Test
     public void verifyNestedProtobufDescriptor() throws Exception {
-        String result = manager.getProtobufClassFieldDescriptions(ConfigurationOuterClass.FullPath.class);
+        String result = manager.getProtobufClassFieldDescriptions(ConfigurationOuterClass.FullPath.class, new HashSet<>());
         assertThat(result).isEqualTo("{\"name\":\"service\",\"type\":\"string\"," +
                 "\"values\":null},{\"name\":\"name\",\"type\":\"string\",\"values\"" +
                 ":null},{\"name\":\"detail\",\"type\":\"VariantDetail\",\"values\":" +
@@ -95,7 +97,7 @@ public class RegistrationManagerTest {
 
     @Test
     public void verifyNestedEndpoint() throws Exception {
-        String result = manager.getProtobufClassFieldDescriptions(ConfigurationOuterClass.Import.class);
+        String result = manager.getProtobufClassFieldDescriptions(ConfigurationOuterClass.Import.class, new HashSet<>());
         assertThat(result).isEqualTo("{\"name\":\"values\",\"type\":\"ImportItem\"," +
                 "\"values\":[{\"name\":\"name\",\"type\":\"string\",\"values\":null},{" +
                 "\"name\":\"value\",\"type\":\"VariantDetail\",\"values\":[{\"name\":" +
@@ -103,6 +105,13 @@ public class RegistrationManagerTest {
                 "\"type\":\"string\",\"values\":null},{\"name\":\"instances\",\"type\":" +
                 "\"string\",\"values\":null},{\"name\":\"value\",\"type\":\"string\",\"values" +
                 "\":null},{\"name\":\"isEncrypted\",\"type\":\"bool\",\"values\":null}]}]}");
+    }
+
+    @Test
+    public void verifyCircularNestedEndpoint() throws Exception {
+        String result = manager.getProtobufClassFieldDescriptions(TreeNode.class, new HashSet<>());
+        assertThat(result).isEqualTo("{\"name\":\"name\",\"type\":\"string\",\"values\":null}" +
+                ",{\"name\":\"children\",\"type\":\"TreeNode\",\"values\":[]}");
     }
 
     @Test
