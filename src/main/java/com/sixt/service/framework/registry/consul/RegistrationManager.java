@@ -349,7 +349,9 @@ public class RegistrationManager implements Runnable {
     protected String getProtobufClassFieldDescriptions(Class<? extends Message> messageClass, Set<Class<? extends Message>> visited)
             throws Exception {
 
-        if (visited.contains(messageClass)) return "";
+        if (visited.contains(messageClass)) {
+            return "";
+        }
         visited.add(messageClass);
 
         StringBuilder sb = new StringBuilder();
