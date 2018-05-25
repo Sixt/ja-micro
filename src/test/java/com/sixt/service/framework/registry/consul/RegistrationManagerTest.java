@@ -20,6 +20,7 @@ import com.sixt.service.configuration.api.ConfigurationOuterClass;
 import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceMethodHandler;
 import com.sixt.service.framework.ServiceProperties;
+import com.sixt.service.framework.kafka.messaging.TreeNode;
 import com.sixt.service.framework.protobuf.FrameworkTest.MessageWithMap;
 import com.sixt.service.framework.protobuf.RpcEnvelope;
 import org.junit.Before;
@@ -104,6 +105,13 @@ public class RegistrationManagerTest {
                 "\"type\":\"string\",\"values\":null},{\"name\":\"instances\",\"type\":" +
                 "\"string\",\"values\":null},{\"name\":\"value\",\"type\":\"string\",\"values" +
                 "\":null},{\"name\":\"isEncrypted\",\"type\":\"bool\",\"values\":null}]}]}");
+    }
+
+    @Test
+    public void verifyCircularNestedEndpoint() throws Exception {
+        String result = manager.getProtobufClassFieldDescriptions(TreeNode.class, new HashSet<>());
+        assertThat(result).isEqualTo("{\"name\":\"name\",\"type\":\"string\",\"values\":null}" +
+                ",{\"name\":\"children\",\"type\":\"TreeNode\",\"values\":[]}");
     }
 
     @Test
