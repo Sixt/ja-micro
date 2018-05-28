@@ -23,6 +23,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.time.Clock;
 import java.util.*;
@@ -30,6 +31,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.sixt.service.framework.OrangeContext.CORRELATION_ID;
 import static net.logstash.logback.marker.Markers.append;
 
 public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListener {
@@ -243,6 +245,7 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
 
         @Override
         public void run() {
+            MDC.put(CORRELATION_ID, UUID.randomUUID().toString());
             try {
                 callback.eventReceived(message, topicInfo);
             } catch (Exception ex) {
