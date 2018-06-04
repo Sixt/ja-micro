@@ -26,11 +26,14 @@ public class KafkaSubscriberFactory<TYPE> {
     protected ServiceProperties serviceProperties;
     protected Collection<KafkaSubscriber<TYPE>> kafkaSubscribers = new ConcurrentLinkedQueue<>();
     private final MetricBuilderFactory metricBuilderFactory;
+    private final PartitionAssignmentWatchdog partitionAssignmentWatchdog;
 
     @Inject
-    public KafkaSubscriberFactory(ServiceProperties serviceProperties, MetricBuilderFactory metricBuilderFactory) {
+    public KafkaSubscriberFactory(ServiceProperties serviceProperties, MetricBuilderFactory metricBuilderFactory,
+                                  PartitionAssignmentWatchdog watchdog) {
         this.serviceProperties = serviceProperties;
         this.metricBuilderFactory = metricBuilderFactory;
+        this.partitionAssignmentWatchdog = watchdog;
     }
 
     /**
@@ -38,7 +41,7 @@ public class KafkaSubscriberFactory<TYPE> {
      */
     @Deprecated
     public KafkaSubscriberFactory(ServiceProperties serviceProperties) {
-        this(serviceProperties, null);
+        this(serviceProperties, null, null);
     }
 
     @Deprecated //no longer needed now that we get populated serviceProperties at guice bootstrap-time
@@ -52,6 +55,7 @@ public class KafkaSubscriberFactory<TYPE> {
     public KafkaSubscriberBuilder<TYPE> newBuilder(String topic, EventReceivedCallback<TYPE> callback) {
         KafkaSubscriberBuilder<TYPE> retval = new KafkaSubscriberBuilder<>(this, topic, callback);
         retval.setMetricBuilderFactory(metricBuilderFactory);
+        retval.setPartitionAssignmentWatchdog(partitionAssignmentWatchdog);
         return retval;
     }
 

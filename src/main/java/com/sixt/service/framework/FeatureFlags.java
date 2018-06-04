@@ -80,4 +80,19 @@ public class FeatureFlags {
         return serviceProps.getIntegerProperty(MAX_JETTY_THREADS,
                 DEFAULT_MAX_JETTY_THREADS);
     }
+
+    public final static String KAFKA_MAX_BLOCK_MS = "kafkaMaxBlockMs";
+    public final static int DEFAULT_KAFKA_MAX_BLOCK_MS = 850;
+    public static int getKafkaMaxBlockMs(ServiceProperties serviceProps) {
+        return serviceProps.getIntegerProperty(KAFKA_MAX_BLOCK_MS,
+                DEFAULT_KAFKA_MAX_BLOCK_MS);
+    }
+
+    public final static String KAFKA_REQUEST_TIMEOUT_MS = "kafkaRequestTimeoutMs";
+    public final static int DEFAULT_KAFKA_REQUEST_TIMEOUT_MS = 200;
+    public static int getKafkaRequestTimeoutMs(ServiceProperties serviceProps) {
+        return serviceProps.getIntegerProperty(KAFKA_REQUEST_TIMEOUT_MS,
+                DEFAULT_KAFKA_REQUEST_TIMEOUT_MS);
+    }
+
 }

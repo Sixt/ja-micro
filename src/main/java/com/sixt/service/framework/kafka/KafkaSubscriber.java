@@ -37,7 +37,6 @@ import static net.logstash.logback.marker.Markers.append;
 public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListener {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaSubscriber.class);
-    private MetricBuilderFactory metricBuilderFactory;
 
     public enum OffsetReset {
         Earliest, Latest;
@@ -68,6 +67,8 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
     private GoCounter messagesReadMetric = new GoCounter("");
     private GoGauge messageBacklogMetric = new GoGauge("");
     private GoCounter rebalaceMetric = new GoCounter("");
+    private MetricBuilderFactory metricBuilderFactory;
+    private PartitionAssignmentWatchdog partitionAssignmentWatchdog;
 
     KafkaSubscriber(EventReceivedCallback<TYPE> callback, String topic,
                     String groupId, boolean enableAutoCommit, OffsetReset offsetReset,
@@ -106,6 +107,10 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
         this.metricBuilderFactory = metricBuilderFactory;
     }
 
+    public void setPartitionAssignmentWatchdog(PartitionAssignmentWatchdog partitionAssignmentWatchdog) {
+        this.partitionAssignmentWatchdog = partitionAssignmentWatchdog;
+    }
+
     synchronized void initialize(String servers) {
         if (isInitialized.get()) {
             logger.warn("Already initialized");
@@ -125,13 +130,18 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
             props.put("auto.offset.reset", offsetReset.toString().toLowerCase());
             realConsumer = new KafkaConsumer<>(props);
 
-            List<String> topics = new ArrayList<String>();
+            List<String> topics = new ArrayList<>();
             topics.add(topic);
             realConsumer.subscribe(topics, this);
 
             offsetCommitter = new OffsetCommitter(realConsumer, Clock.systemUTC());
             primaryExecutor = Executors.newSingleThreadExecutor();
             primaryExecutor.submit(this);
+
+            if (partitionAssignmentWatchdog != null) {
+                partitionAssignmentWatchdog.subscriberInitialized(realConsumer);
+            }
+
             isInitialized.set(true);
         } catch (Exception ex) {
             logger.error("Error building Kafka consumer", ex);
@@ -225,6 +235,7 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
     }
 
     public void shutdown() {
+        partitionAssignmentWatchdog.subscriberShutdown(realConsumer);
         primaryExecutor.shutdown();
         shutdownMutex.set(true);
         try {

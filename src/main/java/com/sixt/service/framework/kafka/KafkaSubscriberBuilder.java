@@ -30,6 +30,7 @@ public class KafkaSubscriberBuilder<TYPE> {
     protected int pollTime = 1000;
     protected int throttleLimit = 100;
     private MetricBuilderFactory metricBuilderFactory;
+    private PartitionAssignmentWatchdog partitionAssignmentWatchdog;
 
     KafkaSubscriberBuilder(KafkaSubscriberFactory<TYPE> factory, String topic,
                            EventReceivedCallback<TYPE> callback) {
@@ -92,6 +93,7 @@ public class KafkaSubscriberBuilder<TYPE> {
                 enableAutoCommit, offsetReset, minThreads, maxThreads, idleTimeoutSeconds,
                 pollTime, throttleLimit);
         retval.setMetricBuilderFactory(metricBuilderFactory);
+        retval.setPartitionAssignmentWatchdog(partitionAssignmentWatchdog);
         parentFactory.builtSubscriber(retval);
         return retval;
     }
@@ -99,4 +101,9 @@ public class KafkaSubscriberBuilder<TYPE> {
     public void setMetricBuilderFactory(MetricBuilderFactory metricBuilderFactory) {
         this.metricBuilderFactory = metricBuilderFactory;
     }
+
+    public void setPartitionAssignmentWatchdog(PartitionAssignmentWatchdog partitionAssignmentWatchdog) {
+        this.partitionAssignmentWatchdog = partitionAssignmentWatchdog;
+    }
+
 }
