@@ -96,7 +96,7 @@ public class HealthCheckManager implements Runnable {
                 HealthCheck.Status summary = getSummaryFor(healthChecks);
                 updateHealthStatus(summary);
             } else {
-                logger.info("Waiting for {} to be registered before updating health"
+                logger.debug("Waiting for {} to be registered before updating health"
                         , serviceProps.getServiceName());
             }
         } catch (Exception ex) {

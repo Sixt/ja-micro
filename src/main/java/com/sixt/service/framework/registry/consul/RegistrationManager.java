@@ -156,7 +156,11 @@ public class RegistrationManager implements Runnable {
     }
 
     private boolean verifyRegistrationInConsul() {
-        String url = "http://" + serviceProps.getRegistryServer() + "/v1/catalog/service/" +
+        String registryServer = serviceProps.getRegistryServer();
+        if (StringUtils.isBlank(registryServer)) {
+            return false;
+        }
+        String url = "http://" + registryServer + "/v1/catalog/service/" +
                 serviceProps.getServiceName();
         try {
             ContentResponse httpResponse = httpClient.newRequest(url).
