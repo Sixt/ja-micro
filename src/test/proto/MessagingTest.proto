@@ -23,3 +23,8 @@ message TypeDictionaryTest{
 message TestMessageWithNoHandler {
     string a_meaningless_field = 1;
 }
+
+message TreeNode {
+    string name = 1;
+    repeated TreeNode children = 2;
+}

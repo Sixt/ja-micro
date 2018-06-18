@@ -61,7 +61,7 @@ public class KafkaThrottlingTest {
         KafkaPublisherFactory publisherFactory = new KafkaPublisherFactory(props, null);
         KafkaPublisher publisher = publisherFactory.newBuilder(topic).build();
 
-        KafkaSubscriberFactory<String> subscriberFactory = new KafkaSubscriberFactory<>(props, null);
+        KafkaSubscriberFactory<String> subscriberFactory = new KafkaSubscriberFactory<>(props, null, null);
         EventReceivedCallback<String> callback = (message, topicInfo) -> {
             latch.countDown();
             try {

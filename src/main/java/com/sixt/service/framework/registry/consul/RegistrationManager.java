@@ -110,6 +110,9 @@ public class RegistrationManager implements Runnable {
                 sleepDuration = (long) (sleepDuration * 1.5);
             } catch (Exception ex) {
                 logger.warn("Caught exception attempting service registration", ex);
+            } catch (Throwable t) {
+                logger.error("Caught throwable attempting service registration", t);
+                throw t;
             }
         }
     }
@@ -153,7 +156,11 @@ public class RegistrationManager implements Runnable {
     }
 
     private boolean verifyRegistrationInConsul() {
-        String url = "http://" + serviceProps.getRegistryServer() + "/v1/catalog/service/" +
+        String registryServer = serviceProps.getRegistryServer();
+        if (StringUtils.isBlank(registryServer)) {
+            return false;
+        }
+        String url = "http://" + registryServer + "/v1/catalog/service/" +
                 serviceProps.getServiceName();
         try {
             ContentResponse httpResponse = httpClient.newRequest(url).
@@ -326,13 +333,13 @@ public class RegistrationManager implements Runnable {
                 sb.append("\",\"type\":\"");
                 sb.append(requestClass.getSimpleName());
                 sb.append("\",\"values\":[");
-                sb.append(getProtobufClassFieldDescriptions(requestClass));
+                sb.append(getProtobufClassFieldDescriptions(requestClass, new HashSet<>()));
                 sb.append("]},\"response\":{\"name\":\"");
                 sb.append(responseClass.getSimpleName());
                 sb.append("\",\"type\":\"");
                 sb.append(responseClass.getSimpleName());
                 sb.append("\",\"values\":[");
-                sb.append(getProtobufClassFieldDescriptions(responseClass));
+                sb.append(getProtobufClassFieldDescriptions(responseClass, new HashSet<>()));
                 sb.append("]},\"metadata\":{\"stream\":\"false\"}}");
             } catch (Exception e) {
                 logger.error("Error inspecting handlers", e);
@@ -343,8 +350,14 @@ public class RegistrationManager implements Runnable {
         });
     }
 
-    protected String getProtobufClassFieldDescriptions(Class<? extends Message> messageClass)
+    protected String getProtobufClassFieldDescriptions(Class<? extends Message> messageClass, Set<Class<? extends Message>> visited)
             throws Exception {
+
+        if (visited.contains(messageClass)) {
+            return "";
+        }
+        visited.add(messageClass);
+
         StringBuilder sb = new StringBuilder();
         Constructor<?> constructor = null;
         try {
@@ -374,7 +387,7 @@ public class RegistrationManager implements Runnable {
                 Descriptors.FieldDescriptor childDescriptor = requestDesc.findFieldByName(fd.getName());
                 Message.Builder subMessageBuilder = builder.newBuilderForField(childDescriptor);
                 Message subMessage = subMessageBuilder.build();
-                sb.append(getProtobufClassFieldDescriptions(subMessage.getClass()));
+                sb.append(getProtobufClassFieldDescriptions(subMessage.getClass(), visited));
                 sb.append("]}");
             } else {
                 sb.append(fd.getType().toString().toLowerCase());

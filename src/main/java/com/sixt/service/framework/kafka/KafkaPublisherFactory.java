@@ -14,19 +14,21 @@ package com.sixt.service.framework.kafka;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.sixt.service.framework.FeatureFlags;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.metrics.MetricBuilderFactory;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Singleton
 public class KafkaPublisherFactory {
 
-    protected ServiceProperties serviceProperties;
-
+    protected final ServiceProperties serviceProperties;
     private Collection<KafkaPublisher> kafkaPublishers = new ConcurrentLinkedQueue<>();
     private final MetricBuilderFactory metricBuilderFactory;
 
@@ -44,8 +46,20 @@ public class KafkaPublisherFactory {
         }
     }
 
+    public Map<String, String> getDefaultProperties() {
+        Map<String, String> retval = new HashMap<>();
+        retval.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, Integer.toString(FeatureFlags.getKafkaRequestTimeoutMs(serviceProperties)));
+        retval.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, Integer.toString(FeatureFlags.getKafkaMaxBlockMs(serviceProperties)));
+        retval.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        retval.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        retval.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, SixtPartitioner.class.getName());
+        retval.put(ProducerConfig.RETRIES_CONFIG, "3");
+        retval.put(ProducerConfig.ACKS_CONFIG, "all");
+        return retval;
+    }
+
     public KafkaPublisherBuilder newBuilder(String topic) {
-        return newBuilder(topic, Collections.emptyMap());
+        return newBuilder(topic, getDefaultProperties());
     }
 
     public KafkaPublisherBuilder newBuilder(String topic, Map<String, String> properties) {
