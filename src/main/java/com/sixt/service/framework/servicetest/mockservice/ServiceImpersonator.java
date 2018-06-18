@@ -236,8 +236,8 @@ public class ServiceImpersonator {
 
     private ServiceMethodProxy buildMethodHandler(RpcMethodDefinition def, List<String> protoClasses)
             throws ClassNotFoundException {
-        Class<?> requestClass = rpcMethodScanner.findProtobufClass(protoClasses, def.getRequestType());
-        Class<?> responseClass = rpcMethodScanner.findProtobufClass(protoClasses, def.getResponseType());
+        Class<?> requestClass = rpcMethodScanner.findProtobufClass(protoClasses, def, def.getRequestType());
+        Class<?> responseClass = rpcMethodScanner.findProtobufClass(protoClasses, def, def.getResponseType());
         return new ServiceMethodProxy(requestClass, responseClass);
     }
 }

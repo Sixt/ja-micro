@@ -45,7 +45,8 @@ public class SixtProtoParser {
                     if (rpcs != null) {
                         for (RpcElement rpc : rpcs) {
                             RpcMethodDefinition def = new RpcMethodDefinition(name + "." + rpc.name(),
-                                                                              rpc.requestType(), rpc.responseType()
+                                                                              rpc.requestType(), rpc.responseType(),
+                                                                              element.packageName(), input
                             );
                             retval.add(def);
                         }

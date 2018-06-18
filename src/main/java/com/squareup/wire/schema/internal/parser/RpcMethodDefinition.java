@@ -12,16 +12,22 @@
 
 package com.squareup.wire.schema.internal.parser;
 
+import java.io.File;
+
 public class RpcMethodDefinition {
 
     protected String methodName;
     protected String requestType;
     protected String responseType;
+    protected String packageName;
+    protected File sourceFile;
 
-    public RpcMethodDefinition(String methodName, String requestType, String responseType) {
+    public RpcMethodDefinition(String methodName, String requestType, String responseType, String packageName, File sourceFile) {
         this.methodName = methodName;
         this.requestType = requestType;
         this.responseType = responseType;
+        this.packageName = packageName;
+        this.sourceFile = sourceFile;
     }
 
     public String getMethodName() {
@@ -36,4 +42,11 @@ public class RpcMethodDefinition {
         return responseType;
     }
 
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public File getSourceFile() {
+        return sourceFile;
+    }
 }
