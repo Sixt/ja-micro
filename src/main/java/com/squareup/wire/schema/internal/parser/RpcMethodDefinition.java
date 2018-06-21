@@ -20,14 +20,14 @@ public class RpcMethodDefinition {
     protected String requestType;
     protected String responseType;
     protected String packageName;
-    protected File sourceFile;
+    protected String sourceFileName;
 
-    public RpcMethodDefinition(String methodName, String requestType, String responseType, String packageName, File sourceFile) {
+    public RpcMethodDefinition(String methodName, String requestType, String responseType, String packageName, String sourceFileName) {
         this.methodName = methodName;
         this.requestType = requestType;
         this.responseType = responseType;
         this.packageName = packageName;
-        this.sourceFile = sourceFile;
+        this.sourceFileName = sourceFileName;
     }
 
     public String getMethodName() {
@@ -46,7 +46,7 @@ public class RpcMethodDefinition {
         return packageName;
     }
 
-    public File getSourceFile() {
-        return sourceFile;
+    public String getSourceFileName() {
+        return sourceFileName;
     }
 }

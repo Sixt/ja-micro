@@ -24,10 +24,12 @@ import java.util.Scanner;
 // This class needed to be in the squareup package because of package-access stuff
 public class SixtProtoParser {
 
+    protected String fileName;
     protected File input;
     protected String serviceName;
 
-    public SixtProtoParser(File input, String serviceName) {
+    public SixtProtoParser(String fileName, File input, String serviceName) {
+        this.fileName = fileName;
         this.input = input;
         this.serviceName = serviceName;
     }
@@ -46,7 +48,7 @@ public class SixtProtoParser {
                         for (RpcElement rpc : rpcs) {
                             RpcMethodDefinition def = new RpcMethodDefinition(name + "." + rpc.name(),
                                                                               rpc.requestType(), rpc.responseType(),
-                                                                              element.packageName(), input
+                                                                              element.packageName(), fileName
                             );
                             retval.add(def);
                         }

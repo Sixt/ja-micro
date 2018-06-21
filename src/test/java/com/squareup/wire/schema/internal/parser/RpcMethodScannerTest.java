@@ -30,7 +30,7 @@ public class RpcMethodScannerTest {
 
         RpcMethodDefinition def = new RpcMethodDefinition("MyService",
                 "TestServiceRequest", "TestServiceResponse",
-                "com.sixt.service.testrpcclasses", new File("test-service.proto"));
+                "com.sixt.service.testrpcclasses", "test-service.proto");
 
         Class<?> clazz = scanner.findProtobufClass(protoClasses, def, "TestServiceRequest");
         assertThat(clazz).isEqualTo(TestService1.TestServiceRequest.class);
@@ -46,7 +46,7 @@ public class RpcMethodScannerTest {
 
         RpcMethodDefinition def = new RpcMethodDefinition("MyService",
                 "TestServiceRequest", "TestServiceResponse",
-                "com.sixt.service.testrpcclasses.package2", new File("test-service.proto"));
+                "com.sixt.service.testrpcclasses.package2", "test-service.proto");
 
         Class<?> clazz = scanner.findProtobufClass(protoClasses, def, "TestServiceRequest");
         assertThat(clazz).isEqualTo(com.sixt.service.testrpcclasses.package2.TestService.TestServiceRequest.class);
@@ -63,7 +63,7 @@ public class RpcMethodScannerTest {
 
         RpcMethodDefinition def = new RpcMethodDefinition("MyService",
                 "TestServiceRequest", "TestServiceResponse",
-                "com.sixt.service.testrpcclasses", new File("test-service-2.proto"));
+                "com.sixt.service.testrpcclasses", "test-service-2.proto");
 
         Class<?> clazz;
 
@@ -82,7 +82,7 @@ public class RpcMethodScannerTest {
 
         RpcMethodDefinition def = new RpcMethodDefinition("MyService",
                 "TestServiceRequest", "TestServiceResponse",
-                "com.sixt.service.testrpcclasses", new File("services.proto"));
+                "com.sixt.service.testrpcclasses", "services.proto");
 
         scanner.findProtobufClass(protoClasses, def, "TestServiceRequest");
 

@@ -147,7 +147,7 @@ public class RpcMethodScanner {
         // It is therefore sufficient for us to search for the class name generated from the proto file name (we'll match
         // it whether or not the "OuterClass" suffix is added).
         // NOTE: We cannot resolve this if the Outer Class name is overwritten manually within the proto file.
-        String outerClassName = ProtobufUtil.toClassName(def.getSourceFile().getName());
+        String outerClassName = ProtobufUtil.toClassName(def.getSourceFileName());
         if (outerClassName != null) {
             Set<String> matchedOnFileName = matched.stream().filter(m -> m.contains(outerClassName)).collect(Collectors.toSet());
             if (matchedOnFileName.size() == 1) {
@@ -196,7 +196,7 @@ public class RpcMethodScanner {
 
         for (File f : protoFiles) {
             try {
-                rpcMethodDefinitions.addAll(inspectProtoFile(new FileInputStream(f), serviceName));
+                rpcMethodDefinitions.addAll(inspectProtoFile(f.getName(), new FileInputStream(f), serviceName));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -222,7 +222,7 @@ public class RpcMethodScanner {
             if (entryName.endsWith(".proto")) {
                 ZipFile zipFile = new ZipFile(jarFile);
                 try (InputStream in = zipFile.getInputStream(ze)) {
-                    defs.addAll(inspectProtoFile(in, serviceName));
+                    defs.addAll(inspectProtoFile(entryName, in, serviceName));
                 }
                 zipFile.close();
             }
@@ -233,11 +233,11 @@ public class RpcMethodScanner {
         return defs;
     }
 
-    private List<RpcMethodDefinition> inspectProtoFile(InputStream instream, String serviceName) throws IOException {
+    private List<RpcMethodDefinition> inspectProtoFile(String fileName, InputStream instream, String serviceName) throws IOException {
         File tempFile = File.createTempFile("proto", null);
         tempFile.delete();
         Files.copy(instream, tempFile.toPath());
-        SixtProtoParser parser = new SixtProtoParser(tempFile, serviceName);
+        SixtProtoParser parser = new SixtProtoParser(fileName, tempFile, serviceName);
         List<RpcMethodDefinition> methodDefinitions = parser.getRpcMethods();
         tempFile.delete();
         instream.close();
