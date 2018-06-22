@@ -41,7 +41,7 @@ public class SixtProtoParserTest {
         extends SixtProtoParser {
 
         PackageMatcherTestParser(final String service) {
-            super(new File("test.txt"), service);
+            super("test.txt", new File("test.txt"), service);
         }
 
         void should_match(String pack) {

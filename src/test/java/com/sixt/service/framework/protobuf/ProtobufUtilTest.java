@@ -366,4 +366,17 @@ public class ProtobufUtilTest {
         ProtobufUtil.jsonToProtobuf(input, ConfigurationOuterClass.VariantDetail.class);
     }
 
+    @Test
+    public void fileNameToClassNameConversions() {
+        assertThat(ProtobufUtil.toClassName("myFirstProtoService.proto")).isEqualTo("MyFirstProtoService");
+        assertThat(ProtobufUtil.toClassName("my_first_proto_service.proto")).isEqualTo("MyFirstProtoService");
+        assertThat(ProtobufUtil.toClassName("/some/path/myFirstProtoService.proto")).isEqualTo("MyFirstProtoService");
+        assertThat(ProtobufUtil.toClassName("myFirstProtoService.proto2")).isEqualTo("MyFirstProtoService");
+        assertThat(ProtobufUtil.toClassName("my-first-proto-service.proto")).isEqualTo("MyFirstProtoService");
+        assertThat(ProtobufUtil.toClassName("myFirstProtoService")).isEqualTo("MyFirstProtoService");
+        assertThat(ProtobufUtil.toClassName("__myFirstProtoService__")).isEqualTo("MyFirstProtoService");
+        assertThat(ProtobufUtil.toClassName(null)).isNull();
+
+    }
+
 }

@@ -16,6 +16,7 @@ import com.google.gson.*;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
 import com.sixt.service.framework.rpc.RpcCallException;
+import com.sixt.service.framework.util.FileUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -239,5 +240,30 @@ public class ProtobufUtil {
     public static Message fromJson(Message.Builder builder, JsonObject input) throws Exception {
         JsonFormat.parser().ignoringUnknownFields().merge(input.toString(), builder);
         return builder.build();
+    }
+
+    /**
+     * Converts a proto file name into a class name according to the rules defined by protobuf:
+     * https://developers.google.com/protocol-buffers/docs/reference/java-generated
+     *
+     * The file name will be camel cased (and underscores, hyphens etc. stripped out).
+     * @param protoFileName The file name to process: e.g. my_service.proto
+     * @return The class name: MyService
+     */
+    public static String toClassName(String protoFileName) {
+
+        if (protoFileName == null) {
+            return null;
+        }
+        String fileName = FileUtil.stripPath(protoFileName);
+        fileName = FileUtil.stripExtension(fileName);
+
+        String parts[] = fileName.split("[^A-Za-z0-9]");
+
+        StringBuilder classNameBuilder = new StringBuilder();
+        for (String part : parts) {
+            classNameBuilder.append(StringUtils.capitalize(part));
+        }
+        return classNameBuilder.toString();
     }
 }
