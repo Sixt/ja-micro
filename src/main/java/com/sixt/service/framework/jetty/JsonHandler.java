@@ -148,15 +148,15 @@ public class JsonHandler extends RpcHandler {
 
     @SuppressWarnings("unchecked")
     private JsonRpcResponse dispatchJsonRpcRequest(JsonRpcRequest rpcRequest, OrangeContext cxt) {
-        ServiceMethodHandler handler = handlers.getMethodHandler(rpcRequest.getMethod());
-        Message innerRequest = convertJsonToProtobuf(handler, rpcRequest);
         JsonRpcResponse jsonResponse = new JsonRpcResponse(rpcRequest.getId(), JsonNull.INSTANCE,
                 JsonNull.INSTANCE, HttpServletResponse.SC_OK);
-        JsonElement idElement = rpcRequest.getId();
-        if (idElement == null) {
-            jsonResponse.setId(new JsonPrimitive(-1));
-        }
         try {
+            ServiceMethodHandler handler = handlers.getMethodHandler(rpcRequest.getMethod());
+            Message innerRequest = convertJsonToProtobuf(handler, rpcRequest);
+            JsonElement idElement = rpcRequest.getId();
+            if (idElement == null) {
+                jsonResponse.setId(new JsonPrimitive(-1));
+            }
             Message innerResponse = invokeHandlerChain(rpcRequest.getMethod(), handler, innerRequest, cxt);
             jsonResponse.setResult(ProtobufUtil.protobufToJson(innerResponse));
         } catch (RpcCallException rpcEx) {
@@ -175,7 +175,7 @@ public class JsonHandler extends RpcHandler {
 
     @SuppressWarnings("unchecked")
     private Message convertJsonToProtobuf(ServiceMethodHandler handler,
-                                          JsonRpcRequest rpcRequest) {
+                                          JsonRpcRequest rpcRequest) throws RpcCallException {
         try {
             Class<?> requestKlass = findSubClassParameterType(handler, 0);
             return ProtobufUtil.jsonToProtobuf(rpcRequest.getParams(),
@@ -183,6 +183,8 @@ public class JsonHandler extends RpcHandler {
         } catch (ClassNotFoundException ex) {
             throw new IllegalStateException("Reflection for handler " +
                     handler.getClass() + " failed");
+        } catch (RuntimeException ex) {
+            throw new RpcCallException(RpcCallException.Category.BadRequest, "Invalid request");
         }
     }
 
