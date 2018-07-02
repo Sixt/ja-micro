@@ -21,7 +21,6 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @Singleton
@@ -33,7 +32,7 @@ public class RandomEventPublisher {
 
     @Inject
     public RandomEventPublisher(KafkaPublisherFactory factory) {
-        Map<String, String> props = new HashMap<>();
+        Map<String, String> props = factory.getDefaultProperties();
         props.put(ProducerConfig.RETRIES_CONFIG, "3");
         props.put(ProducerConfig.ACKS_CONFIG, "all");
         publisher = factory.newBuilder("events", props).build();
