@@ -78,4 +78,13 @@ public class HealthCheck {
         return status.equals(s);
     }
 
+    @Override
+    public String toString() {
+        return "HealthCheck{" +
+                "name='" + name + '\'' +
+                ", status=" + status +
+                ", message='" + message + '\'' +
+                '}';
+    }
+
 }

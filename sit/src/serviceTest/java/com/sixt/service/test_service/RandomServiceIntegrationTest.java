@@ -12,6 +12,8 @@
 
 package com.sixt.service.test_service;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.health.HealthCheck;
 import com.sixt.service.framework.kafka.KafkaPublisher;
@@ -70,16 +72,13 @@ public class RandomServiceIntegrationTest {
         //we have to work around the normal communication channels, as the load-balancer
         //won't let us talk to a failing instance
         LoadBalancer loadBalancer = ServiceIntegrationTestSuite.testService.getLoadBalancer();
-        ServiceIntegrationTestSuite.testService.sendRequest("TestService.SetHealthCheckStatus", command);
         ServiceEndpoint endpoint = loadBalancer.getHealthyInstance();
+        ServiceIntegrationTestSuite.testService.sendRequest("TestService.SetHealthCheckStatus", command);
         String url = "http://" + endpoint.getHostAndPort() + "/health";
         HttpClient httpClient = new HttpClient();
         httpClient.start();
         String response = httpClient.GET(url).getContentAsString();
-        assertThat(response).isEqualTo("{\"summary\":\"CRITICAL\",\"details\":[" +
-                "{\"name\":\"database_migration\",\"status\":\"OK\",\"reason\":\"\"}," +
-                "{\"name\":\"not_set\",\"status\":\"OK\",\"reason\":\"\"}," +
-                "{\"name\":\"test_servlet\",\"status\":\"CRITICAL\",\"reason\":\"" + failureMessage + "\"}]}");
+        assertThat(response).contains("{\"name\":\"test_servlet\",\"status\":\"CRITICAL\",\"reason\":\"I'm a failure!\"}");
     }
 
     @SuppressWarnings("unchecked")
@@ -128,6 +127,17 @@ public class RandomServiceIntegrationTest {
             assertThat(rpcEx.getCategory()).isEqualTo(InsufficientPermissions);
             assertThat(rpcEx.getMessage()).isEqualTo("go away");
         }
+    }
+
+    @Test
+    public void invalidJsonThrowsRpcCallException() throws Exception {
+        String result = ServiceIntegrationTestSuite.testService.sendHttpPost("/", "{\"method\":" +
+                "\"TestService.GetRandomString\",\"params\":[{\"input\":{\"foo\":\"bar\"}}]}");
+        JsonObject jsonResult = new JsonParser().parse(result).getAsJsonObject();
+        JsonObject error = jsonResult.getAsJsonObject("error");
+        assertThat(error.get("category").getAsInt()).isEqualTo(400);
+        assertThat(error.get("retriable").getAsBoolean()).isEqualTo(false);
+        assertThat(error.get("message").getAsString()).isNotBlank();
     }
 
 }

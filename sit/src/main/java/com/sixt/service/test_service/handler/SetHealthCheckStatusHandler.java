@@ -45,6 +45,7 @@ public class SetHealthCheckStatusHandler implements ServiceMethodHandler<SetHeal
                                                       OrangeContext ctx) throws RpcCallException {
         try {
             HealthCheck.Status status = HealthCheck.Status.valueOf(request.getStatus());
+            logger.info("Updating health to: {}", status);
             currentHealth = new HealthCheck("test_servlet", status, request.getMessage());
         } catch (Exception ex) {
             logger.warn("Caught exception", ex);
@@ -57,6 +58,7 @@ public class SetHealthCheckStatusHandler implements ServiceMethodHandler<SetHeal
         HealthCheck retval = currentHealth;
         currentHealth = new HealthCheck("test_servlet",
                 HealthCheck.Status.PASS, null);
+        logger.info("Returning healthCheck: {}", retval);
         return retval;
     }
 
