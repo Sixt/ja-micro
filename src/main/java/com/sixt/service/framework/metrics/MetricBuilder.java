@@ -27,7 +27,7 @@ public class MetricBuilder {
     private static final Logger logger = LoggerFactory.getLogger(MetricBuilder.class);
 
     private final MetricRegistry registry;
-    private List<MetricTag> tags = new ArrayList<>();
+    private final List<MetricTag> tags = new ArrayList<>();
 
     private String baseName;
 
