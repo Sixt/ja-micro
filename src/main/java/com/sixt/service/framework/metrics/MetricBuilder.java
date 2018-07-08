@@ -14,22 +14,21 @@ package com.sixt.service.framework.metrics;
 
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
-@Singleton
+//DO NOT MAKE @Singleton
 public class MetricBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(MetricBuilder.class);
 
     private final MetricRegistry registry;
+    private List<MetricTag> tags = new ArrayList<>();
 
-    private List<MetricTag> tags;
     private String baseName;
 
     @Inject
@@ -38,48 +37,48 @@ public class MetricBuilder {
     }
 
     public MetricBuilder withTag(String name, String value) {
-        MetricTag metricTag = new MetricTag(name, value);
-
-        if (tags == null) {
-            tags = Lists.newArrayList(metricTag);
-        } else {
-            tags.add(metricTag);
-        }
+        tags.add(new MetricTag(name, value));
 
         return this;
     }
 
-    public synchronized GoTimer buildTimer() {
-        String name = generateName("timing");
-        GoTimer timer = getExistingTimer(name);
-        if (timer == null) {
-            timer = new GoTimer(name);
+    public GoTimer buildTimer() {
+        synchronized (registry) {
+            String name = generateName("timing");
+            GoTimer timer = getExistingTimer(name);
+            if (timer == null) {
+                timer = new GoTimer(name);
 
-            registry.register(name, timer);
+                registry.register(name, timer);
+            }
+            return timer;
         }
-        return timer;
     }
 
-    public synchronized GoCounter buildCounter() {
-        String name = generateName("counter");
-        GoCounter counter = getExistingCounter(name);
-        if (counter == null) {
-            counter = new GoCounter(name);
+    public GoCounter buildCounter() {
+        synchronized (registry) {
+            String name = generateName("counter");
+            GoCounter counter = getExistingCounter(name);
+            if (counter == null) {
+                counter = new GoCounter(name);
 
-            registry.register(name, counter);
+                registry.register(name, counter);
+            }
+            return counter;
         }
-        return counter;
     }
 
-    public synchronized GoGauge buildGauge() {
-        String name = generateName("gauge");
-        GoGauge gauge = getExistingGauge(name);
-        if (gauge == null) {
-            gauge = new GoGauge(name);
+    public GoGauge buildGauge() {
+        synchronized (registry) {
+            String name = generateName("gauge");
+            GoGauge gauge = getExistingGauge(name);
+            if (gauge == null) {
+                gauge = new GoGauge(name);
 
-            registry.register(name, gauge);
+                registry.register(name, gauge);
+            }
+            return gauge;
         }
-        return gauge;
     }
 
     private GoTimer getExistingTimer(String name) {
