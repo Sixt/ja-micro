@@ -94,18 +94,16 @@ public class JettyServiceBase {
             //we have to start the container before service registration happens to know the port
             service.startJettyContainer();
 
-            Annotation[] serviceAnnos = serviceClass.getAnnotations();
-
             service.initializeServiceRegistration();
 
-            service.verifyEnvironment();
+            verifyEnvironmentAndExistIfNeeded(service);
 
             //we start health checks first so we can see services with bad state
             if (!hcProviders.isEmpty()) {
                 service.initializeHealthCheckManager(hcProviders);
             }
 
-            if (hasAnnotation(serviceAnnos, EnableDatabaseMigration.class)) {
+            if (hasAnnotation(serviceClass.getAnnotations(), EnableDatabaseMigration.class)) {
                 //this will block until the database is available.
                 //it will then attempt a migration.  if the migration fails,
                 //   the process emits an error and pauses.  it's senseless to continue.
@@ -124,6 +122,15 @@ public class JettyServiceBase {
                 service.displayHelp(System.out);
                 System.exit(0);
             }
+        }
+    }
+
+    private static void verifyEnvironmentAndExistIfNeeded(AbstractService service) {
+        try {
+            service.verifyEnvironment();
+        } catch (Exception e) {
+            logger.error("Error while verifying environment - {}", e.getMessage(), e);
+            System.exit(-1);
         }
     }
 
