@@ -96,7 +96,7 @@ public class JettyServiceBase {
 
             service.initializeServiceRegistration();
 
-            verifyEnvironmentAndExistIfNeeded(service);
+            verifyEnvironmentAndExitIfNeeded(service);
 
             //we start health checks first so we can see services with bad state
             if (!hcProviders.isEmpty()) {
@@ -125,7 +125,7 @@ public class JettyServiceBase {
         }
     }
 
-    private static void verifyEnvironmentAndExistIfNeeded(AbstractService service) {
+    private static void verifyEnvironmentAndExitIfNeeded(AbstractService service) {
         try {
             service.verifyEnvironment();
         } catch (Exception e) {
