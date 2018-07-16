@@ -118,6 +118,7 @@ public class HttpClientWrapper {
                     }
                     Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
                     Tags.PEER_SERVICE.set(span, loadBalancer.getServiceName());
+                    span.setTag("rpc.call", client.getServiceMethodName());
                     if (orangeContext != null) {
                         span.setTag("correlation_id", orangeContext.getCorrelationId());
                     }
