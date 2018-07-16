@@ -16,7 +16,7 @@ import com.google.inject.Inject;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.rpc.*;
 import com.sixt.service.framework.servicetest.helper.DockerPortResolver;
-import io.opentracing.NoopTracerFactory;
+import io.opentracing.noop.NoopTracerFactory;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
