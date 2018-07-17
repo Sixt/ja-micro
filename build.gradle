@@ -102,7 +102,7 @@ ext.versions = [
     'guava'    : '23.3-jre',
     'logback'  : '1.2.3',
     'slf4j'    : '1.7.25',
-    'tracing'  : '0.21.0',
+    'tracing'  : '0.31.0',
     'powermock': '1.7.3'
 ]
 

@@ -13,8 +13,8 @@
 package com.sixt.service.framework.tracing;
 
 import com.sixt.service.framework.annotation.TracingPlugin;
-import io.opentracing.NoopTracerFactory;
 import io.opentracing.Tracer;
+import io.opentracing.noop.NoopTracerFactory;
 
 /**
  * This is the default tracing plugin which just uses the OpenTracing Noop implementation.
