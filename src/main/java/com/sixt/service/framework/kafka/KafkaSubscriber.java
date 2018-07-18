@@ -18,6 +18,7 @@ import com.sixt.service.framework.metrics.GoGauge;
 import com.sixt.service.framework.metrics.MetricBuilderFactory;
 import com.sixt.service.framework.protobuf.ProtobufUtil;
 import com.sixt.service.framework.util.ReflectionUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -111,7 +112,7 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
         this.partitionAssignmentWatchdog = partitionAssignmentWatchdog;
     }
 
-    synchronized void initialize(String servers) {
+    synchronized void initialize(String servers, String username, String password) {
         if (isInitialized.get()) {
             logger.warn("Already initialized");
             return;
@@ -128,6 +129,13 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
             props.put("session.timeout.ms", "20000");
             props.put("enable.auto.commit", Boolean.toString(enableAutoCommit));
             props.put("auto.offset.reset", offsetReset.toString().toLowerCase());
+            if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
+                String jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule " +
+                    "required username=\"%s\" password=\"%s\";";
+                props.put("security.protocol", "SASL_PLAINTEXT");
+                props.put("sasl.mechanism", "PLAIN");
+                props.put("sasl.jaas.config", String.format(jaasTemplate, username, password));
+            }
             realConsumer = new KafkaConsumer<>(props);
 
             List<String> topics = new ArrayList<>();

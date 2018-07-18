@@ -40,9 +40,11 @@ public class KafkaPublisherFactory {
 
     @Deprecated //no longer needed now that we get populated serviceProperties at guice bootstrap-time
     public void initialize() {
+        String username = serviceProperties.getServiceName();
+        String password = serviceProperties.getKafkaPassword();
         String servers = serviceProperties.getKafkaServer();
         for (KafkaPublisher publisher : kafkaPublishers) {
-            publisher.initialize(servers);
+            publisher.initialize(servers, username, password);
         }
     }
 
@@ -70,7 +72,9 @@ public class KafkaPublisherFactory {
 
     void builtPublisher(KafkaPublisher publisher) {
         kafkaPublishers.add(publisher);
-        publisher.initialize(serviceProperties.getKafkaServer());
+        publisher.initialize(serviceProperties.getKafkaServer(),
+                serviceProperties.getServiceName(),
+                serviceProperties.getKafkaPassword());
     }
 
 }

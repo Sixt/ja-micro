@@ -30,6 +30,7 @@ public class ServiceProperties {
 
     public static final String REGISTRY_SERVER_KEY = "registryServer";
     public static final String KAFKA_SERVER_KEY = "kafkaServer";
+    public static final String KAFKA_PASSWORD_KEY = "kafkaPassword";
     public static final String DATABASE_SERVER_KEY = "databaseServer";
     public static final String DATABASE_USERNAME_KEY = "databaseUsername";
     public static final String DATABASE_PASSWORD_KEY = "databasePassword";
@@ -180,6 +181,10 @@ public class ServiceProperties {
 
     public String getKafkaServer() {
         return allProperties.get(KAFKA_SERVER_KEY);
+    }
+
+    public String getKafkaPassword() {
+        return allProperties.get(KAFKA_PASSWORD_KEY);
     }
 
     public String getDatabaseServer() {

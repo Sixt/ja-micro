@@ -46,9 +46,11 @@ public class KafkaSubscriberFactory<TYPE> {
 
     @Deprecated //no longer needed now that we get populated serviceProperties at guice bootstrap-time
     public void initialize() {
+        String username = serviceProperties.getServiceName();
+        String password = serviceProperties.getKafkaPassword();
         String servers = serviceProperties.getKafkaServer();
         for (KafkaSubscriber subscriber : kafkaSubscribers) {
-            subscriber.initialize(servers);
+            subscriber.initialize(servers, username, password);
         }
     }
 
@@ -61,7 +63,9 @@ public class KafkaSubscriberFactory<TYPE> {
 
     public void builtSubscriber(KafkaSubscriber<TYPE> subscriber) {
         kafkaSubscribers.add(subscriber);
-        subscriber.initialize(serviceProperties.getKafkaServer());
+        subscriber.initialize(serviceProperties.getKafkaServer(),
+                serviceProperties.getServiceName(),
+                serviceProperties.getKafkaPassword());
     }
 
 }
