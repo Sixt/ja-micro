@@ -48,7 +48,7 @@ public class KafkaPublisher {
         this.metricBuilderFactory = metricBuilderFactory;
     }
 
-    public void initialize(String servers) {
+    public void initialize(String servers, String username, String password) {
         if (isInitialized.get()) {
             logger.warn("Already initialized");
             return;
@@ -56,6 +56,13 @@ public class KafkaPublisher {
 
         Properties props = new Properties();
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, servers);
+        if (username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
+            String jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule " +
+                "required username=\"%s\" password=\"%s\";";
+            props.put("security.protocol", "SASL_PLAINTEXT");
+            props.put("sasl.mechanism", "PLAIN");
+            props.put("sasl.jaas.config", String.format(jaasTemplate, username, password));
+        }
 
         properties.forEach(props::put);
         buildMetrics();

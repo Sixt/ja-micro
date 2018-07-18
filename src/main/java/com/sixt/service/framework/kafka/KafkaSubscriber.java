@@ -111,7 +111,7 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
         this.partitionAssignmentWatchdog = partitionAssignmentWatchdog;
     }
 
-    synchronized void initialize(String servers) {
+    synchronized void initialize(String servers, String username, String password) {
         if (isInitialized.get()) {
             logger.warn("Already initialized");
             return;
@@ -128,6 +128,13 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
             props.put("session.timeout.ms", "20000");
             props.put("enable.auto.commit", Boolean.toString(enableAutoCommit));
             props.put("auto.offset.reset", offsetReset.toString().toLowerCase());
+            if (username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
+                String jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule " +
+                    "required username=\"%s\" password=\"%s\";";
+                props.put("security.protocol", "SASL_PLAINTEXT");
+                props.put("sasl.mechanism", "PLAIN");
+                props.put("sasl.jaas.config", String.format(jaasTemplate, username, password));
+            }
             realConsumer = new KafkaConsumer<>(props);
 
             List<String> topics = new ArrayList<>();
