@@ -15,6 +15,7 @@ package com.sixt.service.framework.kafka;
 import com.google.common.annotations.VisibleForTesting;
 import com.sixt.service.framework.metrics.GoTimer;
 import com.sixt.service.framework.metrics.MetricBuilderFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -56,7 +57,7 @@ public class KafkaPublisher {
 
         Properties props = new Properties();
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, servers);
-        if (username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
+        if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
             String jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule " +
                 "required username=\"%s\" password=\"%s\";";
             props.put("security.protocol", "SASL_PLAINTEXT");
