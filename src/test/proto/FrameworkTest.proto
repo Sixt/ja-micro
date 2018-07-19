@@ -31,3 +31,7 @@ message MessageWithEnum {
 message MessageWithMap {
     map<string, Error> error_map = 1;
 }
+
+message CamelCaseTestMessage {
+    string user_id = 1;
+}

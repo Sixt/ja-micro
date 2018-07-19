@@ -113,6 +113,20 @@ public class ProtobufUtilTest {
     }
 
     @Test
+    public void protobufToJson_camelCase_YieldsSuccess() {
+        // given
+        FrameworkTest.CamelCaseTestMessage message = FrameworkTest.CamelCaseTestMessage
+                .newBuilder().setUserId("test").build();
+
+        // when
+        JsonObject result = ProtobufUtil.protobufToJsonCamelCase(message);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.get("userId").getAsString()).isEqualTo("test");
+    }
+
+    @Test
     public void protobufToJson_EnumField_YieldsSuccess() throws Exception {
         // given
         FrameworkTest.MessageWithEnum message = FrameworkTest.MessageWithEnum.newBuilder()
