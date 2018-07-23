@@ -3,8 +3,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.bmuschko:gradle-docker-plugin:3.2.1'
-        classpath 'org.ajoberstar:grgit:1.9.1'
+        classpath 'com.bmuschko:gradle-docker-plugin:3.4.0'
+        classpath 'org.ajoberstar:grgit:2.2.1'
     }
     configurations.classpath {
         resolutionStrategy {
@@ -14,7 +14,7 @@ buildscript {
 }
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '2.0.1'  //build shadow jars
+    id 'com.github.johnrengelman.shadow' version '2.0.4'  //build shadow jars
 }
 
 apply plugin: 'java'
@@ -54,7 +54,7 @@ if (project.hasProperty('dockerUrl')) {
 
 // Retrieve git hash for docker tag
 ext {
-    git = org.ajoberstar.grgit.Grgit.open(file('..'))
+    git = Grgit.open(dir: '.')
     commitId = git.head().abbreviatedId
 }
 
@@ -64,6 +64,7 @@ ext {
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
+import org.ajoberstar.grgit.Grgit
 
 task createDockerfile(type: Dockerfile, dependsOn: shadowJar) {
     description = 'Creates the Dockerfile => "build/docker/Dockerfile"'
@@ -146,12 +147,12 @@ dependencies {
     compile project(":")
 
     // https://github.com/palantir/docker-compose-rule
-    compile 'com.palantir.docker.compose:docker-compose-rule-junit4:0.33.0'
+    compile 'com.palantir.docker.compose:docker-compose-rule-junit4:0.34.0'
 
     testCompile 'org.mockito:mockito-core:2.8.+'
-    testCompile 'org.assertj:assertj-core:3.8.0'
+    testCompile 'org.assertj:assertj-core:3.10.0'
 
-    serviceIntegrationTestCompile 'org.assertj:assertj-core:3.8.0'
+    serviceIntegrationTestCompile 'org.assertj:assertj-core:3.10.0'
 }
 
 jar {
