@@ -3,8 +3,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.bmuschko:gradle-docker-plugin:3.4.0'
-        classpath 'org.ajoberstar:grgit:2.2.1'
+        classpath 'com.bmuschko:gradle-docker-plugin:3.4.4'
+        classpath 'org.ajoberstar:grgit:2.3.0'
     }
     configurations.classpath {
         resolutionStrategy {
