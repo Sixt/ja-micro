@@ -12,6 +12,7 @@
 
 package com.sixt.service.framework.kafka;
 
+import com.sixt.service.framework.ServiceProperties;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -24,6 +25,12 @@ public class TopicVerification {
 
     private static final Logger logger = LoggerFactory.getLogger(TopicVerification.class);
 
+    private ServiceProperties serviceProperties = null;
+
+    public void initialize(ServiceProperties serviceProps) {
+        this.serviceProperties = serviceProps;
+    }
+
     public boolean verifyTopicsExist(String kafkaBrokers, Set<String> requiredTopics,
                                      boolean checkPartitionCounts) {
         Properties props = new Properties();
@@ -31,6 +38,12 @@ public class TopicVerification {
         props.put("group.id", UUID.randomUUID().toString());
         props.put("key.deserializer", StringDeserializer.class.getName());
         props.put("value.deserializer", StringDeserializer.class.getName());
+        if (serviceProperties != null) {
+            SaslConfigurator configurator = new SaslConfigurator();
+            configurator.configureSasl(props, serviceProperties.getServiceName(), serviceProperties.getKafkaPassword());
+        } else {
+            logger.warn("TopicVerification was not initialized, SASL will not be supported for this connection");
+        }
         KafkaConsumer consumer = new KafkaConsumer(props);
         try {
             @SuppressWarnings("unchecked")

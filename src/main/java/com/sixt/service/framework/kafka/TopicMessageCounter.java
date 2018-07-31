@@ -12,6 +12,7 @@
 
 package com.sixt.service.framework.kafka;
 
+import com.sixt.service.framework.ServiceProperties;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
@@ -24,6 +25,12 @@ import java.util.*;
 public class TopicMessageCounter {
 
     private static final Logger logger = LoggerFactory.getLogger(TopicMessageCounter.class);
+
+    private ServiceProperties serviceProperties = null;
+
+    public void initialize(ServiceProperties serviceProps) {
+        this.serviceProperties = serviceProps;
+    }
 
     /**
      * Gets the total message count for the topic.
@@ -102,6 +109,12 @@ public class TopicMessageCounter {
         props.put("key.deserializer", StringDeserializer.class.getName());
         props.put("value.deserializer", StringDeserializer.class.getName());
         props.put("auto.offset.reset", "earliest");
+        if (serviceProperties != null) {
+            SaslConfigurator configurator = new SaslConfigurator();
+            configurator.configureSasl(props, serviceProperties.getServiceName(), serviceProperties.getKafkaPassword());
+        } else {
+            logger.warn("TopicMessageCounter was not initialized, SASL will not be supported for this connection");
+        }
         return new KafkaConsumer(props);
     }
 
