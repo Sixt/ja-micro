@@ -27,6 +27,7 @@ import java.util.concurrent.Semaphore;
 public class SchemaMigrator {
 
     private static final Logger logger = LoggerFactory.getLogger(SchemaMigrator.class);
+    private static final String FLYWAY_SCHEMA_TABLE_NAME = "schema_version";
 
     private ServiceProperties serviceProps;
     private DatabaseMigrationContributor healthCheck;
@@ -67,6 +68,7 @@ public class SchemaMigrator {
 
     protected void migrateDatabase() {
         try {
+            flyway.setTable(FLYWAY_SCHEMA_TABLE_NAME);
             String url = "jdbc:" + serviceProps.getDatabaseServer();
             flyway.setDataSource(url, serviceProps.getDatabaseUsername(),
                     serviceProps.getDatabasePassword());
