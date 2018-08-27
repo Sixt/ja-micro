@@ -79,7 +79,7 @@ public class RpcMethodScanner {
     public List<RpcMethodDefinition> getRpcMethodDefinitions(String serviceName) {
         // search classpath
         Map<String, List<RpcMethodDefinition>> jarMap = searchClasspath(serviceName).stream().collect(Collectors.groupingBy(e -> e.getSourceFileName()));
-        // sear local path
+        // search local path
         Map<String, List<RpcMethodDefinition>> localMap = searchDirectory(System.getProperty("user.dir"), serviceName).stream().collect(Collectors.groupingBy(e -> e.getSourceFileName()));
 
         // override jar protos with local protos
