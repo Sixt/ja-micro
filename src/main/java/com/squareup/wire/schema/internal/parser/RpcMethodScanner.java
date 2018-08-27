@@ -77,13 +77,15 @@ public class RpcMethodScanner {
     }
 
     public List<RpcMethodDefinition> getRpcMethodDefinitions(String serviceName) {
-        // first try: search classpath
-        List<RpcMethodDefinition> rpcMethodDefinitions = searchClasspath(serviceName);
+        // search classpath
+        Map<String, List<RpcMethodDefinition>> jarMap = searchClasspath(serviceName).stream().collect(Collectors.groupingBy(e -> e.getSourceFileName()));
+        // search local path
+        Map<String, List<RpcMethodDefinition>> localMap = searchDirectory(System.getProperty("user.dir"), serviceName).stream().collect(Collectors.groupingBy(e -> e.getSourceFileName()));
 
-        // if rpcMethodDefinitions still empty, : search local directory for proto file
-        if (rpcMethodDefinitions.isEmpty()) {
-            rpcMethodDefinitions = searchDirectory(System.getProperty("user.dir"), serviceName);
-        }
+        // override jar protos with local protos
+        jarMap.putAll(localMap);
+
+        List<RpcMethodDefinition> rpcMethodDefinitions = jarMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
 
         if (rpcMethodDefinitions.isEmpty()) {
             logger.warn("No RPC endpoints found for {}", serviceName);
