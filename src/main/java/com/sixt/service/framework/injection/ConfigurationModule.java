@@ -18,12 +18,11 @@ import com.google.inject.Provides;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.annotation.ConfigurationPlugin;
 import com.sixt.service.framework.configuration.ConfigurationProvider;
-import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ClassInfoList;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 public class ConfigurationModule extends AbstractModule {
 
@@ -32,7 +31,7 @@ public class ConfigurationModule extends AbstractModule {
     private final ServiceProperties serviceProperties;
     private Object plugin;
     private ConfigurationProvider provider;
-    private List<String> configurationPlugins;
+    private ClassInfoList configurationPlugins;
 
     public ConfigurationModule(ServiceProperties serviceProperties) {
         this.serviceProperties = serviceProperties;
@@ -70,22 +69,23 @@ public class ConfigurationModule extends AbstractModule {
         if (StringUtils.isBlank(pluginName)) {
             return null;
         }
-        if (configurationPlugins == null) { // only scan if not already set
-            configurationPlugins = new FastClasspathScanner().scan().getNamesOfClassesWithAnnotation(ConfigurationPlugin.class);
+        if (configurationPlugins == null) {
+            logger.warn("No configuration plugins were configured");
+            return null;
         }
         boolean found = false;
-        for (String plugin : configurationPlugins) {
+        for (ClassInfo plugin : configurationPlugins) {
             try {
                 @SuppressWarnings("unchecked")
                 Class<? extends ConfigurationPlugin> pluginClass =
-                        (Class<? extends ConfigurationPlugin>) Class.forName(plugin);
+                        (Class<? extends ConfigurationPlugin>) plugin.loadClass();
                 ConfigurationPlugin anno = pluginClass.getAnnotation(ConfigurationPlugin.class);
                 if (anno != null && pluginName.equals(anno.name())) {
                     retval = injector.getInstance(pluginClass);
                     found = true;
                     break;
                 }
-            } catch (ClassNotFoundException e) {
+            } catch (IllegalArgumentException e) {
                 logger.error("ConfigurationPlugin not found", e);
             }
         }
@@ -95,7 +95,8 @@ public class ConfigurationModule extends AbstractModule {
         return retval;
     }
 
-    public void setConfigurationPlugins(List<String> configurationPlugins) {
+    public void setConfigurationPlugins(ClassInfoList configurationPlugins) {
         this.configurationPlugins = configurationPlugins;
     }
+
 }

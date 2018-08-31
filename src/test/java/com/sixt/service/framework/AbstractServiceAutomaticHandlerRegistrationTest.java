@@ -15,15 +15,15 @@ package com.sixt.service.framework;
 import com.google.protobuf.Message;
 import com.sixt.service.framework.annotation.RpcHandler;
 import com.sixt.service.framework.rpc.RpcCallException;
-import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
-import io.github.lukehutch.fastclasspathscanner.scanner.ScanResult;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfoList;
+import io.github.classgraph.ScanResult;
 import org.junit.Test;
 
 import java.io.PrintStream;
-import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class AbstractServiceAutomaticHandlerRegistrationTest {
 
@@ -32,10 +32,10 @@ public class AbstractServiceAutomaticHandlerRegistrationTest {
         TestService service = new TestService();
         service.initializeGuice();
 
-        FastClasspathScanner scanner = new FastClasspathScanner();
-        ScanResult scanResult = scanner.scan();
-        List<String> rpcHandlers = scanResult.getNamesOfClassesWithAnnotation(RpcHandler.class);
-
+        ClassInfoList rpcHandlers;
+        ScanResult scanResult = new ClassGraph().enableAllInfo()
+                .whitelistPackages("com.sixt.service.framework").scan();
+        rpcHandlers = scanResult.getClassesWithAnnotation(RpcHandler.class.getName());
         service.registerMethodHandlers(rpcHandlers);
 
         Map<String, ServiceMethodHandler<? extends Message, ? extends Message>> s = service.getMethodHandlers();
@@ -71,6 +71,7 @@ public class AbstractServiceAutomaticHandlerRegistrationTest {
         @Override
         public void displayHelp(PrintStream out) {}
     }
+
 }
 
 

@@ -3,7 +3,6 @@ package com.squareup.wire.schema.internal.parser;
 import com.sixt.service.testrpcclasses.TestService1;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -85,7 +84,12 @@ public class RpcMethodScannerTest {
                 "com.sixt.service.testrpcclasses", "services.proto");
 
         scanner.findProtobufClass(protoClasses, def, "TestServiceRequest");
+    }
 
+    @Test
+    public void verifyGetGeneratedProtoClasses() {
+        List<String> protoClasses = scanner.getGeneratedProtoClasses("com.sixt.service.configuration");
+        assertThat(protoClasses.size()).isGreaterThan(6);
     }
 
 }

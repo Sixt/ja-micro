@@ -19,8 +19,8 @@ import com.sixt.service.framework.protobuf.ProtobufUtil;
 import com.sixt.service.framework.rpc.RpcClient;
 import com.sixt.service.framework.rpc.RpcClientFactory;
 import com.sixt.service.framework.servicetest.service.ServiceMethod;
-import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
-import io.github.lukehutch.fastclasspathscanner.scanner.ScanResult;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ScanResult;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,14 +93,15 @@ public class RpcMethodScanner {
     }
 
     public List<String> getGeneratedProtoClasses(String serviceName) {
-        FastClasspathScanner cpScanner = new FastClasspathScanner();
-        ScanResult scanResult = cpScanner.scan();
-        List<String> oldProtobuf = scanResult.getNamesOfSubclassesOf(GeneratedMessage.class);
-        List<String> newProtobuf = scanResult.getNamesOfSubclassesOf(GeneratedMessageV3.class);
-        List<String> retval = Stream.concat(oldProtobuf.stream(),
-                newProtobuf.stream()).collect(Collectors.toList());
+        List<String> protoClasses;
+        try (ScanResult scanResult = new ClassGraph().whitelistPackages("*").blacklistPackages("com.google").scan()) {
+            List<String> oldProtobuf = scanResult.getSubclasses(GeneratedMessage.class.getName()).getNames();
+            List<String> newProtobuf = scanResult.getSubclasses(GeneratedMessageV3.class.getName()).getNames();
+            protoClasses = Stream.concat(oldProtobuf.stream(),
+                    newProtobuf.stream()).collect(Collectors.toList());
+        }
         String[] packageTokens = serviceName.split("\\.");
-        return retval.stream().filter(s -> protoFilePackageMatches(s, packageTokens)).collect(Collectors.toList());
+        return protoClasses.stream().filter(s -> protoFilePackageMatches(s, packageTokens)).collect(Collectors.toList());
     }
 
     //has to roughly match.  com.example.api.foo matches com.example.foo

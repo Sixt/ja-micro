@@ -34,6 +34,8 @@ import com.sixt.service.framework.metrics.MetricsReporterProvider;
 import com.sixt.service.framework.registry.ServiceDiscoveryProvider;
 import com.sixt.service.framework.registry.ServiceRegistrationProvider;
 import com.sixt.service.framework.rpc.LoadBalancerFactory;
+import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ClassInfoList;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -58,16 +60,16 @@ public abstract class AbstractService {
     protected Injector injector = null;
     protected AtomicBoolean startupComplete = new AtomicBoolean(false);
     private ConfigurationManager configurationManager;
-    private List<String> serviceRegistryPlugins;
-    private List<String> configurationPlugins;
-    private List<String> metricsReporterPlugins;
-    private List<String> tracingPlugins;
+    private ClassInfoList serviceRegistryPlugins;
+    private ClassInfoList configurationPlugins;
+    private ClassInfoList metricsReporterPlugins;
+    private ClassInfoList tracingPlugins;
 
     @SuppressWarnings("unchecked")
-    public void registerMethodHandlers(List<String> rpcHandlers) {
-        for (String className : rpcHandlers) {
+    public void registerMethodHandlers(ClassInfoList rpcHandlers) {
+        for (ClassInfo handler : rpcHandlers) {
             try {
-                Class clazz = Class.forName(className);
+                Class clazz = handler.loadClass();
 
                 if ((clazz != ServiceMethodHandler.class) && ServiceMethodHandler.class.isAssignableFrom(clazz)) {
                     registerMethodHandlerFor(((RpcHandler) clazz.getAnnotation(RpcHandler.class)).value(), clazz);
@@ -79,8 +81,8 @@ public abstract class AbstractService {
                             )
                     );
                 }
-            } catch (ClassNotFoundException e) {
-                logger.error(e.getMessage(), e);
+            } catch (IllegalArgumentException e) {
+                logger.error("There was an error while setting up rpc handlers: {}", e.getMessage(), e);
             }
         }
     }
@@ -111,9 +113,9 @@ public abstract class AbstractService {
             ServiceRegistryModule registryModule = new ServiceRegistryModule(serviceProperties);
             registryModule.setServiceRegistryPlugins(serviceRegistryPlugins);
             MetricsReporterModule metricsModule = new MetricsReporterModule();
-            metricsModule.setPlugins(metricsReporterPlugins);
+            metricsModule.setMetricsReporterPlugins(metricsReporterPlugins);
             TracingModule tracingModule = new TracingModule(serviceProperties);
-            tracingModule.setPlugins(tracingPlugins);
+            tracingModule.setTracingPlugins(tracingPlugins);
 
             List<Module> modules = getGuiceModules();
             if (modules == null) {
@@ -169,12 +171,12 @@ public abstract class AbstractService {
     }
 
     @SuppressWarnings("unchecked")
-    public void initializeHealthCheckManager(List<String> hcProviders) {
+    public void initializeHealthCheckManager(List<ClassInfo> hcProviders) {
         if (hcProviders != null && !hcProviders.isEmpty()) {
             HealthCheckManager hcManager = injector.getInstance(HealthCheckManager.class);
-            for (String hcp : hcProviders) {
+            for (ClassInfo hcp : hcProviders) {
                 try {
-                    Class<HealthCheckContributor> hcClass = (Class<HealthCheckContributor>) Class.forName(hcp);
+                    Class<HealthCheckContributor> hcClass = (Class<HealthCheckContributor>) hcp.loadClass();
                     logger.debug("Found HealthCheckContributor: {}", hcClass.getSimpleName());
                     HealthCheckContributor contrib = injector.getInstance(hcClass);
                     if (contrib.shouldRegister()) {
@@ -182,7 +184,7 @@ public abstract class AbstractService {
                     } else {
                         logger.debug("HealthCheckContributor is choosing not to join");
                     }
-                } catch (ClassNotFoundException e) {
+                } catch (IllegalArgumentException e) {
                     logger.error("Error loading HealthCheckProvider: " + hcp, e);
                 }
             }
@@ -272,12 +274,15 @@ public abstract class AbstractService {
 
         ServiceRegistryModule serviceRegistryModule = new ServiceRegistryModule(serviceProperties);
         serviceRegistryModule.setServiceRegistryPlugins(serviceRegistryPlugins);
+
         ConfigurationModule configurationModule = new ConfigurationModule(serviceProperties);
         configurationModule.setConfigurationPlugins(configurationPlugins);
 
+        TracingModule tracingModule = new TracingModule(serviceProperties);
+        tracingModule.setTracingPlugins(tracingPlugins);
+
         Injector configInjector = Guice.createInjector(configBaseModule,
-                serviceRegistryModule,
-                configurationModule, new TracingModule(serviceProperties));
+                serviceRegistryModule, configurationModule, tracingModule);
 
         ConfigurationProvider configProvider = configInjector.getInstance(ConfigurationProvider.class);
         if (configProvider == null) {
@@ -299,18 +304,6 @@ public abstract class AbstractService {
         }
     }
 
-    void setServiceRegistryPlugins(List<String> serviceRegistryPlugins) {
-        this.serviceRegistryPlugins = serviceRegistryPlugins;
-    }
-
-    void setConfigurationPlugins(List<String> configurationPlugins) {
-        this.configurationPlugins = configurationPlugins;
-    }
-
-    public void setMetricsReporterPlugins(List<String> metricsReporterPlugins) {
-        this.metricsReporterPlugins = metricsReporterPlugins;
-    }
-
     public void initializeMetricsReporting() {
         MetricsReporterProvider provider = injector.getInstance(MetricsReporterProvider.class);
         if (provider != null) {
@@ -318,7 +311,20 @@ public abstract class AbstractService {
         }
     }
 
-    public void setTracingPlugins(List<String> tracingPlugins) {
+    void setServiceRegistryPlugins(ClassInfoList serviceRegistryPlugins) {
+        this.serviceRegistryPlugins = serviceRegistryPlugins;
+    }
+
+    void setConfigurationPlugins(ClassInfoList configurationPlugins) {
+        this.configurationPlugins = configurationPlugins;
+    }
+
+    public void setMetricsReporterPlugins(ClassInfoList metricsReporterPlugins) {
+        this.metricsReporterPlugins = metricsReporterPlugins;
+    }
+
+    public void setTracingPlugins(ClassInfoList tracingPlugins) {
         this.tracingPlugins = tracingPlugins;
     }
+
 }

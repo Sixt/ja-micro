@@ -20,7 +20,7 @@ import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.annotation.ServiceRegistryPlugin;
 import com.sixt.service.framework.registry.ServiceDiscoveryProvider;
 import com.sixt.service.framework.registry.ServiceRegistrationProvider;
-import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import io.github.classgraph.ClassInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +35,7 @@ public class ServiceRegistryModule extends AbstractModule {
     private Object plugin;
     private ServiceRegistrationProvider registrationProvider;
     private ServiceDiscoveryProvider discoveryProvider;
-    private List<String> serviceRegistryPlugins;
+    private List<ClassInfo> serviceRegistryPlugins;
 
     public ServiceRegistryModule(ServiceProperties serviceProperties) {
         this.serviceProperties = serviceProperties;
@@ -85,22 +85,23 @@ public class ServiceRegistryModule extends AbstractModule {
         if (StringUtils.isBlank(pluginName)) {
             return null;
         }
-        if (serviceRegistryPlugins == null) { // only scan if not already set
-            serviceRegistryPlugins = new FastClasspathScanner().scan().getNamesOfClassesWithAnnotation(ServiceRegistryPlugin.class);
+        if (serviceRegistryPlugins == null) {
+            logger.warn("No service registry plugins were configured");
+            return null;
         }
         boolean found = false;
-        for (String plugin : serviceRegistryPlugins) {
+        for (ClassInfo plugin : serviceRegistryPlugins) {
             try {
                 @SuppressWarnings("unchecked")
                 Class<? extends ServiceRegistryPlugin> pluginClass =
-                        (Class<? extends ServiceRegistryPlugin>) Class.forName(plugin);
+                        (Class<? extends ServiceRegistryPlugin>) plugin.loadClass();
                 ServiceRegistryPlugin anno = pluginClass.getAnnotation(ServiceRegistryPlugin.class);
                 if (anno != null && pluginName.equals(anno.name())) {
                     retval = injector.getInstance(pluginClass);
                     found = true;
                     break;
                 }
-            } catch (ClassNotFoundException e) {
+            } catch (IllegalArgumentException e) {
                 logger.error("ServiceRegistryPlugin not found", e);
             }
         }
@@ -110,7 +111,8 @@ public class ServiceRegistryModule extends AbstractModule {
         return retval;
     }
 
-    public void setServiceRegistryPlugins(List<String> serviceRegistryPlugins) {
+    public void setServiceRegistryPlugins(List<ClassInfo> serviceRegistryPlugins) {
         this.serviceRegistryPlugins = serviceRegistryPlugins;
     }
+
 }

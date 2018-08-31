@@ -7,8 +7,6 @@ import com.sixt.service.framework.OrangeContext;
 import com.sixt.service.framework.ServiceProperties;
 import org.junit.Test;
 
-import java.util.concurrent.CountDownLatch;
-
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -27,7 +25,6 @@ public class ReflectionTypeDictionaryFactoryTest {
         modules[0] = new TestInjectionModule(serviceProperites);
 
         Injector injector = Guice.createInjector(modules);
-
 
         ReflectionTypeDictionaryFactory rtdf = new ReflectionTypeDictionaryFactory(injector);
         TypeDictionary dictionary = rtdf.createFromClasspath();

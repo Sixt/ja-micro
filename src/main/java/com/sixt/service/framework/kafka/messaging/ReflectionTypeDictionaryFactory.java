@@ -15,8 +15,12 @@ package com.sixt.service.framework.kafka.messaging;
 import com.google.inject.ConfigurationException;
 import com.google.inject.Injector;
 import com.google.inject.ProvisionException;
+import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.Parser;
-import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ClassInfoList;
+import io.github.classgraph.ScanResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,12 +60,12 @@ public final class ReflectionTypeDictionaryFactory {
 
         List<Class<? extends MessageHandler>> foundHandlers = new ArrayList<>();
 
-        new FastClasspathScanner()
-                .matchClassesImplementing(MessageHandler.class, matchingClass ->
-                        foundHandlers.add(matchingClass)).scan();
+        ScanResult scanResult = new ClassGraph().enableAllInfo().whitelistPackages("*").blacklistPackages("com.google").scan();
+        ClassInfoList handlersClassInfo = scanResult.getClassesImplementing(MessageHandler.class.getName());
 
-        foundHandlers.forEach((handlerClass) -> {
-            Type[] interfaces = handlerClass.getGenericInterfaces();
+        handlersClassInfo.forEach((handlerClass) -> {
+            Class<?> clazz = handlerClass.loadClass();
+            Type[] interfaces = clazz.getGenericInterfaces();
 
             for (Type it : interfaces) {
                 if (it instanceof ParameterizedType) {
@@ -79,7 +83,7 @@ public final class ReflectionTypeDictionaryFactory {
                             // Ask Guice for an instance of the handler.
                             // We cannot simply use e.g. the default constructor as any meaningful handler would need to
                             // be wired to dependencies such as databases, metrics, etc.
-                            handler = (MessageHandler<? extends com.google.protobuf.Message>) injector.getInstance(handlerClass);
+                            handler = (MessageHandler<? extends com.google.protobuf.Message>) injector.getInstance(clazz);
                         } catch (ConfigurationException | ProvisionException e) {
                             logger.warn("Cannot instantiate MessageHandler {} using Guice.", handlerClass, e);
                         }
@@ -94,7 +98,7 @@ public final class ReflectionTypeDictionaryFactory {
                         }
                     }
                 } else {
-                    logger.warn("Cannot add untyped instance of MessageHander {} to TypeDictionary", handlerClass.getTypeName());
+                    logger.warn("Cannot add untyped instance of MessageHander {} to TypeDictionary", clazz.getTypeName());
                 }
             }
         });
@@ -104,15 +108,13 @@ public final class ReflectionTypeDictionaryFactory {
 
     public Map<MessageType, Parser<com.google.protobuf.Message>> populateParsersFromClasspath() {
         Map<MessageType, Parser<com.google.protobuf.Message>> parsers = new HashMap<>();
-        List<Class<? extends com.google.protobuf.GeneratedMessageV3>> foundProtoMessages = new ArrayList<>();
-
-        new FastClasspathScanner()
-                .matchSubclassesOf(com.google.protobuf.GeneratedMessageV3.class, matchingClass ->
-                        foundProtoMessages.add(matchingClass)).scan();
+        ScanResult scanResult = new ClassGraph().whitelistPackages("*").blacklistPackages("com.google").scan(); //TODO: should google be blacklisted here?
+        ClassInfoList foundProtoMessages = scanResult.getSubclasses(GeneratedMessageV3.class.getName());
 
         // This algorithm adds parsers for all protobuf messages in the classpath including base types such as com.google.protobuf.DoubleValue.
-        for (Class<? extends com.google.protobuf.GeneratedMessageV3> clazz : foundProtoMessages) {
+        for (ClassInfo protoClassInfo : foundProtoMessages) {
             try {
+                Class<?> clazz = protoClassInfo.loadClass();
                 java.lang.reflect.Method method = clazz.getMethod("parser"); // static method, no arguments
                 @SuppressWarnings("unchecked")
                 Parser<com.google.protobuf.Message> parser = (Parser<com.google.protobuf.Message>) method.invoke(null, (Object[]) null); // static method, no arguments

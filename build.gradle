@@ -141,7 +141,7 @@ dependencies { //achtung: order does matter!
     compile "io.opentracing:opentracing-noop:$versions.tracing"
 
     //Classpath scanner
-    compile 'io.github.lukehutch:fast-classpath-scanner:3.1.12'
+    compile group: 'io.github.classgraph', name: 'classgraph', version: '4.1.4'
 
     //Jetty
     compile "org.eclipse.jetty:jetty-client:$versions.jetty"

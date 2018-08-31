@@ -18,7 +18,7 @@ import com.google.inject.Provides;
 import com.sixt.service.framework.ServiceProperties;
 import com.sixt.service.framework.annotation.MetricsReporterPlugin;
 import com.sixt.service.framework.metrics.MetricsReporterProvider;
-import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import io.github.classgraph.ClassInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public class MetricsReporterModule extends AbstractModule {
 
     private static final Logger logger = LoggerFactory.getLogger(MetricsReporterModule.class);
 
-    private List<String> plugins;
+    private List<ClassInfo> metricsReporterPlugins;
     private Object plugin;
     private MetricsReporterProvider provider;
 
@@ -62,21 +62,22 @@ public class MetricsReporterModule extends AbstractModule {
         if (StringUtils.isBlank(pluginName)) {
             return null;
         }
-        if (plugins == null) { // only scan if not already set
-            plugins = new FastClasspathScanner().scan().getNamesOfClassesWithAnnotation(MetricsReporterPlugin.class);
+        if (metricsReporterPlugins == null) {
+            logger.warn("No metrics reporting plugins were configured");
+            return null;
         }
         boolean found = false;
-        for (String plugin : plugins) {
+        for (ClassInfo plugin : metricsReporterPlugins) {
             try {
                 @SuppressWarnings("unchecked") Class<? extends MetricsReporterPlugin> pluginClass =
-                        (Class<? extends MetricsReporterPlugin>) Class.forName(plugin);
+                        (Class<? extends MetricsReporterPlugin>) plugin.loadClass();
                 MetricsReporterPlugin anno = pluginClass.getAnnotation(MetricsReporterPlugin.class);
                 if (anno != null && pluginName.equals(anno.name())) {
                     retval = injector.getInstance(pluginClass);
                     found = true;
                     break;
                 }
-            } catch (ClassNotFoundException e) {
+            } catch (IllegalArgumentException e) {
                 logger.error("MetricsReporterPlugin not found", e);
             }
         }
@@ -86,8 +87,8 @@ public class MetricsReporterModule extends AbstractModule {
         return retval;
     }
 
-    public void setPlugins(List<String> plugins) {
-        this.plugins = plugins;
+    public void setMetricsReporterPlugins(List<ClassInfo> plugins) {
+        this.metricsReporterPlugins = plugins;
     }
 
 }

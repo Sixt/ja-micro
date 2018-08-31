@@ -14,49 +14,32 @@ package com.sixt.service.framework;
 
 import com.sixt.service.framework.annotation.*;
 import com.sixt.service.framework.util.Sleeper;
-import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfoList;
+import io.github.classgraph.ScanResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
 
 public class JettyServiceBase {
 
     private static final Logger logger = LoggerFactory.getLogger(JettyServiceBase.class);
 
+    private static ClassInfoList serviceEntries;
+    private static ClassInfoList rpcHandlers;
+    private static ClassInfoList hcProviders;
+    private static ClassInfoList serviceRegistryPlugins;
+    private static ClassInfoList configPlugins;
+    private static ClassInfoList metricsReportingPlugins;
+    private static ClassInfoList tracingPlugins;
+
     public static void main(String[] args) {
         try {
             verifyDefaultCharset();
 
-            // find main class, rpc handlers, healthcheck providers, serviceRegistryPlugins,
-            // configuration plugins, and metrics reporting plugins
-            List<String> serviceEntries = new ArrayList<>();
-            List<String> rpcHandlers = new ArrayList<>();
-            List<String> hcProviders = new ArrayList<>();
-            List<String> serviceRegistryPlugins = new ArrayList<>();
-            List<String> configPlugins = new ArrayList<>();
-            List<String> metricsReportingPlugins = new ArrayList<>();
-            List<String> tracingPlugins = new ArrayList<>();
-
-            new FastClasspathScanner()
-                    .matchClassesWithAnnotation(OrangeMicroservice.class, matchingClass ->
-                            serviceEntries.add(matchingClass.getName()))
-                    .matchClassesWithAnnotation(RpcHandler.class, matchingClass ->
-                            rpcHandlers.add(matchingClass.getName()))
-                    .matchClassesWithAnnotation(HealthCheckProvider.class, matchingClass ->
-                            hcProviders.add(matchingClass.getName()))
-                    .matchClassesWithAnnotation(ServiceRegistryPlugin.class, matchingClass ->
-                            serviceRegistryPlugins.add(matchingClass.getName()))
-                    .matchClassesWithAnnotation(ConfigurationPlugin.class, matchingClass ->
-                            configPlugins.add(matchingClass.getName()))
-                    .matchClassesWithAnnotation(MetricsReporterPlugin.class, matchingClass ->
-                            metricsReportingPlugins.add(matchingClass.getName()))
-                    .matchClassesWithAnnotation(TracingPlugin.class, matchingClass ->
-                            tracingPlugins.add(matchingClass.getName()))
-                    .scan();
+            performClassPathScanning();
 
             if (serviceEntries.isEmpty()) {
                 logger.error("No OrangeMicroservice classes found");
@@ -65,8 +48,8 @@ public class JettyServiceBase {
                 logger.error("More than one OrangeMicroservice class found: {}", serviceEntries);
                 System.exit(-1);
             }
-            //create main class
-            Class<?> serviceClass = Class.forName(serviceEntries.get(0));
+
+            Class<?> serviceClass = serviceEntries.get(0).loadClass();
             AbstractService service = (AbstractService) serviceClass.newInstance();
 
             displayHelpAndExitIfNeeded(args, service);
@@ -108,7 +91,7 @@ public class JettyServiceBase {
             if (hasAnnotation(serviceAnnos, EnableDatabaseMigration.class)) {
                 //this will block until the database is available.
                 //it will then attempt a migration.  if the migration fails,
-                //   the process emits an error and pauses.  it's senseless to continue.
+                //the process emits an error and pauses.  it's senseless to continue.
                 service.performDatabaseMigration();
             }
 
@@ -116,6 +99,17 @@ public class JettyServiceBase {
         } catch (Exception ex) {
             logger.error("Uncaught exception running service", ex);
         }
+    }
+
+    private static void performClassPathScanning() {
+        ScanResult scanResult = new ClassGraph().enableAllInfo().whitelistPackages("*").scan();
+        serviceEntries = scanResult.getClassesWithAnnotation(OrangeMicroservice.class.getName());
+        rpcHandlers = scanResult.getClassesWithAnnotation(RpcHandler.class.getName());
+        hcProviders = scanResult.getClassesWithAnnotation(HealthCheckProvider.class.getName());
+        serviceRegistryPlugins = scanResult.getClassesWithAnnotation(ServiceRegistryPlugin.class.getName());
+        configPlugins = scanResult.getClassesWithAnnotation(ConfigurationPlugin.class.getName());
+        metricsReportingPlugins = scanResult.getClassesWithAnnotation(MetricsReporterPlugin.class.getName());
+        tracingPlugins = scanResult.getClassesWithAnnotation(TracingPlugin.class.getName());
     }
 
     private static void displayHelpAndExitIfNeeded(String[] args, AbstractService service) {

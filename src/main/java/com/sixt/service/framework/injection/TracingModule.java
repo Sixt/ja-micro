@@ -16,9 +16,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.sixt.service.framework.ServiceProperties;
-import com.sixt.service.framework.annotation.TracingPlugin;
+import com.sixt.service.framework.annotation.*;
 import com.sixt.service.framework.tracing.TracingProvider;
-import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ScanResult;
 import io.opentracing.Tracer;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -32,7 +34,7 @@ public class TracingModule extends AbstractModule {
     private final ServiceProperties serviceProperties;
     private Tracer tracer;
     private Object plugin;
-    private List<String> plugins;
+    private List<ClassInfo> tracingPlugins;
 
     public TracingModule(ServiceProperties serviceProperties) {
         this.serviceProperties = serviceProperties;
@@ -46,7 +48,7 @@ public class TracingModule extends AbstractModule {
     public Tracer getTracer(Injector injector) {
         if (tracer == null) {
             Object plugin = getTracingPlugin(injector);
-            if (plugin != null && plugin instanceof TracingProvider) {
+            if (plugin instanceof TracingProvider) {
                 tracer = ((TracingProvider) plugin).getTracer();
             }
         }
@@ -68,21 +70,23 @@ public class TracingModule extends AbstractModule {
             logger.debug("no tracing plugin set, defaulting to 'noop'");
             pluginName = "noop";
         }
-        if (plugins == null) {
-            plugins = new FastClasspathScanner().scan().getNamesOfClassesWithAnnotation(TracingPlugin.class);
+        if (tracingPlugins == null) {
+            //scanning is slow, this if should only be hit in tests.
+            ScanResult scanResult = new ClassGraph().enableAllInfo().whitelistPackages("*").scan();
+            tracingPlugins = scanResult.getClassesWithAnnotation(TracingPlugin.class.getName());
         }
         boolean found = false;
-        for (String plugin : plugins) {
+        for (ClassInfo plugin : tracingPlugins) {
             try {
                 @SuppressWarnings("unchecked")
-                Class<? extends TracingPlugin> pluginClass = (Class<? extends TracingPlugin>) Class.forName(plugin);
+                Class<? extends TracingPlugin> pluginClass = (Class<? extends TracingPlugin>) plugin.loadClass();
                 TracingPlugin anno = pluginClass.getAnnotation(TracingPlugin.class);
                 if (anno != null && pluginName.equals(anno.name())) {
                     retval = injector.getInstance(pluginClass);
                     found = true;
                     break;
                 }
-            } catch (ClassNotFoundException e) {
+            } catch (IllegalArgumentException e) {
                 logger.error("Tracing plugin not found", e);
             }
         }
@@ -92,8 +96,8 @@ public class TracingModule extends AbstractModule {
         return retval;
     }
 
-    public void setPlugins(List<String> plugins) {
-        this.plugins = plugins;
+    public void setTracingPlugins(List<ClassInfo> plugins) {
+        this.tracingPlugins = plugins;
     }
 
 }
