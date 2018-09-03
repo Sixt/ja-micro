@@ -70,6 +70,7 @@ public class RegistrationMonitorWorker implements Runnable {
 
     @Override
     public void run() {
+        logger.debug("Monitoring registration for service={}", serviceName);
         if (serviceName == null) {
             throw new IllegalStateException("Service name was not set");
         }
