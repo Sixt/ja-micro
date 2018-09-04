@@ -13,7 +13,6 @@
 package com.sixt.service.framework.rpc;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +22,16 @@ import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static com.sixt.service.framework.rpc.CircuitBreakerState.State.*;
+import static com.sixt.service.framework.rpc.CircuitBreakerState.State.PRIMARY_HEALTHY;
+import static com.sixt.service.framework.rpc.CircuitBreakerState.State.PRIMARY_PROBE;
+import static com.sixt.service.framework.rpc.CircuitBreakerState.State.PRIMARY_TRIPPED;
+import static com.sixt.service.framework.rpc.CircuitBreakerState.State.SECONDARY_HEALTHY;
+import static com.sixt.service.framework.rpc.CircuitBreakerState.State.SECONDARY_PROBE;
+import static com.sixt.service.framework.rpc.CircuitBreakerState.State.SECONDARY_TRIPPED;
+import static com.sixt.service.framework.rpc.CircuitBreakerState.State.TERTIARY_HEALTHY;
+import static com.sixt.service.framework.rpc.CircuitBreakerState.State.TERTIARY_PROBE;
+import static com.sixt.service.framework.rpc.CircuitBreakerState.State.TERTIARY_TRIPPED;
+import static com.sixt.service.framework.rpc.CircuitBreakerState.State.UNHEALTHY;
 
 public class CircuitBreakerState {
 
@@ -234,14 +242,6 @@ public class CircuitBreakerState {
             return state.equals(SECONDARY_HEALTHY) ||
                     state.equals(TERTIARY_HEALTHY);
         }
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("state", state)
-                .add("responseHistory", responseHistory)
-                .toString();
     }
 
     @VisibleForTesting

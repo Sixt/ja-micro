@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static net.logstash.logback.marker.Markers.append;
-
 @Singleton
 public class LoadBalancerFactory {
 
@@ -51,7 +49,6 @@ public class LoadBalancerFactory {
         if (retval == null) {
             retval = buildLoadBalancer(serviceName);
         }
-        logger.debug("Returning loadBalancer for service={}", serviceName);
         return retval;
     }
 
@@ -61,7 +58,7 @@ public class LoadBalancerFactory {
         retval.setServiceName(svc);
         loadBalancers.put(svc, retval);
         if (provider == null) {
-            logger.warn(append("serviceName", svc), "No ServiceDiscoveryProvider configured");
+            logger.warn("No ServiceDiscoveryProvider configured");
         } else {
             provider.monitorService(retval);
         }

@@ -90,7 +90,6 @@ public class RpcClientBuilder<RESPONSE extends Message> {
         }
         LoadBalancerFactory lbFactory = injector.getInstance(LoadBalancerFactory.class);
         LoadBalancer loadBalancer = lbFactory.getLoadBalancer(serviceName);
-        logger.debug("Building RpcClient for service={} with loadBalancer={}", serviceName, loadBalancer.getClass().getSimpleName());
         return new RpcClient<>(loadBalancer, serviceName, methodName, retries, timeout,
                                retryBackOffFunction, responseClass);
     }
