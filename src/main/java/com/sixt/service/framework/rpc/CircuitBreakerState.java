@@ -13,6 +13,7 @@
 package com.sixt.service.framework.rpc;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -233,6 +234,14 @@ public class CircuitBreakerState {
             return state.equals(SECONDARY_HEALTHY) ||
                     state.equals(TERTIARY_HEALTHY);
         }
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("state", state)
+                .add("responseHistory", responseHistory)
+                .toString();
     }
 
     @VisibleForTesting

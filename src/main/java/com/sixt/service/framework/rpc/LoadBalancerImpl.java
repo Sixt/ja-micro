@@ -12,6 +12,7 @@
 
 package com.sixt.service.framework.rpc;
 
+import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 import com.sixt.service.framework.FeatureFlags;
 import com.sixt.service.framework.ServiceProperties;
@@ -129,6 +130,7 @@ public class LoadBalancerImpl implements LoadBalancer {
      */
     @Override
     public ServiceEndpoint getHealthyInstance() {
+        logger.info("Get healthy instance for service={}", this.serviceName);
         if (! haveEndpoints.get()) {
             //wait for the first one to come in
             try {
@@ -137,6 +139,7 @@ public class LoadBalancerImpl implements LoadBalancer {
             }
         }
         mutex.readLock().lock();
+        logger.info("Availability zones: {} ", availabilityZones);
         try {
             for (AvailabilityZone az : availabilityZones) {
                 ServiceEndpoint next = az.nextEndpoint();
@@ -235,4 +238,11 @@ class AvailabilityZone {
         return serviceEndpoints;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("name", name)
+                .add("serviceEndpoints", serviceEndpoints)
+                .toString();
+    }
 }
