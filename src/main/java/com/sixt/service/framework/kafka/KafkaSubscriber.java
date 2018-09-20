@@ -25,6 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.time.Clock;
 import java.util.*;
 import java.util.concurrent.*;
@@ -34,12 +36,32 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.sixt.service.framework.OrangeContext.CORRELATION_ID;
 import static net.logstash.logback.marker.Markers.append;
 
-public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListener {
+public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListener, MessageExecuter {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaSubscriber.class);
 
     public enum OffsetReset {
         Earliest, Latest;
+    }
+
+    public enum QueueType {
+        Eager(EagerMessageQueue.class),
+        Priority(PriorityMessageQueue.class);
+
+        private Class<? extends MessageQueue> messageQueueType;
+
+        QueueType(Class<? extends MessageQueue> messageQueueType) {
+            this.messageQueueType = messageQueueType;
+        }
+
+        public MessageQueue getMessageQueueInstance(MessageExecuter executor, long retryDelayMillis) {
+            try {
+                Constructor<? extends MessageQueue> c = messageQueueType.getConstructor(MessageExecuter.class, long.class);
+                return c.newInstance(executor, retryDelayMillis);
+            } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException("Failed to create message queue instance of type " + name(), e);
+            }
+        }
     }
 
     protected EventReceivedCallback<TYPE> callback;
@@ -69,11 +91,12 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
     private GoCounter rebalaceMetric = new GoCounter("");
     private MetricBuilderFactory metricBuilderFactory;
     private PartitionAssignmentWatchdog partitionAssignmentWatchdog;
+    private MessageQueue messageQueue;
 
     KafkaSubscriber(EventReceivedCallback<TYPE> callback, String topic,
                     String groupId, boolean enableAutoCommit, OffsetReset offsetReset,
                     int minThreads, int maxThreads, int idleTimeoutSeconds, int pollTime,
-                    int throttleLimit) {
+                    int throttleLimit, QueueType queueType, long retryDelayMillis) {
         this.callback = callback;
         this.topic = topic;
         this.groupId = groupId;
@@ -101,6 +124,7 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
         messagesForConsume = new HashMap<>();
         executor = new ThreadPoolExecutor(this.minThreads, this.maxThreads, this.idleTimeoutSeconds,
                 TimeUnit.SECONDS, workQueue);
+        messageQueue = queueType.getMessageQueueInstance(this, retryDelayMillis);
     }
 
     public void setMetricBuilderFactory(MetricBuilderFactory metricBuilderFactory) {
@@ -164,14 +188,15 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
                 .withTag("topic", topic).withTag("group_id", groupId).buildCounter();
     }
 
-    public void consume(KafkaTopicInfo message) {
-        TopicPartition tp = message.getTopicPartition();
+    public void consume(KafkaTopicInfo topicInfo) {
+        TopicPartition tp = topicInfo.getTopicPartition();
         synchronized (messagesForConsume) {
             Long previous = messagesForConsume.get(tp);
-            if (previous == null || previous.longValue() < message.getOffset()) {
-                messagesForConsume.put(tp, message.getOffset());
+            if (previous == null || previous.longValue() < topicInfo.getOffset()) {
+                messagesForConsume.put(tp, topicInfo.getOffset());
             }
         }
+        messageQueue.consumed(topicInfo);
     }
 
     @Override
@@ -203,19 +228,28 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
                 String rawMessage = record.value();
                 logger.trace(append("rawMessage", rawMessage), "Read Kafka message ({}/{})",
                         record.partition(), record.offset());
-                KafkaTopicInfo topicInfo = new KafkaTopicInfo(topic, record.partition(),
-                        record.offset(), record.key());
-                KafkaSubscriberWorker worker;
-                if (useProtobuf) {
-                    Message proto = ProtobufUtil.jsonToProtobuf(rawMessage,
-                            (Class<? extends Message>) messageType);
-                    worker = new KafkaSubscriberWorker((TYPE) proto, topicInfo);
-                } else {
-                    worker = new KafkaSubscriberWorker((TYPE) rawMessage, topicInfo);
-                }
-                executor.submit(worker);
+
+                messageQueue.add(record);
                 messageBacklog.incrementAndGet();
             }
+        }
+    }
+
+    @Override
+    public void execute(ConsumerRecord<String, String> record) {
+        synchronized (executor) {
+        String rawMessage = record.value();
+        KafkaTopicInfo topicInfo = new KafkaTopicInfo(topic, record.partition(),
+                record.offset(), record.key());
+        KafkaSubscriberWorker worker;
+        if (useProtobuf) {
+            Message proto = ProtobufUtil.jsonToProtobuf(rawMessage,
+                    (Class<? extends Message>) messageType);
+            worker = new KafkaSubscriberWorker((TYPE) proto, topicInfo);
+        } else {
+            worker = new KafkaSubscriberWorker((TYPE) rawMessage, topicInfo);
+        }
+        executor.submit(worker);
         }
     }
 
@@ -263,8 +297,10 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
                 callback.eventReceived(message, topicInfo);
             } catch (Exception ex) {
                 logger.warn("Caught exception in event callback", ex);
+            } finally {
+                messageQueue.processingEnded(topicInfo);
+                messageBacklog.decrementAndGet();
             }
-            messageBacklog.decrementAndGet();
         }
     }
 

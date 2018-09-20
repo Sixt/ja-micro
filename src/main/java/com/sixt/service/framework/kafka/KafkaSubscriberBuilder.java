@@ -24,11 +24,13 @@ public class KafkaSubscriberBuilder<TYPE> {
     protected String groupId = UUID.randomUUID().toString();
     protected boolean enableAutoCommit = false;
     protected KafkaSubscriber.OffsetReset offsetReset = KafkaSubscriber.OffsetReset.Earliest;
+    protected KafkaSubscriber.QueueType queueType = KafkaSubscriber.QueueType.Priority;
     protected int minThreads = 1;
     protected int maxThreads = 1;
     protected int idleTimeoutSeconds = 15;
     protected int pollTime = 1000;
     protected int throttleLimit = 100;
+    protected long retryDelayMillis = 1000 * 60;//1 min
     private MetricBuilderFactory metricBuilderFactory;
     private PartitionAssignmentWatchdog partitionAssignmentWatchdog;
 
@@ -79,6 +81,16 @@ public class KafkaSubscriberBuilder<TYPE> {
     }
 
     /**
+     * Unless called, will initialize without priority queue.
+     * CAUTION: using eager type will NOT guarantee that processing of failed messages will be retried.
+     * Retry mechanism for eager queue is not implemented.
+     */
+    public KafkaSubscriberBuilder<TYPE> withQueueType(KafkaSubscriber.QueueType queueType) {
+        this.queueType = queueType;
+        return this;
+    }
+
+    /**
      * Sets the limit at which throttling occurs, which is pausing the consumption from
      * kafka until the actual consumer can catch up.  Setting to -1 disables throttling
      * (which can cause unexpected memory bloat).
@@ -88,10 +100,15 @@ public class KafkaSubscriberBuilder<TYPE> {
         return this;
     }
 
+    public KafkaSubscriberBuilder<TYPE> withRetryDelayMillis(long retryDelayMillis) {
+        this.retryDelayMillis = retryDelayMillis;
+        return this;
+    }
+
     public KafkaSubscriber<TYPE> build() {
         KafkaSubscriber<TYPE> retval = new KafkaSubscriber<>(callback, topic, groupId,
                 enableAutoCommit, offsetReset, minThreads, maxThreads, idleTimeoutSeconds,
-                pollTime, throttleLimit);
+                pollTime, throttleLimit, queueType, retryDelayMillis);
         retval.setMetricBuilderFactory(metricBuilderFactory);
         retval.setPartitionAssignmentWatchdog(partitionAssignmentWatchdog);
         parentFactory.builtSubscriber(retval);
@@ -105,5 +122,4 @@ public class KafkaSubscriberBuilder<TYPE> {
     public void setPartitionAssignmentWatchdog(PartitionAssignmentWatchdog partitionAssignmentWatchdog) {
         this.partitionAssignmentWatchdog = partitionAssignmentWatchdog;
     }
-
 }
