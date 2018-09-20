@@ -11,14 +11,14 @@ public class PriorityMessageQueue implements MessageQueue {
 
     private Map<Integer, TreeSet<ConsumerRecord<String, String>>> partitionQueue;
     private Map<Integer, ConsumerRecord<String, String>> inProgress;
-    private MessageExecuter messageExecuter;
+    private MessageExecutor messageExecutor;
     private ScheduledExecutorService retryExecutor;
     private long retryDelayMillis;
 
-    public PriorityMessageQueue(MessageExecuter messageExecuter, long retryDelayMillis) {
+    public PriorityMessageQueue(MessageExecutor messageExecutor, long retryDelayMillis) {
         this.partitionQueue = new HashMap<>();
         this.inProgress = new HashMap<>();
-        this.messageExecuter = messageExecuter;
+        this.messageExecutor = messageExecutor;
         this.retryExecutor = Executors.newSingleThreadScheduledExecutor();
         this.retryDelayMillis = retryDelayMillis;
     }
@@ -49,7 +49,7 @@ public class PriorityMessageQueue implements MessageQueue {
         final ConsumerRecord<String, String> record = inProgress.get(topicInfo.getPartition());
         if (record != null && record.offset() == topicInfo.getOffset()) {
             //Processing failed. Schedule retry.
-            retryExecutor.schedule(() -> messageExecuter.execute(record), retryDelayMillis, TimeUnit.MILLISECONDS);
+            retryExecutor.schedule(() -> messageExecutor.execute(record), retryDelayMillis, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -57,7 +57,7 @@ public class PriorityMessageQueue implements MessageQueue {
         TreeSet<ConsumerRecord<String, String>> pQueue = partitionQueue.get(partition);
         if (pQueue != null && !pQueue.isEmpty()) {
             ConsumerRecord<String, String> record = pQueue.first();
-            messageExecuter.execute(record);
+            messageExecutor.execute(record);
             inProgress.put(partition, record);
             pQueue.pollFirst();
         }

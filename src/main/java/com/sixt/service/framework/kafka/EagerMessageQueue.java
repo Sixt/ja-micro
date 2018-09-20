@@ -4,15 +4,15 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class EagerMessageQueue implements MessageQueue {
 
-    private MessageExecuter messageExecuter;
+    private MessageExecutor messageExecutor;
 
-    public EagerMessageQueue(MessageExecuter messageExecuter, long retryDelayMillis) {
-        this.messageExecuter = messageExecuter;
+    public EagerMessageQueue(MessageExecutor messageExecutor, long retryDelayMillis) {
+        this.messageExecutor = messageExecutor;
     }
 
     @Override
     public void add(ConsumerRecord<String, String> record) {
-        messageExecuter.execute(record);
+        messageExecutor.execute(record);
     }
 
     @Override

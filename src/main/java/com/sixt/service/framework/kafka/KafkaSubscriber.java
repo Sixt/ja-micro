@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.sixt.service.framework.OrangeContext.CORRELATION_ID;
 import static net.logstash.logback.marker.Markers.append;
 
-public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListener, MessageExecuter {
+public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListener, MessageExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaSubscriber.class);
 
@@ -54,9 +54,9 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
             this.messageQueueType = messageQueueType;
         }
 
-        public MessageQueue getMessageQueueInstance(MessageExecuter executor, long retryDelayMillis) {
+        public MessageQueue getMessageQueueInstance(MessageExecutor executor, long retryDelayMillis) {
             try {
-                Constructor<? extends MessageQueue> c = messageQueueType.getConstructor(MessageExecuter.class, long.class);
+                Constructor<? extends MessageQueue> c = messageQueueType.getConstructor(MessageExecutor.class, long.class);
                 return c.newInstance(executor, retryDelayMillis);
             } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException("Failed to create message queue instance of type " + name(), e);
