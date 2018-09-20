@@ -136,6 +136,29 @@ public class DockerComposeHelper {
     }
 
     /**
+     * Wait for impersonator to become ready by checking log for
+     * "Jetty has started"
+     *
+     * @param logFile         The logfile to check
+     * @return SuccessOrFailure
+     */
+    public static SuccessOrFailure waitForImpersonator(String logFile) {
+        return waitForImpersonator(logFile, "Jetty has started");
+    }
+
+    /**
+     * Wait for impersonator to become ready by checking log for
+     * some custom expected phrase
+     *
+     * @param logFile         The logfile to check
+     * @param phraseToWaitFor The phrase in logs we wait for
+     * @return SuccessOrFailure
+     */
+    public static SuccessOrFailure waitForImpersonator(String logFile, String phraseToWaitFor) {
+        return waitFor(logFile, phraseToWaitFor, "Impersonator not ready yet");
+    }
+
+    /**
      * Wait for Consul to become ready by checking log for "consul: New leader elected"
      *
      * @param logFile The logfile to check
