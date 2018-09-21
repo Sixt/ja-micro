@@ -26,7 +26,7 @@ public class PriorityMessageQueueTest {
     }
 
     @Test
-    public void queue_addRecord_execeuted() {
+    public void queue_addRecord_executed() {
         ConsumerRecord record = new ConsumerRecord<>(topic, 0, 0, defaultKey, defaultValue);
         messageQueue.add(record);
 

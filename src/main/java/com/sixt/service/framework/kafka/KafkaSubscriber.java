@@ -343,4 +343,5 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
         }
     }
 
+
 }
