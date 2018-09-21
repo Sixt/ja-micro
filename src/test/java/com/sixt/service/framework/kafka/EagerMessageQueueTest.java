@@ -34,7 +34,7 @@ public class EagerMessageQueueTest {
         ArgumentCaptor<ConsumerRecord> captor = ArgumentCaptor.forClass(ConsumerRecord.class);
         verify(messageExecutor, times(2)).execute(captor.capture());
         assertThat(captor.getAllValues().get(0)).isEqualTo(record1);
-        assertThat(captor.getAllValues().get(0)).isEqualTo(record2);
+        assertThat(captor.getAllValues().get(1)).isEqualTo(record2);
     }
 
 }
