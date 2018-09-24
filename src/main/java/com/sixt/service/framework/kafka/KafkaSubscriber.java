@@ -230,7 +230,6 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
                         record.partition(), record.offset());
 
                 messageQueue.add(record);
-                messageBacklog.incrementAndGet();
             }
         }
     }
@@ -238,18 +237,19 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
     @Override
     public void execute(ConsumerRecord<String, String> record) {
         synchronized (executor) {
-        String rawMessage = record.value();
-        KafkaTopicInfo topicInfo = new KafkaTopicInfo(topic, record.partition(),
-                record.offset(), record.key());
-        KafkaSubscriberWorker worker;
-        if (useProtobuf) {
-            Message proto = ProtobufUtil.jsonToProtobuf(rawMessage,
-                    (Class<? extends Message>) messageType);
-            worker = new KafkaSubscriberWorker((TYPE) proto, topicInfo);
-        } else {
-            worker = new KafkaSubscriberWorker((TYPE) rawMessage, topicInfo);
-        }
-        executor.submit(worker);
+            String rawMessage = record.value();
+            KafkaTopicInfo topicInfo = new KafkaTopicInfo(topic, record.partition(),
+                    record.offset(), record.key());
+            KafkaSubscriberWorker worker;
+            if (useProtobuf) {
+                Message proto = ProtobufUtil.jsonToProtobuf(rawMessage,
+                        (Class<? extends Message>) messageType);
+                worker = new KafkaSubscriberWorker((TYPE) proto, topicInfo);
+            } else {
+                worker = new KafkaSubscriberWorker((TYPE) rawMessage, topicInfo);
+            }
+            executor.submit(worker);
+            messageBacklog.incrementAndGet();
         }
     }
 
