@@ -11,7 +11,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class PriorityMessageQueueTest {
+public class OffsetBlockingMessageQueueTest {
 
     private MessageExecutor messageExecutor;
     private MessageQueue messageQueue;
@@ -22,7 +22,7 @@ public class PriorityMessageQueueTest {
     @Before
     public void setup() {
         messageExecutor = mock(MessageExecutor.class);
-        messageQueue = new PriorityMessageQueue(messageExecutor, 5000);
+        messageQueue = new OffsetBlockingMessageQueue(messageExecutor, 5000);
     }
 
     @Test
@@ -85,7 +85,7 @@ public class PriorityMessageQueueTest {
 
     @Test
     public void queue_processingEnded_retryScheduled() {
-        messageQueue = new PriorityMessageQueue(messageExecutor, 100);
+        messageQueue = new OffsetBlockingMessageQueue(messageExecutor, 100);
         ConsumerRecord record1 = new ConsumerRecord<>(topic, 0, 0, defaultKey, defaultValue);
         messageQueue.add(record1);
         messageQueue.add(new ConsumerRecord<>(topic, 0, 1, defaultKey, defaultValue));

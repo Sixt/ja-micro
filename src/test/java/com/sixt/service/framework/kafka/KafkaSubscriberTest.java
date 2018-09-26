@@ -33,7 +33,7 @@ public class KafkaSubscriberTest {
         KafkaSubscriber<String> subscriber = new KafkaSubscriber<>(new MessageCallback(),
                 "topic", "groupId", false,
                 KafkaSubscriber.OffsetReset.Earliest, 1, 1, 1,
-                5000, 5000, KafkaSubscriber.QueueType.Priority, 1000);
+                5000, 5000, KafkaSubscriber.QueueType.OffsetBlocking, 1000);
         KafkaTopicInfo message1 = new KafkaTopicInfo("topic", 0, 1, null);
         KafkaTopicInfo message2 = new KafkaTopicInfo("topic", 0, 2, null);
         KafkaTopicInfo message3 = new KafkaTopicInfo("topic", 1, 1, null);

@@ -7,7 +7,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class PriorityMessageQueue implements MessageQueue {
+public class OffsetBlockingMessageQueue implements MessageQueue {
 
     private Map<Integer, TreeSet<ConsumerRecord<String, String>>> partitionQueue;
     private Map<Integer, ConsumerRecord<String, String>> inProgress;
@@ -15,7 +15,7 @@ public class PriorityMessageQueue implements MessageQueue {
     private ScheduledExecutorService retryExecutor;
     private long retryDelayMillis;
 
-    public PriorityMessageQueue(MessageExecutor messageExecutor, long retryDelayMillis) {
+    public OffsetBlockingMessageQueue(MessageExecutor messageExecutor, long retryDelayMillis) {
         this.partitionQueue = new HashMap<>();
         this.inProgress = new HashMap<>();
         this.messageExecutor = messageExecutor;

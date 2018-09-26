@@ -24,13 +24,13 @@ public class KafkaSubscriberBuilder<TYPE> {
     protected String groupId = UUID.randomUUID().toString();
     protected boolean enableAutoCommit = false;
     protected KafkaSubscriber.OffsetReset offsetReset = KafkaSubscriber.OffsetReset.Earliest;
-    protected KafkaSubscriber.QueueType queueType = KafkaSubscriber.QueueType.Priority;
+    protected KafkaSubscriber.QueueType queueType = KafkaSubscriber.QueueType.OffsetBlocking;
     protected int minThreads = 1;
     protected int maxThreads = 1;
     protected int idleTimeoutSeconds = 15;
     protected int pollTime = 1000;
     protected int throttleLimit = 100;
-    protected long retryDelayMillis = 1000 * 60;//1 min
+    protected long retryDelayMillis = 1000 * 3;//3 sec
     private MetricBuilderFactory metricBuilderFactory;
     private PartitionAssignmentWatchdog partitionAssignmentWatchdog;
 

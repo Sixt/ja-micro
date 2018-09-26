@@ -9,8 +9,8 @@ public class QueueTypeEnumTest {
 
     @Test
     public void getMessageQueueInstance_succes() {
-        assertThat(KafkaSubscriber.QueueType.Priority.getMessageQueueInstance(mock(MessageExecutor.class), 100))
-                .isInstanceOf(PriorityMessageQueue.class);
+        assertThat(KafkaSubscriber.QueueType.OffsetBlocking.getMessageQueueInstance(mock(MessageExecutor.class), 100))
+                .isInstanceOf(OffsetBlockingMessageQueue.class);
         assertThat(KafkaSubscriber.QueueType.Eager.getMessageQueueInstance(mock(MessageExecutor.class), 100))
                 .isInstanceOf(EagerMessageQueue.class);
     }

@@ -46,7 +46,7 @@ public class KafkaSubscriber<TYPE> implements Runnable, ConsumerRebalanceListene
 
     public enum QueueType {
         Eager(EagerMessageQueue.class),
-        Priority(PriorityMessageQueue.class);
+        OffsetBlocking(OffsetBlockingMessageQueue.class);
 
         private Class<? extends MessageQueue> messageQueueType;
 
