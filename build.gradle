@@ -70,6 +70,15 @@ def pomConfig = {
     }
 }
 
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
 publishing {
     publications {
         MyPublication(MavenPublication) {
