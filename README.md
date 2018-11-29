@@ -1,9 +1,3 @@
-# Announcement
-
-The structure of ja-micro requires that extensions are tightly coupled to it, and, as everyone can see, we have a lot of sixt-custom implementation inside of it already. As for going forward with the framework, there would be more sixt-specific logic required to live inside the repository. Subsequently we decided to go back to a private repository. We recommend everyone using the framework to do the same.
-
-We will archive ja-micro on github, so nobody will be able to open new issues or PRs. Thank you for your support.
-
 # Ja-micro [![License](https://img.shields.io/:license-apache-blue.svg)](https://opensource.org/licenses/Apache-2.0) 
 
 Ja-micro is a lightweight Java framework for building microservices.
