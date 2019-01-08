@@ -10,10 +10,7 @@ import javax.inject.Singleton;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Singleton
 public class PartitionAssignmentWatchdog {
@@ -25,6 +22,7 @@ public class PartitionAssignmentWatchdog {
     private Set<KafkaConsumer<String, String>> consumers = new CopyOnWriteArraySet<>();
     private Map<String, ConsumerPartitionLevels> consumerPartitions = new HashMap<>();
     private ScheduledFuture<?> partitionWatchdogFuture;
+    private ScheduledExecutorService scheduler;
 
     public synchronized void subscriberInitialized(KafkaConsumer<String, String> realConsumer) {
         logger.debug("Adding subscriber");
@@ -76,12 +74,15 @@ public class PartitionAssignmentWatchdog {
     }
 
     private void startWatchdog() {
-        partitionWatchdogFuture = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+        partitionWatchdogFuture = scheduler.scheduleAtFixedRate(
                 this::checkAssignments, 10, 10, TimeUnit.SECONDS);
     }
 
     private void stopWatchdog() {
         partitionWatchdogFuture.cancel(true);
+        scheduler.shutdown();
+        logger.debug("Partition assignment watchdog scheduler shut down");
     }
 
     class ConsumerPartitionLevels {
