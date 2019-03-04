@@ -47,7 +47,8 @@ public abstract class RpcHandler {
     //The reason is that these headers are also then used for outgoing requests.
     //If you need the incoming headers, we can create an additional bucket inside of OrangeContext to hold them.
     private static final Set<String> blackListedHeaders = of("user-agent", "content-length", "content-type",
-            "date", "expect", "host");
+            "date", "expect", "host", "micro-service", "micro-endpoint", "micro-method",
+            "x-micro-service", "x-micro-endpoint", "x-micro-method");
 
     public RpcHandler(MethodHandlerDictionary handlers, MetricRegistry registry,
                       RpcHandlerMetrics handlerMetrics, ServiceProperties serviceProperties,
